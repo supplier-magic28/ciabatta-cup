@@ -15,8 +15,13 @@ Database migrations for Ciabatta Cup. The authoritative data model is
 - `20260709020000_guard_exempt_backend.sql` — exempt trusted backend contexts
   (service role / SQL editor, where `auth.uid()` is null) from the privilege
   guard, so the first admin can be seeded with a plain `update` (ADR-0005).
+- `20260710000000_matches_spine.sql` — **Phase 3a spine**: the `matches`,
+  `match_sets`, and `match_confirmations` tables, their RLS policies, and the
+  immutable-facts triggers that seal a match (and its sets/confirmations) once it
+  is approved (ADR-0001, ADR-0006). `tournament_id`/`fixture_id` are nullable
+  plain-uuid columns until those tables land.
 
-Only the `players` table exists so far. Matches, tournaments, fixtures, rating
+The `players` and match tables exist so far. Tournaments, fixtures, rating
 history, etc. arrive in later phases.
 
 ## Applying migrations

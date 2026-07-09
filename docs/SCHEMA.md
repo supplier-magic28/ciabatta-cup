@@ -65,7 +65,12 @@ always corresponds to an auth user. An `invited` player is a Supabase Auth
 
 _(`password_hash` from the original handoff is intentionally removed — see ADR-0002.)_
 
-### matches _(later phase — not yet built)_
+### matches _(Phase 3a — implemented)_
+Immutable match facts (ADR-0001). Once `status = approved` a row is frozen by a
+trigger (`enforce_match_immutable()`); corrections are new facts, never edits.
+`tournament_id` / `fixture_id` are nullable **plain uuid** columns until their
+tables exist — the FK constraints are added in the tournaments/fixtures phase
+(ADR-0006).
 | field | type | notes |
 |---|---|---|
 | id | uuid PK | |
@@ -84,7 +89,7 @@ _(`password_hash` from the original handoff is intentionally removed — see ADR
 
 **Match lifecycle**: `pending_confirmation` (opponent hasn't confirmed) → `pending_approval` (both confirmed; ranked only — exhibitions can auto-approve) → `approved` (points applied, stats count) | `queried` (admin flagged, back to submitter) | `rejected`.
 
-### match_sets _(later phase — not yet built)_
+### match_sets _(Phase 3a — implemented)_
 | field | type | notes |
 |---|---|---|
 | id | uuid PK | |
@@ -93,8 +98,10 @@ _(`password_hash` from the original handoff is intentionally removed — see ADR
 | p1_games / p2_games | int | e.g. 7 / 5 |
 | tiebreak_p1 / tiebreak_p2 | int nullable | e.g. 7 / 3 when set went to TB |
 
-### match_confirmations _(later phase — not yet built)_
+### match_confirmations _(Phase 3a — implemented)_
 | match_id FK, player_id FK, confirmed_at timestamptz | one row per participant; both rows present ⇒ move to pending_approval |
+
+_The "both present ⇒ pending_approval" transition is a lifecycle behaviour and is **not** automated in Phase 3a — the schema records confirmations; the transition lands with the confirm/approve surfaces (ADR-0006)._
 
 ### tournaments _(later phase — not yet built)_
 | field | type | notes |
