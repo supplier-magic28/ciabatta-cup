@@ -33,6 +33,11 @@ This version has breaking changes — APIs, conventions, and file structure may 
   driven by design tokens (`components/tokens.ts`), not bespoke markup.
 - **Commands:** `npm run lint`, `npm run typecheck`, `npm run test`
   (`test:watch` for TDD), `npm run dev`.
+- **Commit messages.** The **first line is a clear, concise subject** under ~70
+  characters — it becomes the Vercel deployment title, so it must stand alone and
+  never be empty or a placeholder. Follow the phase pattern, e.g. `Phase 3a:
+  match-facts schema + RLS`. Add detail in a body after one blank line when the
+  subject can't carry it.
 - **Secrets:** the publishable key is browser-safe; the secret key never touches
   client code or the repo. Env files (`.env*`) are git-ignored.
 
