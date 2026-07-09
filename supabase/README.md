@@ -20,9 +20,34 @@ Database migrations for Ciabatta Cup. The authoritative data model is
   immutable-facts triggers that seal a match (and its sets/confirmations) once it
   is approved (ADR-0001, ADR-0006). `tournament_id`/`fixture_id` are nullable
   plain-uuid columns until those tables land.
+- `20260710010000_invited_profile_status.sql` — redefine `handle_new_user` so an
+  **invited** auth user (`invited_at` set) gets a `players` row at status
+  `invited`, while self-signups stay `active` (ADR-0009). Supersedes the
+  profile-status logic in `20260709010000`.
 
 The `players` and match tables exist so far. Tournaments, fixtures, rating
 history, etc. arrive in later phases.
+
+## Environment variables
+
+- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` — browser-safe
+  client config.
+- `SUPABASE_SECRET_KEY` — **server-only** service-role key. Required for admin
+  operations (inviting players via `inviteUserByEmail`). Never expose it to the
+  browser or commit it; `.env*` is git-ignored.
+
+## Inviting players (Supabase project config)
+
+Admin invites call `inviteUserByEmail` with a `redirectTo` of
+`<site>/auth/confirm?next=/`. For the link to work end-to-end, in the Supabase
+dashboard:
+
+1. **Auth → URL Configuration → Redirect URLs:** allow-list your site origin
+   (e.g. `http://localhost:3000/**` and the deployed origin).
+2. **Auth → Email Templates → Invite user:** ensure the confirmation link carries
+   the OTP so `/auth/confirm` can `verifyOtp` (`token_hash` + `type=invite`), or
+   rely on the hosted verify redirect. On landing, `ensureActivated` flips the
+   invitee `invited → active`.
 
 ## Applying migrations
 

@@ -27,4 +27,8 @@ of Done (`CLAUDE.md`).
   (matchup → type & format → per-set scores), shared pure validation, submits via
   the `submitMatch` server action. Submission only — no confirm/approve/scoring.
 
+**Players (admin)**
+- `players/InvitePlayerForm` — admin invite form (design screen 08): name + email
+  → `inviteUser` server action (`useActionState`).
+
 Planned next (from ARCHITECTURE.md): `Card`, `RankBadge`, `StatBlock`.

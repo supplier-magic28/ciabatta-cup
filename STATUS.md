@@ -85,6 +85,21 @@ in `CLAUDE.md`). For vision and how-we-build, read `ARCHITECTURE.md`._
     set scores** (draws rejected). **ADR-0008.**
   - **"Your matches" list** (`app/matches`) shows submitted matches + lifecycle
     status — the minimal "submission is working" surface (not the leaderboard).
+- **Invite-players flow (admin) (COMPLETE):**
+  - **Admin invite action** (`lib/players/actions.ts#inviteUser`): secret-key
+    server-only admin client (`lib/supabase/admin.ts`) calls `inviteUserByEmail`;
+    the invitee's `players` row is created at status `invited`. Admin-only via a
+    role guard + the existing `is_admin()` players RLS. Pure `validateInvite`
+    (tests-first, 5 cases) for friendly errors. **ADR-0009.**
+  - **Trigger fix** (`20260710010000_invited_profile_status.sql`):
+    `handle_new_user` now creates `invited` profiles for invited auth users
+    (`invited_at` set) and keeps `active` for self-signups.
+  - **Manage-players screen** (`app/admin/players`, design screen 08): admin-only
+    roster with status pills + the `InvitePlayerForm`. Home page shows a
+    **Manage players** link to admins only.
+  - **invited → active reused**, not duplicated: `/auth/confirm` (`type=invite`)
+    + `ensureActivated`. Acceptance link/password is Supabase project config
+    (documented in `supabase/README.md`).
 
 ## Next up — Phase 3c-part-2 (confirm / approve)
 
@@ -95,18 +110,18 @@ that feeds approved ranked facts into `computeRankings` and materialises
 `rating_history` / the `rating_points` cache, and finally **Ciabatta reigns**.
 Decisions (e.g. how approval writes `rating_history`) get an ADR.
 
-Decisions along the way (e.g. how approval writes `rating_history`) get an ADR.
-
 ## Known issues / caveats
 
 - `computeRankings` is the real Elo engine but is **not yet wired to the DB**:
   nothing feeds it live match facts and nothing persists its `rating_history` /
   `rating_points` output. That adapter is Phase 3c.
-- **Phase 3a migration is file-only — not applied to Supabase yet.** The
-  log-match flow (3c-part-1) is code-complete and lint/typecheck/test-green, but
-  **cannot run live until `20260710000000_matches_spine.sql` is applied** (CLI
-  `supabase db push` or the SQL editor). Not yet verified end-to-end against the
-  live DB for that reason.
+- **Migrations are applied by the operator out-of-band.** `20260710000000_matches_spine.sql`
+  was reported applied (log-match flow live). **`20260710010000_invited_profile_status.sql`
+  is file-only — apply it** (CLI `supabase db push` or SQL editor) for invited
+  players to land at status `invited` rather than `active`.
+- **Invites need `SUPABASE_SECRET_KEY`** set in the server environment; without
+  it `inviteUser` fails. Supabase redirect allow-list / invite email template
+  also need configuring (see `supabase/README.md`). Not verified end-to-end here.
 - Match **lifecycle transitions are not automated** (deferred to 3c, ADR-0006):
   confirmations are recorded, but nothing yet flips `pending_confirmation →
   pending_approval` or auto-approves exhibitions.
