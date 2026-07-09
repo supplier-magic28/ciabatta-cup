@@ -21,52 +21,58 @@ in `CLAUDE.md`). For vision and how-we-build, read `ARCHITECTURE.md`._
   - **CI** (`.github/workflows/ci.yml`) runs lint + typecheck + Vitest on every
     push and PR.
   - `components/` + `components/tokens.ts` placeholders ready for design handoff.
-- **Phase 2 — players spine:**
+- **Phase 2 — players spine + authentication (COMPLETE):**
   - Design handoff landed in `design-reference/`. Reconciled it into
     **`docs/SCHEMA.md`** as the authoritative, phased data model.
-  - **ADR-0002** (Supabase Auth for identity; dropped `password_hash`;
-    `players.id` → `auth.users.id`) and **ADR-0003** (`rating_points` is a
-    rebuildable cache; schema built in phases; refines ADR-0001).
-  - **`players` table + RLS** migration
-    (`supabase/migrations/20260709000000_players_spine.sql`): enums,
+  - **`players` table + RLS** (`20260709000000_players_spine.sql`): enums,
     `is_admin()` helper, policies (read all / update own / admin all), and a
-    trigger blocking non-admins from editing privileged columns.
-- **Phase 2 — authentication (this session):**
-  - **Supabase Auth** (email + password) on the existing `@supabase/ssr`
-    clients: sign-up, log-in, log-out (`lib/auth/actions.ts`), session refresh +
-    protected-route gating in `proxy.ts` (Next 16's renamed middleware).
-  - **`handle_new_user` trigger** auto-creates the `players` profile on signup;
-    privilege guard widened for self `invited → active`
-    (`supabase/migrations/20260709010000_handle_new_user.sql`). **ADR-0004.**
-  - **Sign-in / sign-up screens** rebuilt as real token-driven components from
-    design screen 05 (`app/(auth)/…`, `components/{brand,ui,auth}/…`);
-    `/auth/confirm` route for email confirmation.
-  - **Protected placeholder landing** (`app/page.tsx`): "logged in as {name}" +
-    log out. Design tokens filled in (`app/globals.css`, `components/tokens.ts`,
-    brand fonts).
+    trigger freezing privileged columns. **ADR-0002** (Supabase Auth; dropped
+    `password_hash`; `players.id` → `auth.users.id`), **ADR-0003** (rating is a
+    rebuildable cache; phased schema).
+  - **Supabase Auth** (email + password) on the `@supabase/ssr` clients:
+    sign-up / log-in / log-out (`lib/auth/actions.ts`), session refresh +
+    protected-route gating in `proxy.ts`. **`handle_new_user` trigger**
+    auto-creates the profile on signup; self `invited → active` allowed
+    (`20260709010000_handle_new_user.sql`). **ADR-0004.**
+  - **Sign-in / sign-up screens** as real token-driven components from design
+    screen 05 (`app/(auth)/…`, `components/{brand,ui,auth}/…`); `/auth/confirm`
+    route; protected placeholder landing (`app/page.tsx`, "logged in as {name}").
+    Design tokens + brand fonts wired (`app/globals.css`, `components/tokens.ts`).
   - **Admin-bootstrap fix** (`20260709020000_guard_exempt_backend.sql`,
-    **ADR-0005**): the privilege guard is a trigger, so the service role / SQL
-    editor did not bypass it — blocking the first-admin seed. Guard now exempts
-    backend contexts (`auth.uid()` null). First-admin steps simplified in
-    `supabase/README.md`.
+    **ADR-0005**): guard exempts backend contexts (`auth.uid()` null).
+  - **Applied & live on Supabase:** all three migrations run; **first admin
+    (`ringo@spectoolbox.com`) seeded** and auth flow working end-to-end.
 
-## What's next
+## Next up — Phase 3: matches (tomorrow's pickup point)
 
-- **You:** apply both migrations to Supabase, check the email-confirmation
-  setting, and create your admin — steps in `supabase/README.md`.
-- **You:** connect the repo to Vercel (+ env vars) to actually deploy.
-- Next schema phase: `matches` / `match_sets` / `match_confirmations` (+ RLS).
-- Replace the placeholder scoring formula with the real Elo one, aligned to
-  `docs/SCHEMA.md` — tests first, per ADR-0001/0003.
-- First real screens (leaderboard, submit-a-match).
+The goal of Phase 3 is turning real match results into data. Suggested order,
+per `docs/SCHEMA.md` and the append-only / tests-first conventions:
+
+1. **Schema + RLS migration** for the match facts (casual matches first;
+   `tournament_id` / `fixture_id` stay nullable until the tournaments phase):
+   - `matches` — `type` (ranked/exhibition), `format`, `player1_id`/`player2_id`,
+     `winner_id`, `status` lifecycle (`pending_confirmation → pending_approval →
+     approved | queried | rejected`), `submitted_by`, `played_at`.
+   - `match_sets` — per-set games + tiebreak.
+   - `match_confirmations` — one row per participant; both present ⇒
+     `pending_approval`.
+   - RLS: participants submit/confirm their own; **admins** approve/query.
+     Matches are **immutable facts** once recorded (ADR-0001) — corrections are
+     new facts, not edits.
+2. **Real scoring formula** — replace the `computeRankings` stub with Elo
+   (K=32, floor 100, start 1000; ranked + approved only), aligned to the match
+   fact shape. **Write the tests first** (this is the test spine, ADR-0001/0003).
+3. **Log-match screen** (design screen 03: matchup → type → format → per-set
+   scores → submit for approval) + the confirm/approve surfaces.
+
+Decisions along the way (e.g. how approval writes `rating_history`) get an ADR.
 
 ## Known issues / caveats
 
-- `computeRankings` is a **placeholder** (ranks by raw win count), not the real
-  formula. Its tests pin the *pattern*, not the final scoring rules.
-- Only the `players` table exists. No matches, tournaments, fixtures,
-  rating_history, or activity_log tables yet (later phases).
-- Migrations **not applied** in this environment (no DB) and no admin seeded yet;
-  the live sign-in flow was not exercised here (routing/rendering were).
-- No hosting connected yet — pushing to `main` does not deploy (Vercel setup
-  pending).
+- `computeRankings` is still a **placeholder** (ranks by raw win count), not the
+  real formula — the first thing Phase 3's scoring step replaces.
+- Only the `players` table exists. No matches, sets, confirmations, tournaments,
+  fixtures, rating_history, or activity_log tables yet.
+- **Not deployed:** no hosting connected — pushing to `main` does not publish a
+  site. Vercel setup (+ env vars) is still pending when a live URL is wanted;
+  it does not block Phase 3.
