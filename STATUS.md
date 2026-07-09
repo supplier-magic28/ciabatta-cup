@@ -21,7 +21,7 @@ in `CLAUDE.md`). For vision and how-we-build, read `ARCHITECTURE.md`._
   - **CI** (`.github/workflows/ci.yml`) runs lint + typecheck + Vitest on every
     push and PR.
   - `components/` + `components/tokens.ts` placeholders ready for design handoff.
-- **Phase 2 — players spine (this session):**
+- **Phase 2 — players spine:**
   - Design handoff landed in `design-reference/`. Reconciled it into
     **`docs/SCHEMA.md`** as the authoritative, phased data model.
   - **ADR-0002** (Supabase Auth for identity; dropped `password_hash`;
@@ -31,15 +31,29 @@ in `CLAUDE.md`). For vision and how-we-build, read `ARCHITECTURE.md`._
     (`supabase/migrations/20260709000000_players_spine.sql`): enums,
     `is_admin()` helper, policies (read all / update own / admin all), and a
     trigger blocking non-admins from editing privileged columns.
+- **Phase 2 — authentication (this session):**
+  - **Supabase Auth** (email + password) on the existing `@supabase/ssr`
+    clients: sign-up, log-in, log-out (`lib/auth/actions.ts`), session refresh +
+    protected-route gating in `proxy.ts` (Next 16's renamed middleware).
+  - **`handle_new_user` trigger** auto-creates the `players` profile on signup;
+    privilege guard widened for self `invited → active`
+    (`supabase/migrations/20260709010000_handle_new_user.sql`). **ADR-0004.**
+  - **Sign-in / sign-up screens** rebuilt as real token-driven components from
+    design screen 05 (`app/(auth)/…`, `components/{brand,ui,auth}/…`);
+    `/auth/confirm` route for email confirmation.
+  - **Protected placeholder landing** (`app/page.tsx`): "logged in as {name}" +
+    log out. Design tokens filled in (`app/globals.css`, `components/tokens.ts`,
+    brand fonts).
 
 ## What's next
 
-- Apply the migration to the Supabase project and seed the first admin
-  (`supabase/README.md`).
+- **You:** apply both migrations to Supabase, check the email-confirmation
+  setting, and create your admin — steps in `supabase/README.md`.
+- **You:** connect the repo to Vercel (+ env vars) to actually deploy.
 - Next schema phase: `matches` / `match_sets` / `match_confirmations` (+ RLS).
 - Replace the placeholder scoring formula with the real Elo one, aligned to
   `docs/SCHEMA.md` — tests first, per ADR-0001/0003.
-- Auth wiring (sign-in) and first screens (leaderboard, submit-a-match).
+- First real screens (leaderboard, submit-a-match).
 
 ## Known issues / caveats
 
@@ -47,7 +61,7 @@ in `CLAUDE.md`). For vision and how-we-build, read `ARCHITECTURE.md`._
   formula. Its tests pin the *pattern*, not the final scoring rules.
 - Only the `players` table exists. No matches, tournaments, fixtures,
   rating_history, or activity_log tables yet (later phases).
-- The migration has **not been applied** here (no DB in this environment) and no
-  first admin is seeded yet.
-- Design tokens in `components/tokens.ts` are empty placeholders awaiting the
-  design handoff.
+- Migrations **not applied** in this environment (no DB) and no admin seeded yet;
+  the live sign-in flow was not exercised here (routing/rendering were).
+- No hosting connected yet — pushing to `main` does not deploy (Vercel setup
+  pending).

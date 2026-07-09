@@ -1,26 +1,32 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+ * Ciabatta Cup design tokens (from the design-reference handoff).
+ * The brand uses one fixed palette — no system light/dark inversion.
+ */
+@theme {
+  --color-cream: #efe6d0; /* app background */
+  --color-surface: #f7f0de; /* card / input surface */
+  --color-row: #ede9d2; /* highlighted row */
+  --color-hairline: #d9ccae; /* hairline borders */
+  --color-ink: #1b1a16; /* text, 2px borders, dark surfaces */
+  --color-green: #3e6b35; /* primary, wins, ranked */
+  --color-green-muted: #bfd3b4; /* on-green muted */
+  --color-chartreuse: #c9da5a; /* accent on dark */
+  --color-crust: #8c5426; /* admin accent, trophy */
+  --color-crust-top: #c98a4b; /* loaf gradient top */
+  --color-crumb: #f5e7cc; /* crumb scores */
+  --color-rust: #a0442c; /* losses, drops */
+  --color-muted: #8c8672; /* muted text */
+  --color-muted-dark: #8a9188; /* muted text on dark */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-heading: var(--font-bricolage), sans-serif;
+  --font-mono: var(--font-plex-mono), monospace;
+  --font-body: var(--font-work-sans), sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-body);
 }

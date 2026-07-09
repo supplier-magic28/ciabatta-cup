@@ -7,7 +7,17 @@ of Done (`CLAUDE.md`).
 
 ## Inventory
 
-_None yet — placeholder awaiting the design handoff._
+**Brand**
+- `brand/LoafBadge` — the Ciabatta loaf (SVG), the trophy motif; reused for the
+  #1 badge later.
+- `brand/Wordmark` — "CIABATTA CUP" wordmark, `tone` light/dark.
 
-Planned primitives (from ARCHITECTURE.md): `Button`, `Card`, `RankBadge`, the
-Ciabatta badge, `StatBlock`.
+**UI primitives**
+- `ui/Button` — primary action button (green, 2px ink border, offset shadow).
+- `ui/Field` — labelled input; `reveal` adds a password Show/Hide toggle.
+
+**Auth**
+- `auth/SignInForm` — email + password sign-in (client, `useActionState`).
+- `auth/SignUpForm` — create-account (name + email + password).
+
+Planned next (from ARCHITECTURE.md): `Card`, `RankBadge`, `StatBlock`.
