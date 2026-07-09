@@ -44,6 +44,11 @@ in `CLAUDE.md`). For vision and how-we-build, read `ARCHITECTURE.md`._
   - **Protected placeholder landing** (`app/page.tsx`): "logged in as {name}" +
     log out. Design tokens filled in (`app/globals.css`, `components/tokens.ts`,
     brand fonts).
+  - **Admin-bootstrap fix** (`20260709020000_guard_exempt_backend.sql`,
+    **ADR-0005**): the privilege guard is a trigger, so the service role / SQL
+    editor did not bypass it — blocking the first-admin seed. Guard now exempts
+    backend contexts (`auth.uid()` null). First-admin steps simplified in
+    `supabase/README.md`.
 
 ## What's next
 
