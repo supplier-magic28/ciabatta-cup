@@ -3,7 +3,9 @@ import { redirect } from "next/navigation";
 import { getSessionPlayer } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { displayName } from "@/lib/auth/displayName";
+import { formatScore, type ScoreSet } from "@/lib/match/score";
 import { Button } from "@/components/ui/Button";
+import { ConfirmMatchButton } from "@/components/match/ConfirmMatchButton";
 
 const STATUS_LABEL: Record<string, string> = {
   pending_confirmation: "Waiting for opponent",
@@ -23,9 +25,9 @@ const FORMAT_LABEL: Record<string, string> = {
 const eyebrow = "font-mono text-[10px] uppercase tracking-[2px] text-muted";
 
 /**
- * "Your matches" — the minimal surface that makes submission visibly work
- * (Phase 3c-part-1). Lists the current player's matches with their lifecycle
- * status. Not the leaderboard: no ratings, no scoring.
+ * "Your matches" — the current player's matches with their lifecycle status, the
+ * score, and (Phase 3c-part-2) a Confirm button on matches awaiting *their*
+ * confirmation. Not the leaderboard: no ratings, no scoring.
  */
 export default async function MatchesPage() {
   const player = await getSessionPlayer();
@@ -39,9 +41,21 @@ export default async function MatchesPage() {
     .or(`player1_id.eq.${player.id},player2_id.eq.${player.id}`)
     .order("played_at", { ascending: false });
 
-  const { data: players } = await supabase
-    .from("players")
-    .select("id, first_name, last_name, email");
+  const rows = matches ?? [];
+  const matchIds = rows.map((m) => m.id);
+
+  const [{ data: players }, { data: sets }, { data: myConfirmations }] = await Promise.all([
+    supabase.from("players").select("id, first_name, last_name, email"),
+    matchIds.length
+      ? supabase
+          .from("match_sets")
+          .select("match_id, set_number, p1_games, p2_games, tiebreak_p1, tiebreak_p2")
+          .in("match_id", matchIds)
+          .order("set_number", { ascending: true })
+      : Promise.resolve({ data: [] as never[] }),
+    supabase.from("match_confirmations").select("match_id").eq("player_id", player.id),
+  ]);
+
   const nameOf = new Map(
     (players ?? []).map((p) => [
       p.id,
@@ -49,7 +63,19 @@ export default async function MatchesPage() {
     ]),
   );
 
-  const rows = matches ?? [];
+  const setsByMatch = new Map<string, ScoreSet[]>();
+  for (const s of sets ?? []) {
+    const list = setsByMatch.get(s.match_id) ?? [];
+    list.push({
+      p1Games: s.p1_games,
+      p2Games: s.p2_games,
+      tiebreakP1: s.tiebreak_p1,
+      tiebreakP2: s.tiebreak_p2,
+    });
+    setsByMatch.set(s.match_id, list);
+  }
+
+  const confirmedByMe = new Set((myConfirmations ?? []).map((c) => c.match_id));
 
   return (
     <main className="mx-auto w-full max-w-md flex-1 px-6 py-10">
@@ -74,6 +100,9 @@ export default async function MatchesPage() {
           {rows.map((m) => {
             const opponentId = m.player1_id === player.id ? m.player2_id : m.player1_id;
             const won = m.winner_id === player.id;
+            // I'm the opponent who hasn't confirmed yet (the submitter auto-confirms).
+            const needsMyConfirmation =
+              m.status === "pending_confirmation" && !confirmedByMe.has(m.id);
             return (
               <li
                 key={m.id}
@@ -92,14 +121,18 @@ export default async function MatchesPage() {
                     {won ? "You won" : "You lost"}
                   </span>
                 </div>
+                <p className="mt-1 font-mono text-[13px] text-ink">
+                  {formatScore(setsByMatch.get(m.id) ?? []) || "No sets recorded"}
+                </p>
                 <p className={`${eyebrow} mt-1`}>
                   {m.type === "ranked" ? "Ranked" : "Exhibition"} ·{" "}
                   {FORMAT_LABEL[m.format] ?? m.format}
                   {m.format === "custom" && m.format_note ? ` (${m.format_note})` : ""}
                 </p>
                 <p className="mt-2 font-mono text-[11px] uppercase tracking-[1.5px] text-crust">
-                  {STATUS_LABEL[m.status] ?? m.status}
+                  {needsMyConfirmation ? "Needs your confirmation" : STATUS_LABEL[m.status] ?? m.status}
                 </p>
+                {needsMyConfirmation && <ConfirmMatchButton matchId={m.id} />}
               </li>
             );
           })}

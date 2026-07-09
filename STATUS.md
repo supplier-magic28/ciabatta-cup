@@ -100,25 +100,38 @@ in `CLAUDE.md`). For vision and how-we-build, read `ARCHITECTURE.md`._
   - **invited → active reused**, not duplicated: `/auth/confirm` (`type=invite`)
     + `ensureActivated`. Acceptance link/password is Supabase project config
     (documented in `supabase/README.md`).
+- **Phase 3c-part-2 — confirm / approve (COMPLETE):**
+  - **Confirm→advance trigger** (`20260710020000_advance_on_confirmation.sql`):
+    once both participants confirm, a `pending_confirmation` match moves to
+    `pending_approval` (ranked) or `approved` (exhibition auto-approve). A
+    SECURITY DEFINER trigger because the opponent has no RLS path to update
+    matches. **ADR-0010.**
+  - **Server actions** (`lib/match/actions.ts`): `confirmMatch` (opponent inserts
+    their confirmation); admin `approveMatch` / `queryMatch` / `rejectMatch`
+    (guarded to `pending_approval`, run under `is_admin()` RLS). **Approve sets
+    status only — still no scoring / rating writes.**
+  - **UI:** `app/matches` gains score + a **Confirm result** button for the
+    awaiting participant (`ConfirmMatchButton`); new admin **`app/admin/approvals`**
+    lists both-confirmed ranked matches oldest-first with Approve/Query/Reject
+    (`ApprovalActions`). Pure `formatScore` (`lib/match/score.ts`, tested). Home
+    page links admins to Approvals.
 
-## Next up — Phase 3c-part-2 (confirm / approve)
+## Next up — Phase 3d (scoring wired to the DB → leaderboard)
 
-The opponent-confirm and admin approve/query/reject surfaces, wiring the
-**deferred lifecycle transitions** the schema supports (both-confirmed ⇒
-`pending_approval`, exhibition auto-approve; ADR-0006). Then the **DB adapter**
-that feeds approved ranked facts into `computeRankings` and materialises
-`rating_history` / the `rating_points` cache, and finally **Ciabatta reigns**.
-Decisions (e.g. how approval writes `rating_history`) get an ADR.
+The **DB adapter** that feeds approved ranked facts into `computeRankings` and
+materialises `rating_history` + the `rating_points` cache (written on approval),
+then the **leaderboard** read surface, and finally **Ciabatta reigns**. Decisions
+(how approval writes `rating_history`; rebuild-vs-incremental) get an ADR.
 
 ## Known issues / caveats
 
 - `computeRankings` is the real Elo engine but is **not yet wired to the DB**:
   nothing feeds it live match facts and nothing persists its `rating_history` /
   `rating_points` output. That adapter is Phase 3c.
-- **Migrations are applied by the operator out-of-band.** `20260710000000_matches_spine.sql`
-  was reported applied (log-match flow live). **`20260710010000_invited_profile_status.sql`
-  is file-only — apply it** (CLI `supabase db push` or SQL editor) for invited
-  players to land at status `invited` rather than `active`.
+- **Migrations are applied by the operator out-of-band.** Applied per operator:
+  `20260710000000_matches_spine.sql`, `20260710010000_invited_profile_status.sql`.
+  **`20260710020000_advance_on_confirmation.sql` is file-only — apply it** (CLI
+  `supabase db push` or SQL editor) or confirming a match won't advance its status.
 - **Invites need `SUPABASE_SECRET_KEY`** set in the server environment; without
   it `inviteUser` fails. Supabase redirect allow-list / invite email template
   also need configuring (see `supabase/README.md`). Not verified end-to-end here.

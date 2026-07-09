@@ -38,12 +38,20 @@ export default async function Home() {
           Your matches
         </Link>
         {player.role === "admin" && (
-          <Link
-            href="/admin/players"
-            className="font-mono text-[12px] uppercase tracking-[1.5px] text-crust"
-          >
-            Manage players
-          </Link>
+          <>
+            <Link
+              href="/admin/approvals"
+              className="font-mono text-[12px] uppercase tracking-[1.5px] text-crust"
+            >
+              Approvals
+            </Link>
+            <Link
+              href="/admin/players"
+              className="font-mono text-[12px] uppercase tracking-[1.5px] text-crust"
+            >
+              Manage players
+            </Link>
+          </>
         )}
       </div>
       <form action={signOut} className="w-full max-w-[200px]">

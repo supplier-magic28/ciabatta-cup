@@ -26,6 +26,10 @@ of Done (`CLAUDE.md`).
 - `match/LogMatchForm` — the log-match wizard (design screen 03): 3 steps
   (matchup → type & format → per-set scores), shared pure validation, submits via
   the `submitMatch` server action. Submission only — no confirm/approve/scoring.
+- `match/ConfirmMatchButton` — opponent-side confirm (calls `confirmMatch`); the
+  DB trigger advances the status once both players confirm.
+- `match/ApprovalActions` — admin Approve / Query / Reject for a `pending_approval`
+  match (calls the admin match actions).
 
 **Players (admin)**
 - `players/InvitePlayerForm` — admin invite form (design screen 08): name + email

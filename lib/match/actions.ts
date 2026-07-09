@@ -8,6 +8,8 @@ import type { MatchSubmission } from "./types";
 
 export type SubmitResult = { ok: true; matchId: string } | { ok: false; error: string };
 
+export type MatchActionResult = { ok: true } | { ok: false; error: string };
+
 const SAVE_FAILED = "Couldn't save the match — please try again.";
 
 /**
@@ -80,4 +82,76 @@ export async function submitMatch(input: MatchSubmission): Promise<SubmitResult>
 
   revalidatePath("/matches");
   return { ok: true, matchId: created.id };
+}
+
+/**
+ * Confirm a match you're a participant in (Phase 3c-part-2, ADR-0010). Inserts
+ * the caller's `match_confirmations` row — RLS enforces that they are a
+ * participant of a `pending_confirmation` match. Once both participants have
+ * confirmed, the `advance_on_confirmation` trigger moves the status forward
+ * (ranked → `pending_approval`, exhibition → `approved`). No scoring here.
+ */
+export async function confirmMatch(matchId: string): Promise<MatchActionResult> {
+  const player = await getSessionPlayer();
+  if (!player) return { ok: false, error: "You need to be signed in." };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("match_confirmations")
+    .insert({ match_id: matchId, player_id: player.id });
+
+  if (error) {
+    // RLS denial, already-confirmed (PK), or no-longer-pending.
+    return { ok: false, error: "Couldn't confirm this match — it may already be confirmed." };
+  }
+
+  revalidatePath("/matches");
+  return { ok: true };
+}
+
+/**
+ * Admin-only transition of a `pending_approval` match to a terminal decision.
+ * Admin-gated in code (Server Actions are POST-reachable) and at the DB by the
+ * `matches_update_admin` (`is_admin()`) RLS policy. Approve carries NO scoring —
+ * it only sets `status = 'approved'`; materialising ratings is a later phase.
+ */
+async function adminSetStatus(
+  matchId: string,
+  to: "approved" | "queried" | "rejected",
+): Promise<MatchActionResult> {
+  const player = await getSessionPlayer();
+  if (!player || player.role !== "admin") {
+    return { ok: false, error: "Only admins can review matches." };
+  }
+
+  const supabase = await createClient();
+  const { data: match } = await supabase
+    .from("matches")
+    .select("status")
+    .eq("id", matchId)
+    .single();
+
+  if (!match) return { ok: false, error: "Match not found." };
+  if (match.status !== "pending_approval") {
+    return { ok: false, error: "This match isn't awaiting approval." };
+  }
+
+  const { error } = await supabase.from("matches").update({ status: to }).eq("id", matchId);
+  if (error) return { ok: false, error: "Couldn't update this match — please try again." };
+
+  revalidatePath("/admin/approvals");
+  revalidatePath("/matches");
+  return { ok: true };
+}
+
+export async function approveMatch(matchId: string): Promise<MatchActionResult> {
+  return adminSetStatus(matchId, "approved");
+}
+
+export async function queryMatch(matchId: string): Promise<MatchActionResult> {
+  return adminSetStatus(matchId, "queried");
+}
+
+export async function rejectMatch(matchId: string): Promise<MatchActionResult> {
+  return adminSetStatus(matchId, "rejected");
 }
