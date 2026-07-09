@@ -56,24 +56,38 @@ in `CLAUDE.md`). For vision and how-we-build, read `ARCHITECTURE.md`._
   - `tournament_id`/`fixture_id` are nullable plain-uuid columns (FKs added when
     those tables land). **File-only — NOT yet applied to Supabase** (see caveats).
   - Out of scope by design: no Elo, no UI, no lifecycle-transition automation.
+- **Phase 3b — Elo scoring engine, tests-first (COMPLETE):**
+  - `computeRankings` is now the **real Elo engine** (`lib/scoring/`): pure
+    function of match facts → `{ rankings, ratingHistory }`. K=32, start 1000,
+    100 floor (`constants.ts`); ranked + approved only; roster = every
+    participant (exhibition-only players sit at 1000); chronological
+    recompute-forward; two `rating_history` entries per scored match with
+    points/rank before & after. **Returns** the data — **no DB writes, no UI, no
+    reigns.** **ADR-0007.**
+  - **10-case test battery written first** (`computeRankings.test.ts`): empty
+    input, single win (+16/-16), K/start pinned, gap-weighted underdog win +
+    rank flip, exhibition/pending ignored, no-ranked-matches stays at 1000,
+    input-order independence, chronological order-dependence, the 100 floor
+    invariant, purity. All green.
 
-## Next up — Phase 3b/3c
+## Next up — Phase 3c
 
-1. **Real scoring formula (3b)** — replace the `computeRankings` stub with Elo
-   (K=32, floor 100, start 1000; ranked + approved only), aligned to the match
-   fact shape. **Write the tests first** (this is the test spine, ADR-0001/0003).
-2. **Log-match screen (3c)** (design screen 03: matchup → type → format → per-set
-   scores → submit for approval) + the confirm/approve surfaces. This phase also
-   wires the **deferred lifecycle transitions** the schema supports but does not
-   automate: auto-confirm the submitter, both-confirmed ⇒ `pending_approval`,
-   exhibition auto-approve (ADR-0006).
+**Log-match screen** (design screen 03: matchup → type → format → per-set scores
+→ submit for approval) + the confirm/approve surfaces. This phase wires the
+**deferred lifecycle transitions** the schema supports but doesn't automate
+(auto-confirm the submitter, both-confirmed ⇒ `pending_approval`, exhibition
+auto-approve; ADR-0006), and the **DB read/write adapter** that feeds real match
+facts into `computeRankings` and materialises `rating_history` / the
+`rating_points` cache. Then **Ciabatta reigns** (tracking the #1 spot over time)
+build on that. Decisions (e.g. how approval writes `rating_history`) get an ADR.
 
 Decisions along the way (e.g. how approval writes `rating_history`) get an ADR.
 
 ## Known issues / caveats
 
-- `computeRankings` is still a **placeholder** (ranks by raw win count), not the
-  real formula — the first thing Phase 3b's scoring step replaces.
+- `computeRankings` is the real Elo engine but is **not yet wired to the DB**:
+  nothing feeds it live match facts and nothing persists its `rating_history` /
+  `rating_points` output. That adapter is Phase 3c.
 - **Phase 3a migration is file-only — not applied to Supabase yet.** Apply
   `20260710000000_matches_spine.sql` (CLI `supabase db push` or the SQL editor)
   before any match code runs against the live DB.

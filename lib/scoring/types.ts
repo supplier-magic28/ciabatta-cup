@@ -2,35 +2,87 @@
  * Domain types for scoring.
  *
  * A `Match` is an immutable fact (ADR-0001): once recorded it is never mutated.
- * A `Standing` is *computed* from matches and is never stored.
+ * Everything a `Match` implies — ratings, rankings, rating history — is
+ * *computed* by the pure `computeRankings` function and is never stored
+ * authoritatively (ADR-0001, ADR-0003). Scoring decisions live in ADR-0007.
  */
 
-/** An immutable record of a single completed match. */
+/** Match lifecycle status — mirrors `public.match_status` in the DB. */
+export type MatchStatus =
+  | "pending_confirmation"
+  | "pending_approval"
+  | "approved"
+  | "queried"
+  | "rejected";
+
+/** Whether a match counts toward ranked points or is exhibition-only. */
+export type MatchType = "ranked" | "exhibition";
+
+/**
+ * An immutable record of a single match, shaped to mirror the `matches` table
+ * (docs/SCHEMA.md): the two participants and the winner, not a pre-derived
+ * winner/loser pair. Only `type === "ranked"` && `status === "approved"`
+ * matches move ratings; the loser is whichever participant is not `winnerId`.
+ */
 export interface Match {
   /** Stable unique id for the match fact. */
   id: string;
-  /** Player id of the winner. */
-  winnerId: string;
-  /** Player id of the loser. */
-  loserId: string;
-  /** Whether this match counts toward ranked standings (vs exhibition). */
-  ranked: boolean;
-  /** ISO-8601 date the match was played, e.g. "2026-07-09". */
+  /** First participant. */
+  player1Id: string;
+  /** Second participant. */
+  player2Id: string;
+  /** Winner; one of `player1Id`/`player2Id`. `null` until the match is scored. */
+  winnerId: string | null;
+  /** Ranked (moves points) or exhibition (record only). */
+  type: MatchType;
+  /** Lifecycle status; only `approved` matches move ratings. */
+  status: MatchStatus;
+  /** ISO-8601 timestamp; defines the chronological scoring order. */
   playedAt: string;
-  /** Optional human-readable score, e.g. "6-3 6-4". Not used by scoring yet. */
-  score?: string;
 }
 
-/** A single row in the computed standings table. */
-export interface Standing {
+/** A player's computed standing: current rating, rank, and ranked W–L record. */
+export interface PlayerRating {
   /** Player id this standing is for. */
   playerId: string;
-  /** 1-based rank; ties share the lower rank number (dense within this stub). */
+  /** Current Elo rating (integer points). */
+  rating: number;
+  /** 1-based rank; 1 = highest rating. Ties break by `playerId` (interim). */
   rank: number;
-  /** Matches played (as winner or loser) among the scored set. */
+  /** Ranked + approved matches played. */
   played: number;
-  /** Matches won among the scored set. */
+  /** Ranked + approved matches won. */
   won: number;
-  /** Matches lost among the scored set. */
+  /** Ranked + approved matches lost. */
   lost: number;
+}
+
+/**
+ * One rating-history row: the effect a single ranked+approved match had on one
+ * participant. Materialises the `rating_history` table (ADR-0003) — but this
+ * function only *returns* these; writing them is a later phase.
+ */
+export interface RatingHistoryEntry {
+  /** The approved ranked match that caused this change. */
+  matchId: string;
+  /** The participant this row is for. */
+  playerId: string;
+  /** Rating immediately before the match was applied. */
+  pointsBefore: number;
+  /** Rating immediately after. */
+  pointsAfter: number;
+  /** Rank (over the full roster) immediately before. */
+  rankBefore: number;
+  /** Rank immediately after. Powers the ▲/▼ movement arrows. */
+  rankAfter: number;
+  /** ISO-8601 timestamp of the causing match. */
+  playedAt: string;
+}
+
+/** The full computed result: the current ladder plus the history that built it. */
+export interface ScoringResult {
+  /** Every rostered player, sorted by rank (rating desc, then playerId). */
+  rankings: PlayerRating[];
+  /** Two entries per ranked+approved match, in chronological application order. */
+  ratingHistory: RatingHistoryEntry[];
 }
