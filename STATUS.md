@@ -70,16 +70,30 @@ in `CLAUDE.md`). For vision and how-we-build, read `ARCHITECTURE.md`._
     input-order independence, chronological order-dependence, the 100 floor
     invariant, purity. All green.
 
-## Next up — Phase 3c
+- **Phase 3c-part-1 — log-match submission (COMPLETE):**
+  - **Log-match wizard** (design screen 03) as token-driven components
+    (`components/match/LogMatchForm`, new `components/ui/Chip`): 3 steps —
+    matchup → type & format → per-set scores with tie-breaks. Linked from the
+    home page.
+  - **`submitMatch` server action** (`lib/match/actions.ts`): writes `matches`
+    (status `pending_confirmation`) + `match_sets` + the submitter's
+    `match_confirmations` row, through the user's authenticated client (RLS
+    applies), with compensating delete on partial failure. **No auto-approve, no
+    scoring, no rating writes.**
+  - **Shared pure validation** (`lib/match/submission.ts`, tests-first, 12 cases):
+    mirrors the DB constraints for friendly errors; **winner is derived from the
+    set scores** (draws rejected). **ADR-0008.**
+  - **"Your matches" list** (`app/matches`) shows submitted matches + lifecycle
+    status — the minimal "submission is working" surface (not the leaderboard).
 
-**Log-match screen** (design screen 03: matchup → type → format → per-set scores
-→ submit for approval) + the confirm/approve surfaces. This phase wires the
-**deferred lifecycle transitions** the schema supports but doesn't automate
-(auto-confirm the submitter, both-confirmed ⇒ `pending_approval`, exhibition
-auto-approve; ADR-0006), and the **DB read/write adapter** that feeds real match
-facts into `computeRankings` and materialises `rating_history` / the
-`rating_points` cache. Then **Ciabatta reigns** (tracking the #1 spot over time)
-build on that. Decisions (e.g. how approval writes `rating_history`) get an ADR.
+## Next up — Phase 3c-part-2 (confirm / approve)
+
+The opponent-confirm and admin approve/query/reject surfaces, wiring the
+**deferred lifecycle transitions** the schema supports (both-confirmed ⇒
+`pending_approval`, exhibition auto-approve; ADR-0006). Then the **DB adapter**
+that feeds approved ranked facts into `computeRankings` and materialises
+`rating_history` / the `rating_points` cache, and finally **Ciabatta reigns**.
+Decisions (e.g. how approval writes `rating_history`) get an ADR.
 
 Decisions along the way (e.g. how approval writes `rating_history`) get an ADR.
 
@@ -88,9 +102,11 @@ Decisions along the way (e.g. how approval writes `rating_history`) get an ADR.
 - `computeRankings` is the real Elo engine but is **not yet wired to the DB**:
   nothing feeds it live match facts and nothing persists its `rating_history` /
   `rating_points` output. That adapter is Phase 3c.
-- **Phase 3a migration is file-only — not applied to Supabase yet.** Apply
-  `20260710000000_matches_spine.sql` (CLI `supabase db push` or the SQL editor)
-  before any match code runs against the live DB.
+- **Phase 3a migration is file-only — not applied to Supabase yet.** The
+  log-match flow (3c-part-1) is code-complete and lint/typecheck/test-green, but
+  **cannot run live until `20260710000000_matches_spine.sql` is applied** (CLI
+  `supabase db push` or the SQL editor). Not yet verified end-to-end against the
+  live DB for that reason.
 - Match **lifecycle transitions are not automated** (deferred to 3c, ADR-0006):
   confirmations are recorded, but nothing yet flips `pending_confirmation →
   pending_approval` or auto-approves exhibitions.

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionPlayer } from "@/lib/auth/session";
 import { signOut } from "@/lib/auth/actions";
@@ -26,6 +27,17 @@ export default async function Home() {
       <h1 className="font-heading text-4xl font-bold tracking-tight text-ink">
         {name}
       </h1>
+      <div className="flex w-full max-w-[240px] flex-col gap-3">
+        <Link href="/matches/new">
+          <Button type="button">Log a match</Button>
+        </Link>
+        <Link
+          href="/matches"
+          className="font-mono text-[12px] uppercase tracking-[1.5px] text-green"
+        >
+          Your matches
+        </Link>
+      </div>
       <form action={signOut} className="w-full max-w-[200px]">
         <Button type="submit">Log out</Button>
       </form>

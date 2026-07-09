@@ -15,9 +15,16 @@ of Done (`CLAUDE.md`).
 **UI primitives**
 - `ui/Button` — primary action button (green, 2px ink border, offset shadow).
 - `ui/Field` — labelled input; `reveal` adds a password Show/Hide toggle.
+- `ui/Chip` — selectable pill (2px ink border; fills green when selected). Used
+  for the match type/format choices; reusable for any one-of-many selection.
 
 **Auth**
 - `auth/SignInForm` — email + password sign-in (client, `useActionState`).
 - `auth/SignUpForm` — create-account (name + email + password).
+
+**Match**
+- `match/LogMatchForm` — the log-match wizard (design screen 03): 3 steps
+  (matchup → type & format → per-set scores), shared pure validation, submits via
+  the `submitMatch` server action. Submission only — no confirm/approve/scoring.
 
 Planned next (from ARCHITECTURE.md): `Card`, `RankBadge`, `StatBlock`.
