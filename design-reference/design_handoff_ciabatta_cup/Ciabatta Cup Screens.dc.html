@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,800&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; background:#20221E; font-family:'Work Sans',sans-serif; }
+  a { color:#C9DA5A; text-decoration:none; }
+  a:hover { color:#ffffff; }
+</style>
+</helmet>
+
+<section data-screen-label="Screens — Leaderboard" style="padding:48px 56px 24px 56px;">
+  <div style="color:#8A9188; font-family:'IBM Plex Mono',monospace; font-size:13px; letter-spacing:2px; margin-bottom:20px;">01 · LEADERBOARD — MOBILE + DESKTOP</div>
+  <div style="display:flex; flex-wrap:wrap; gap:36px; align-items:flex-start;">
+
+    <!-- ===== Leaderboard MOBILE ===== -->
+    <div style="width:390px; background:#EFE6D0; border:2px solid #1B1A16; border-radius:28px; overflow:hidden; flex-shrink:0;">
+      <div style="display:flex; justify-content:space-between; padding:12px 24px 4px 24px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;"><div>9:41</div><div>●●●</div></div>
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 20px 0 20px;">
+        <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:15px; color:#1B1A16; letter-spacing:1px;">CIABATTA <span style="color:#3E6B35;">CUP</span></div>
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672; letter-spacing:2px;">SEASON 01</div>
+      </div>
+      <div style="padding:14px 20px 8px 20px;">
+        <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:34px; color:#1B1A16; letter-spacing:1px; line-height:1;">Leaderboard</div>
+        <div style="display:flex; align-items:center; gap:8px; margin-top:10px; background:#3E6B35; border-radius:6px; padding:8px 12px;">
+          <div style="position:relative; width:26px; height:14px; background:linear-gradient(175deg, #C98A4B, #8C5426); border-radius:13px 13px 9px 9px / 10px 10px 4px 4px; flex-shrink:0;">
+            <div style="position:absolute; left:6px; top:2px; width:2px; height:6px; background:#F5E7CC; border-radius:2px; transform:rotate(28deg);"></div>
+            <div style="position:absolute; left:12px; top:2px; width:2px; height:6px; background:#F5E7CC; border-radius:2px; transform:rotate(28deg);"></div>
+            <div style="position:absolute; left:18px; top:2px; width:2px; height:6px; background:#F5E7CC; border-radius:2px; transform:rotate(28deg);"></div>
+          </div>
+          <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px; color:#EFE6D0; letter-spacing:1px;">The Ciabatta · held by Ben Cossar · 24 days</div>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px; padding:6px 20px 12px 20px;">
+        <div style="background:#1B1A16; color:#EFE6D0; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px; letter-spacing:1px; padding:6px 14px; border-radius:20px;">Ranked</div>
+        <div style="border:1.5px solid #1B1A16; color:#1B1A16; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px; letter-spacing:1px; padding:6px 14px; border-radius:20px;">Exhibition</div>
+        <div style="border:1.5px solid #1B1A16; color:#1B1A16; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px; letter-spacing:1px; padding:6px 14px; border-radius:20px;">All-time</div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:10px; padding:2px 16px 20px 16px;">
+        <!-- #1 -->
+        <div style="display:flex; align-items:center; gap:12px; background:#1B1A16; border:2px solid #1B1A16; border-radius:8px; padding:12px 14px; box-shadow:3px 3px 0 #3E6B35;">
+          <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:20px; color:#C9DA5A; width:22px;">1</div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#C9DA5A; width:24px;">▲1</div>
+          <img src="players/ben.png" style="width:40px; height:40px; border-radius:50%; border:2px solid #C9DA5A; object-fit:cover;">
+          <div style="display:flex; flex-direction:column; gap:1px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:15px; color:#EFE6D0; letter-spacing:1px;">Ben Cossar</div>
+              <div style="position:relative; width:22px; height:12px; background:linear-gradient(175deg, #C98A4B, #8C5426); border-radius:11px 11px 8px 8px / 9px 9px 4px 4px;">
+                <div style="position:absolute; left:5px; top:2px; width:2px; height:5px; background:#F5E7CC; border-radius:2px; transform:rotate(28deg);"></div>
+                <div style="position:absolute; left:10px; top:2px; width:2px; height:5px; background:#F5E7CC; border-radius:2px; transform:rotate(28deg);"></div>
+                <div style="position:absolute; left:15px; top:2px; width:2px; height:5px; background:#F5E7CC; border-radius:2px; transform:rotate(28deg);"></div>
+              </div>
+            </div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8A9188;">16–4 · W5 STREAK</div>
+          </div>
+          <div style="margin-left:auto; font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:15px; color:#C9DA5A;">1284</div>
+        </div>
+        <!-- #2 -->
+        <div style="display:flex; align-items:center; gap:12px; background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:12px 14px; box-shadow:3px 3px 0 #1B1A16;">
+          <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:20px; color:#1B1A16; width:22px;">2</div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#A0442C; width:24px;">▼1</div>
+          <img src="players/michaels.png" style="width:40px; height:40px; border-radius:50%; border:2px solid #1B1A16; object-fit:cover;">
+          <div style="display:flex; flex-direction:column; gap:1px;">
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:15px; color:#1B1A16; letter-spacing:1px;">Michaels Kumove</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672;">14–6 · W2 STREAK</div>
+          </div>
+          <div style="margin-left:auto; font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:15px; color:#3E6B35;">1261</div>
+        </div>
+        <!-- #3 -->
+        <div style="display:flex; align-items:center; gap:12px; background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:12px 14px; box-shadow:3px 3px 0 #1B1A16;">
+          <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:20px; color:#1B1A16; width:22px;">3</div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8C8672; width:24px;">—</div>
+          <img src="players/string.png" style="width:40px; height:40px; border-radius:50%; border:2px solid #1B1A16; object-fit:cover;">
+          <div style="display:flex; flex-direction:column; gap:1px;">
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:15px; color:#1B1A16; letter-spacing:1px;">String Ray</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672;">11–8 · L1</div>
+          </div>
+          <div style="margin-left:auto; font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:15px; color:#3E6B35;">1198</div>
+        </div>
+        <!-- #4 -->
+        <div style="display:flex; align-items:center; gap:12px; background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:12px 14px; box-shadow:3px 3px 0 #1B1A16;">
+          <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:20px; color:#1B1A16; width:22px;">4</div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#3E6B35; width:24px;">▲2</div>
+          <img src="players/jacks.png" style="width:40px; height:40px; border-radius:50%; border:2px solid #1B1A16; object-fit:cover;">
+          <div style="display:flex; flex-direction:column; gap:1px;">
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:15px; color:#1B1A16; letter-spacing:1px;">Jacks Bendell</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672;">9–9 · W3 STREAK</div>
+          </div>
+          <div style="margin-left:auto; font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:15px; color:#3E6B35;">1144</div>
+        </div>
+        <!-- #5 -->
+        <div style="display:flex; align-items:center; gap:12px; background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:12px 14px; box-shadow:3px 3px 0 #1B1A16;">
+          <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:20px; color:#1B1A16; width:22px;">5</div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#A0442C; width:24px;">▼1</div>
+          <img src="players/ringo.png" style="width:40px; height:40px; border-radius:50%; border:2px solid #1B1A16; object-fit:cover;">
+          <div style="display:flex; flex-direction:column; gap:1px;">
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:15px; color:#1B1A16; letter-spacing:1px;">Ringo Zeus</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672;">7–11 · L2</div>
+          </div>
+          <div style="margin-left:auto; font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:15px; color:#3E6B35;">1090</div>
+        </div>
+        <!-- #6 -->
+        <div style="display:flex; align-items:center; gap:12px; background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:12px 14px; box-shadow:3px 3px 0 #1B1A16;">
+          <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:20px; color:#1B1A16; width:22px;">6</div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8C8672; width:24px;">—</div>
+          <div style="width:40px; height:40px; border-radius:50%; border:2px solid #1B1A16; background:#3E6B35; display:flex; align-items:center; justify-content:center; font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:14px; color:#EFE6D0;">Tv</div>
+          <div style="display:flex; flex-direction:column; gap:1px;">
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:15px; color:#1B1A16; letter-spacing:1px;">Tommy Vance</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672;">6–10 · W1</div>
+          </div>
+          <div style="margin-left:auto; font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:15px; color:#3E6B35;">1042</div>
+        </div>
+      </div>
+
+      <!-- tab bar -->
+      <div style="display:flex; border-top:2px solid #1B1A16; background:#F7F0DE;">
+        <div style="flex:1; text-align:center; padding:14px 0 20px 0; font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:10px; letter-spacing:1px; color:#3E6B35; border-top:3px solid #3E6B35; margin-top:-2px;">Board</div>
+        <div style="flex:1; text-align:center; padding:14px 0 20px 0; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:10px; letter-spacing:1px; color:#8C8672;">Matches</div>
+        <div style="flex:1; text-align:center; padding:14px 0 20px 0; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:10px; letter-spacing:1px; color:#8C8672;">Cups</div>
+        <div style="flex:1; text-align:center; padding:14px 0 20px 0; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:10px; letter-spacing:1px; color:#8C8672;">Profile</div>
+      </div>
+    </div>
+
+    <!-- ===== Leaderboard DESKTOP ===== -->
+    <div style="width:1240px; background:#EFE6D0; border:2px solid #1B1A16; border-radius:12px; overflow:hidden; flex-shrink:0;">
+      <div style="display:flex; align-items:center; gap:28px; padding:16px 28px; border-bottom:2px solid #1B1A16; background:#F7F0DE;">
+        <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:18px; color:#1B1A16; letter-spacing:1px;">CIABATTA <span style="color:#3E6B35;">CUP</span></div>
+        <div style="display:flex; gap:22px; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:12px; letter-spacing:1px;">
+          <div style="color:#3E6B35; border-bottom:2px solid #3E6B35; padding-bottom:2px;">Leaderboard</div>
+          <div style="color:#8C8672;">Matches</div>
+          <div style="color:#8C8672;">Tournaments</div>
+          <div style="color:#8C8672;">Players</div>
+        </div>
+        <div style="margin-left:auto; display:flex; align-items:center; gap:10px;">
+          <div style="background:#3E6B35; color:#EFE6D0; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:12px; letter-spacing:1px; padding:8px 16px; border-radius:6px; border:2px solid #1B1A16; box-shadow:2px 2px 0 #1B1A16;">+ Log match</div>
+          <img src="players/michaels.png" style="width:34px; height:34px; border-radius:50%; border:2px solid #1B1A16; object-fit:cover;">
+        </div>
+      </div>
+
+      <div style="display:flex; gap:24px; padding:28px;">
+        <!-- table -->
+        <div style="flex:1; display:flex; flex-direction:column; gap:14px;">
+          <div style="display:flex; align-items:baseline; gap:14px;">
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:38px; color:#1B1A16; letter-spacing:1px;">Leaderboard</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#8C8672; letter-spacing:2px;">SEASON 01 · RANKED · UPDATED TODAY</div>
+          </div>
+          <div style="border:2px solid #1B1A16; border-radius:8px; overflow:hidden; box-shadow:4px 4px 0 #1B1A16; background:#F7F0DE;">
+            <div style="display:grid; grid-template-columns:60px 56px 1fr 90px 90px 90px 120px 90px; gap:0; padding:10px 18px; background:#1B1A16; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8A9188;">
+              <div>RANK</div><div>MOVE</div><div>PLAYER</div><div>W–L</div><div>WIN%</div><div>STREAK</div><div>LAST 5</div><div style="text-align:right;">PTS</div>
+            </div>
+            <!-- row 1 -->
+            <div style="display:grid; grid-template-columns:60px 56px 1fr 90px 90px 90px 120px 90px; align-items:center; padding:12px 18px; background:#EDE9D2; border-bottom:1px solid #D9CCAE;">
+              <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:18px; color:#3E6B35;">1</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#3E6B35;">▲1</div>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <img src="players/ben.png" style="width:34px; height:34px; border-radius:50%; border:2px solid #3E6B35; object-fit:cover;">
+                <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:14px; color:#1B1A16; letter-spacing:1px;">Ben Cossar</div>
+                <div style="position:relative; width:22px; height:12px; background:linear-gradient(175deg, #C98A4B, #8C5426); border-radius:11px 11px 8px 8px / 9px 9px 4px 4px;">
+                  <div style="position:absolute; left:5px; top:2px; width:2px; height:5px; background:#F5E7CC; border-radius:2px; transform:rotate(28deg);"></div>
+                  <div style="position:absolute; left:10px; top:2px; width:2px; height:5px; background:#F5E7CC; border-radius:2px; transform:rotate(28deg);"></div>
+                  <div style="position:absolute; left:15px; top:2px; width:2px; height:5px; background:#F5E7CC; border-radius:2px; transform:rotate(28deg);"></div>
+                </div>
+              </div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;">16–4</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;">80%</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#3E6B35;">W5</div>
+              <div style="display:flex; gap:4px;">
+                <div style="width:10px; height:10px; border-radius:50%; background:#3E6B35;"></div><div style="width:10px; height:10px; border-radius:50%; background:#3E6B35;"></div><div style="width:10px; height:10px; border-radius:50%; background:#3E6B35;"></div><div style="width:10px; height:10px; border-radius:50%; background:#3E6B35;"></div><div style="width:10px; height:10px; border-radius:50%; background:#3E6B35;"></div>
+              </div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:14px; color:#3E6B35; text-align:right;">1284</div>
+            </div>
+            <!-- row 2 -->
+            <div style="display:grid; grid-template-columns:60px 56px 1fr 90px 90px 90px 120px 90px; align-items:center; padding:12px 18px; border-bottom:1px solid #D9CCAE;">
+              <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:18px; color:#1B1A16;">2</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#A0442C;">▼1</div>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <img src="players/michaels.png" style="width:34px; height:34px; border-radius:50%; border:2px solid #1B1A16; object-fit:cover;">
+                <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:14px; color:#1B1A16; letter-spacing:1px;">Michaels Kumove</div>
+              </div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;">14–6</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;">70%</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#3E6B35;">W2</div>
+              <div style="display:flex; gap:4px;">
+                <div style="width:10px; height:10px; border-radius:50%; background:#3E6B35;"></div><div style="width:10px; height:10px; border-radius:50%; background:#A0442C;"></div><div style="width:10px; height:10px; border-radius:50%; background:#3E6B35;"></div><div style="width:10px; height:10px; border-radius:50%; background:#3E6B35;"></div><div style="width:10px; height:10px; border-radius:50%; background:#A0442C;"></div>
+              </div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:14px; color:#1B1A16; text-align:right;">1261</div>
+            </div>
+            <!-- row 3 -->
+            <div style="display:grid; grid-template-columns:60px 56px 1fr 90px 90px 90px 120px 90px; align-items:center; padding:12px 18px; border-bottom:1px solid #D9CCAE;">
+              <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:18px; color:#1B1A16;">3</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#8C8672;">—</div>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <img src="players/string.png" style="width:34px; height:34px; border-radius:50%; border:2px solid #1B1A16; object-fit:cover;">
+                <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:14px; color:#1B1A16; letter-spacing:1px;">String Ray</div>
+              </div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;">11–8</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;">58%</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#A0442C;">L1</div>
+              <div style="display:flex; gap:4px;">
+                <div style="width:10px; height:10px; border-radius:50%; background:#3E6B35;"></div><div style="width:10px; height:10px; border-radius:50%; background:#3E6B35;"></div><div style="width:10px; height:10px; border-radius:50%; background:#A0442C;"></div><div style="width:10px; height:10px; border-radius:50%; background:#3E6B35;"></div><div style="width:10px; height:10px; border-radius:50%; background:#A0442C;"></div>
+              </div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:14px; color:#1B1A16; text-align:right;">1198</div>
+            </div>
+            <!-- row 4 -->
+            <div style="display:grid; grid-template-columns:60px 56px 1fr 90px 90px 90px 120px 90px; align-items:center; padding:12px 18px; border-bottom:1px solid #D9CCAE;">
+              <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:18px; color:#1B1A16;">4</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#3E6B35;">▲2</div>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <img src="players/jacks.png" style="width:34px; height:34px; border-radius:50%; border:2px solid #1B1A16; object-fit:cover;">
+                <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:14px; color:#1B1A16; letter-spacing:1px;">Jacks Bendell</div>
+              </div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;">9–9</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;">50%</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#3E6B35;">W3</div>
+              <div style="display:flex; gap:4px;">
+                <div style="width:10px; height:10px; border-radius:50%; background:#A0442C;"></div><div style="width:10px; height:10px; border-radius:50%; background:#A0442C;"></div><div style="width:10px; height:10px; border-radius:50%; background:#3E6B35;"></div><div style="width:10px; height:10px; border-radius:50%; background:#3E6B35;"></div><div style="width:10px; height:10px; border-radius:50%; background:#3E6B35;"></div>
+              </div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:14px; color:#1B1A16; text-align:right;">1144</div>
+            </div>
+            <!-- row 5 -->
+            <div style="display:grid; grid-template-columns:60px 56px 1fr 90px 90px 90px 120px 90px; align-items:center; padding:12px 18px; border-bottom:1px solid #D9CCAE;">
+              <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:18px; color:#1B1A16;">5</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#A0442C;">▼1</div>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <img src="players/ringo.png" style="width:34px; height:34px; border-radius:50%; border:2px solid #1B1A16; object-fit:cover;">
+                <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:14px; color:#1B1A16; letter-spacing:1px;">Ringo Zeus</div>
+              </div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;">7–11</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;">39%</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#A0442C;">L2</div>
+              <div style="display:flex; gap:4px;">
+                <div style="width:10px; height:10px; border-radius:50%; background:#3E6B35;"></div><div style="width:10px; height:10px; border-radius:50%; background:#A0442C;"></div><div style="width:10px; height:10px; border-radius:50%; background:#3E6B35;"></div><div style="width:10px; height:10px; border-radius:50%; background:#A0442C;"></div><div style="width:10px; height:10px; border-radius:50%; background:#A0442C;"></div>
+              </div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:14px; color:#1B1A16; text-align:right;">1090</div>
+            </div>
+            <!-- row 6 -->
+            <div style="display:grid; grid-template-columns:60px 56px 1fr 90px 90px 90px 120px 90px; align-items:center; padding:12px 18px;">
+              <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:18px; color:#1B1A16;">6</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#8C8672;">—</div>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div style="width:34px; height:34px; border-radius:50%; border:2px solid #1B1A16; background:#3E6B35; display:flex; align-items:center; justify-content:center; font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:12px; color:#EFE6D0;">Tv</div>
+                <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:14px; color:#1B1A16; letter-spacing:1px;">Tommy Vance</div>
+              </div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;">6–10</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;">38%</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#3E6B35;">W1</div>
+              <div style="display:flex; gap:4px;">
+                <div style="width:10px; height:10px; border-radius:50%; background:#A0442C;"></div><div style="width:10px; height:10px; border-radius:50%; background:#A0442C;"></div><div style="width:10px; height:10px; border-radius:50%; background:#A0442C;"></div><div style="width:10px; height:10px; border-radius:50%; background:#3E6B35;"></div><div style="width:10px; height:10px; border-radius:50%; background:#3E6B35;"></div>
+              </div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:14px; color:#1B1A16; text-align:right;">1042</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- side panel -->
+        <div style="width:320px; display:flex; flex-direction:column; gap:16px; flex-shrink:0; padding-top:52px;">
+          <div style="background:#1B1A16; border:2px solid #1B1A16; border-radius:8px; padding:18px; box-shadow:4px 4px 0 #3E6B35;">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+              <div style="position:relative; width:30px; height:16px; background:linear-gradient(175deg, #C98A4B, #8C5426); border-radius:15px 15px 10px 10px / 12px 12px 5px 5px;">
+                <div style="position:absolute; left:7px; top:3px; width:2px; height:7px; background:#F5E7CC; border-radius:2px; transform:rotate(28deg);"></div>
+                <div style="position:absolute; left:14px; top:3px; width:2px; height:7px; background:#F5E7CC; border-radius:2px; transform:rotate(28deg);"></div>
+                <div style="position:absolute; left:21px; top:3px; width:2px; height:7px; background:#F5E7CC; border-radius:2px; transform:rotate(28deg);"></div>
+              </div>
+              <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:12px; letter-spacing:2px; color:#C9DA5A;">The Ciabatta</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px;">
+              <img src="players/ben.png" style="width:52px; height:52px; border-radius:50%; border:2px solid #C9DA5A; object-fit:cover;">
+              <div>
+                <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:17px; color:#EFE6D0; letter-spacing:1px;">Ben Cossar</div>
+                <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8A9188;">HELD 24 DAYS · 3RD REIGN</div>
+              </div>
+            </div>
+          </div>
+          <div style="background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:18px; box-shadow:4px 4px 0 #1B1A16;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672; margin-bottom:12px;">LATEST RESULTS</div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div style="display:flex; justify-content:space-between; font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;"><div><span style="color:#3E6B35; font-weight:700;">COSSAR</span> d. KUMOVE</div><div>6–4 3–6 7–5</div></div>
+              <div style="display:flex; justify-content:space-between; font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;"><div><span style="color:#3E6B35; font-weight:700;">BENDELL</span> d. RAY</div><div>7–6 6–3</div></div>
+              <div style="display:flex; justify-content:space-between; font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;"><div><span style="color:#3E6B35; font-weight:700;">KUMOVE</span> d. ZEUS</div><div>6–2 6–4</div></div>
+            </div>
+          </div>
+          <div style="background:#3E6B35; border:2px solid #1B1A16; border-radius:8px; padding:18px; box-shadow:4px 4px 0 #1B1A16;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#C9DA5A; margin-bottom:8px;">NEXT TOURNAMENT</div>
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:18px; color:#EFE6D0; letter-spacing:1px;">Ciabatta Qualifier</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#BFD3B4; margin-top:4px;">SAT 18 JUL · 2 COURTS · 5 ENTERED</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="Screens — Player profile" style="padding:24px 56px;">
+  <div style="color:#8A9188; font-family:'IBM Plex Mono',monospace; font-size:13px; letter-spacing:2px; margin-bottom:20px;">02 · PLAYER PROFILE — MOBILE + DESKTOP</div>
+  <div style="display:flex; flex-wrap:wrap; gap:36px; align-items:flex-start;">
+
+    <!-- ===== Profile MOBILE ===== -->
+    <div style="width:390px; background:#EFE6D0; border:2px solid #1B1A16; border-radius:28px; overflow:hidden; flex-shrink:0;">
+      <div style="display:flex; justify-content:space-between; padding:12px 24px 4px 24px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;"><div>9:41</div><div>●●●</div></div>
+      <!-- hero -->
+      <div style="background:#1B1A16; padding:20px; display:flex; flex-direction:column; gap:14px;">
+        <div style="display:flex; align-items:center; gap:16px;">
+          <img src="players/ben.png" style="width:84px; height:84px; border-radius:12px; border:2px solid #C9DA5A; object-fit:cover;">
+          <div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:24px; color:#EFE6D0; letter-spacing:1px;">Ben Cossar</div>
+              <div style="position:relative; width:26px; height:14px; background:linear-gradient(175deg, #C98A4B, #8C5426); border-radius:13px 13px 9px 9px / 10px 10px 4px 4px;">
+                <div style="position:absolute; left:6px; top:2px; width:2px; height:6px; background:#F5E7CC; border-radius:2px; transform:rotate(28deg);"></div>
+                <div style="position:absolute; left:12px; top:2px; width:2px; height:6px; background:#F5E7CC; border-radius:2px; transform:rotate(28deg);"></div>
+                <div style="position:absolute; left:18px; top:2px; width:2px; height:6px; background:#F5E7CC; border-radius:2px; transform:rotate(28deg);"></div>
+              </div>
+            </div>
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:12px; color:#C9DA5A; letter-spacing:1px;">“Winners only”</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8A9188; margin-top:4px;">RANK #1 · 1284 PTS · HOLDS THE CIABATTA</div>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:8px;">
+          <div style="background:#2A2C24; border-radius:6px; padding:8px 6px; text-align:center;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1px; color:#8A9188;">HEIGHT</div>
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:15px; color:#EFE6D0; margin-top:2px;">185 cm</div>
+          </div>
+          <div style="background:#2A2C24; border-radius:6px; padding:8px 6px; text-align:center;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1px; color:#8A9188;">WEIGHT</div>
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:15px; color:#EFE6D0; margin-top:2px;">78 kg</div>
+          </div>
+          <div style="background:#2A2C24; border-radius:6px; padding:8px 6px; text-align:center;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1px; color:#8A9188;">PLAYS</div>
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:15px; color:#EFE6D0; margin-top:2px;">Right</div>
+          </div>
+          <div style="background:#2A2C24; border-radius:6px; padding:8px 6px; text-align:center;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1px; color:#8A9188;">BACKHAND</div>
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:15px; color:#EFE6D0; margin-top:2px;">1-hand</div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1px; color:#8A9188;">STYLE</div>
+          <div style="background:#3E6B35; color:#EFE6D0; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px; letter-spacing:1px; padding:4px 12px; border-radius:14px;">Aggressive baseliner</div>
+        </div>
+      </div>
+
+      <div style="padding:18px 16px 24px 16px; display:flex; flex-direction:column; gap:14px;">
+        <!-- records -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div style="background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:14px; box-shadow:3px 3px 0 #1B1A16;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; color:#3E6B35;">RANKED RECORD</div>
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:28px; color:#1B1A16; margin-top:4px;">12–4</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672; margin-top:2px;">75% WIN · 34 SETS</div>
+          </div>
+          <div style="background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:14px; box-shadow:3px 3px 0 #1B1A16;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; color:#8C5426;">EXHIBITION RECORD</div>
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:28px; color:#1B1A16; margin-top:4px;">8–3</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672; margin-top:2px;">73% WIN · 21 SETS</div>
+          </div>
+        </div>
+        <!-- points history -->
+        <div style="background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:14px; box-shadow:3px 3px 0 #1B1A16;">
+          <div style="display:flex; justify-content:space-between; align-items:baseline;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; color:#8C8672;">POINTS · LAST 12 MATCHES</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#3E6B35; font-weight:700;">+118</div>
+          </div>
+          <div style="display:flex; align-items:flex-end; gap:5px; height:64px; margin-top:12px;">
+            <div style="flex:1; height:38%; background:#D9CCAE; border-radius:2px;"></div>
+            <div style="flex:1; height:42%; background:#D9CCAE; border-radius:2px;"></div>
+            <div style="flex:1; height:40%; background:#D9CCAE; border-radius:2px;"></div>
+            <div style="flex:1; height:48%; background:#9FB380; border-radius:2px;"></div>
+            <div style="flex:1; height:52%; background:#9FB380; border-radius:2px;"></div>
+            <div style="flex:1; height:47%; background:#D9CCAE; border-radius:2px;"></div>
+            <div style="flex:1; height:56%; background:#9FB380; border-radius:2px;"></div>
+            <div style="flex:1; height:62%; background:#9FB380; border-radius:2px;"></div>
+            <div style="flex:1; height:58%; background:#D9CCAE; border-radius:2px;"></div>
+            <div style="flex:1; height:70%; background:#9FB380; border-radius:2px;"></div>
+            <div style="flex:1; height:82%; background:#3E6B35; border-radius:2px;"></div>
+            <div style="flex:1; height:100%; background:#3E6B35; border-radius:2px;"></div>
+          </div>
+        </div>
+        <!-- head to head -->
+        <div style="background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:14px; box-shadow:3px 3px 0 #1B1A16;">
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; color:#8C8672; margin-bottom:10px;">HEAD-TO-HEAD</div>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <img src="players/michaels.png" style="width:28px; height:28px; border-radius:50%; border:1.5px solid #1B1A16; object-fit:cover;">
+              <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:12px; color:#1B1A16;">Vs Kumove</div>
+              <div style="margin-left:auto; display:flex; align-items:center; gap:8px;">
+                <div style="flex:none; width:110px; height:8px; border-radius:4px; background:#A0442C; overflow:hidden;"><div style="width:70%; height:100%; background:#3E6B35;"></div></div>
+                <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700; color:#1B1A16;">7–3</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <img src="players/string.png" style="width:28px; height:28px; border-radius:50%; border:1.5px solid #1B1A16; object-fit:cover;">
+              <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:12px; color:#1B1A16;">Vs Ray</div>
+              <div style="margin-left:auto; display:flex; align-items:center; gap:8px;">
+                <div style="flex:none; width:110px; height:8px; border-radius:4px; background:#A0442C; overflow:hidden;"><div style="width:56%; height:100%; background:#3E6B35;"></div></div>
+                <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700; color:#1B1A16;">5–4</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <img src="players/jacks.png" style="width:28px; height:28px; border-radius:50%; border:1.5px solid #1B1A16; object-fit:cover;">
+              <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:12px; color:#1B1A16;">Vs Bendell</div>
+              <div style="margin-left:auto; display:flex; align-items:center; gap:8px;">
+                <div style="flex:none; width:110px; height:8px; border-radius:4px; background:#A0442C; overflow:hidden;"><div style="width:80%; height:100%; background:#3E6B35;"></div></div>
+                <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700; color:#1B1A16;">4–1</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- tab bar -->
+      <div style="display:flex; border-top:2px solid #1B1A16; background:#F7F0DE;">
+        <div style="flex:1; text-align:center; padding:14px 0 20px 0; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:10px; letter-spacing:1px; color:#8C8672;">Board</div>
+        <div style="flex:1; text-align:center; padding:14px 0 20px 0; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:10px; letter-spacing:1px; color:#8C8672;">Matches</div>
+        <div style="flex:1; text-align:center; padding:14px 0 20px 0; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:10px; letter-spacing:1px; color:#8C8672;">Cups</div>
+        <div style="flex:1; text-align:center; padding:14px 0 20px 0; font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:10px; letter-spacing:1px; color:#3E6B35; border-top:3px solid #3E6B35; margin-top:-2px;">Profile</div>
+      </div>
+    </div>
+
+    <!-- ===== Profile DESKTOP ===== -->
+    <div style="width:1240px; background:#EFE6D0; border:2px solid #1B1A16; border-radius:12px; overflow:hidden; flex-shrink:0;">
+      <div style="display:flex; align-items:center; gap:28px; padding:16px 28px; border-bottom:2px solid #1B1A16; background:#F7F0DE;">
+        <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:18px; color:#1B1A16; letter-spacing:1px;">CIABATTA <span style="color:#3E6B35;">CUP</span></div>
+        <div style="display:flex; gap:22px; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:12px; letter-spacing:1px;">
+          <div style="color:#8C8672;">Leaderboard</div>
+          <div style="color:#8C8672;">Matches</div>
+          <div style="color:#8C8672;">Tournaments</div>
+          <div style="color:#3E6B35; border-bottom:2px solid #3E6B35; padding-bottom:2px;">Players</div>
+        </div>
+        <div style="margin-left:auto; display:flex; align-items:center; gap:10px;">
+          <div style="background:#3E6B35; color:#EFE6D0; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:12px; letter-spacing:1px; padding:8px 16px; border-radius:6px; border:2px solid #1B1A16; box-shadow:2px 2px 0 #1B1A16;">+ Log match</div>
+          <img src="players/michaels.png" style="width:34px; height:34px; border-radius:50%; border:2px solid #1B1A16; object-fit:cover;">
+        </div>
+      </div>
+
+      <div style="display:flex; gap:24px; padding:28px;">
+        <!-- left: identity -->
+        <div style="width:360px; flex-shrink:0; display:flex; flex-direction:column; gap:16px;">
+          <div style="background:#1B1A16; border:2px solid #1B1A16; border-radius:8px; overflow:hidden; box-shadow:4px 4px 0 #3E6B35;">
+            <img src="players/ben.png" style="width:100%; height:300px; object-fit:cover; display:block;">
+            <div style="padding:18px;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:26px; color:#EFE6D0; letter-spacing:1px;">Ben Cossar</div>
+                <div style="position:relative; width:28px; height:15px; background:linear-gradient(175deg, #C98A4B, #8C5426); border-radius:14px 14px 10px 10px / 11px 11px 4px 4px;">
+                  <div style="position:absolute; left:6px; top:3px; width:2px; height:6px; background:#F5E7CC; border-radius:2px; transform:rotate(28deg);"></div>
+                  <div style="position:absolute; left:13px; top:3px; width:2px; height:6px; background:#F5E7CC; border-radius:2px; transform:rotate(28deg);"></div>
+                  <div style="position:absolute; left:20px; top:3px; width:2px; height:6px; background:#F5E7CC; border-radius:2px; transform:rotate(28deg);"></div>
+                </div>
+              </div>
+              <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:13px; color:#C9DA5A; letter-spacing:1px;">“Winners only”</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#8A9188; margin-top:6px;">RANK #1 · 1284 PTS · HOLDS THE CIABATTA · 24 DAYS</div>
+            </div>
+          </div>
+          <div style="background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:18px; box-shadow:4px 4px 0 #1B1A16;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672; margin-bottom:12px;">VITALS</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px 16px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;">
+              <div style="display:flex; justify-content:space-between;"><span style="color:#8C8672;">HEIGHT</span><span style="font-weight:700;">185 CM</span></div>
+              <div style="display:flex; justify-content:space-between;"><span style="color:#8C8672;">WEIGHT</span><span style="font-weight:700;">78 KG</span></div>
+              <div style="display:flex; justify-content:space-between;"><span style="color:#8C8672;">PLAYS</span><span style="font-weight:700;">RIGHT</span></div>
+              <div style="display:flex; justify-content:space-between;"><span style="color:#8C8672;">BACKHAND</span><span style="font-weight:700;">1-HAND</span></div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; margin-top:14px;">
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1px; color:#8C8672;">STYLE</div>
+              <div style="background:#3E6B35; color:#EFE6D0; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:12px; letter-spacing:1px; padding:4px 12px; border-radius:14px;">Aggressive baseliner</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- right: stats -->
+        <div style="flex:1; display:flex; flex-direction:column; gap:16px;">
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;">
+            <div style="background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:18px; box-shadow:4px 4px 0 #1B1A16;">
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#3E6B35;">RANKED RECORD</div>
+              <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:36px; color:#1B1A16; margin-top:6px;">12–4</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8C8672; margin-top:2px;">75% WIN · 34 SETS · 288 GAMES</div>
+            </div>
+            <div style="background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:18px; box-shadow:4px 4px 0 #1B1A16;">
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C5426;">EXHIBITION RECORD</div>
+              <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:36px; color:#1B1A16; margin-top:6px;">8–3</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8C8672; margin-top:2px;">73% WIN · 21 SETS · 176 GAMES</div>
+            </div>
+            <div style="background:#1B1A16; border:2px solid #1B1A16; border-radius:8px; padding:18px; box-shadow:4px 4px 0 #1B1A16;">
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#C9DA5A;">CURRENT STREAK</div>
+              <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:36px; color:#C9DA5A; margin-top:6px;">W5</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8A9188; margin-top:2px;">BEST: W8 · MAR–APR 2026</div>
+            </div>
+          </div>
+
+          <div style="background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:20px; box-shadow:4px 4px 0 #1B1A16;">
+            <div style="display:flex; justify-content:space-between; align-items:baseline;">
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672;">POINTS · LAST 12 MATCHES</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:13px; color:#3E6B35; font-weight:700;">+118 THIS MONTH</div>
+            </div>
+            <div style="display:flex; align-items:flex-end; gap:8px; height:110px; margin-top:16px;">
+              <div style="flex:1; height:38%; background:#D9CCAE; border-radius:3px;"></div>
+              <div style="flex:1; height:42%; background:#D9CCAE; border-radius:3px;"></div>
+              <div style="flex:1; height:40%; background:#D9CCAE; border-radius:3px;"></div>
+              <div style="flex:1; height:48%; background:#9FB380; border-radius:3px;"></div>
+              <div style="flex:1; height:52%; background:#9FB380; border-radius:3px;"></div>
+              <div style="flex:1; height:47%; background:#D9CCAE; border-radius:3px;"></div>
+              <div style="flex:1; height:56%; background:#9FB380; border-radius:3px;"></div>
+              <div style="flex:1; height:62%; background:#9FB380; border-radius:3px;"></div>
+              <div style="flex:1; height:58%; background:#D9CCAE; border-radius:3px;"></div>
+              <div style="flex:1; height:70%; background:#9FB380; border-radius:3px;"></div>
+              <div style="flex:1; height:82%; background:#3E6B35; border-radius:3px;"></div>
+              <div style="flex:1; height:100%; background:#3E6B35; border-radius:3px;"></div>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+            <div style="background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:18px; box-shadow:4px 4px 0 #1B1A16;">
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672; margin-bottom:12px;">HEAD-TO-HEAD</div>
+              <div style="display:flex; flex-direction:column; gap:12px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <img src="players/michaels.png" style="width:30px; height:30px; border-radius:50%; border:1.5px solid #1B1A16; object-fit:cover;">
+                  <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:13px; color:#1B1A16;">Vs Kumove</div>
+                  <div style="margin-left:auto; display:flex; align-items:center; gap:8px;">
+                    <div style="width:120px; height:8px; border-radius:4px; background:#A0442C; overflow:hidden;"><div style="width:70%; height:100%; background:#3E6B35;"></div></div>
+                    <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:700; color:#1B1A16;">7–3</div>
+                  </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <img src="players/string.png" style="width:30px; height:30px; border-radius:50%; border:1.5px solid #1B1A16; object-fit:cover;">
+                  <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:13px; color:#1B1A16;">Vs Ray</div>
+                  <div style="margin-left:auto; display:flex; align-items:center; gap:8px;">
+                    <div style="width:120px; height:8px; border-radius:4px; background:#A0442C; overflow:hidden;"><div style="width:56%; height:100%; background:#3E6B35;"></div></div>
+                    <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:700; color:#1B1A16;">5–4</div>
+                  </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <img src="players/jacks.png" style="width:30px; height:30px; border-radius:50%; border:1.5px solid #1B1A16; object-fit:cover;">
+                  <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:13px; color:#1B1A16;">Vs Bendell</div>
+                  <div style="margin-left:auto; display:flex; align-items:center; gap:8px;">
+                    <div style="width:120px; height:8px; border-radius:4px; background:#A0442C; overflow:hidden;"><div style="width:80%; height:100%; background:#3E6B35;"></div></div>
+                    <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:700; color:#1B1A16;">4–1</div>
+                  </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <img src="players/ringo.png" style="width:30px; height:30px; border-radius:50%; border:1.5px solid #1B1A16; object-fit:cover;">
+                  <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:13px; color:#1B1A16;">Vs Zeus</div>
+                  <div style="margin-left:auto; display:flex; align-items:center; gap:8px;">
+                    <div style="width:120px; height:8px; border-radius:4px; background:#A0442C; overflow:hidden;"><div style="width:100%; height:100%; background:#3E6B35;"></div></div>
+                    <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:700; color:#1B1A16;">3–0</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style="background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:18px; box-shadow:4px 4px 0 #1B1A16;">
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672; margin-bottom:12px;">MATCH LOG</div>
+              <div style="display:flex; flex-direction:column; gap:11px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;">
+                <div style="display:flex; gap:10px;"><span style="color:#3E6B35; font-weight:700;">W</span><span style="flex:1;">vs KUMOVE · RANKED</span><span>6–4 3–6 7–5</span></div>
+                <div style="display:flex; gap:10px;"><span style="color:#3E6B35; font-weight:700;">W</span><span style="flex:1;">vs RAY · RANKED</span><span>6–3 6–4</span></div>
+                <div style="display:flex; gap:10px;"><span style="color:#3E6B35; font-weight:700;">W</span><span style="flex:1;">vs ZEUS · EXHIBITION</span><span>6–1 6–2</span></div>
+                <div style="display:flex; gap:10px;"><span style="color:#3E6B35; font-weight:700;">W</span><span style="flex:1;">vs BENDELL · RANKED</span><span>7–6 6–4</span></div>
+                <div style="display:flex; gap:10px;"><span style="color:#A0442C; font-weight:700;">L</span><span style="flex:1;">vs KUMOVE · RANKED</span><span>4–6 6–7</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section data-screen-label="Screens — Match submission" style="padding:24px 56px;">
+  <div style="color:#8A9188; font-family:'IBM Plex Mono',monospace; font-size:13px; letter-spacing:2px; margin-bottom:20px;">03 · LOG A MATCH — MOBILE + DESKTOP</div>
+  <div style="display:flex; flex-wrap:wrap; gap:36px; align-items:flex-start;">
+
+    <!-- ===== Match submission MOBILE ===== -->
+    <div style="width:390px; background:#EFE6D0; border:2px solid #1B1A16; border-radius:28px; overflow:hidden; flex-shrink:0;">
+      <div style="display:flex; justify-content:space-between; padding:12px 24px 4px 24px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;"><div>9:41</div><div>●●●</div></div>
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 20px;">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:13px; color:#8C8672;">✕</div>
+        <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:18px; color:#1B1A16; letter-spacing:1px;">Log match</div>
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8C8672;">2/3</div>
+      </div>
+      <div style="display:flex; gap:4px; padding:0 20px 16px 20px;">
+        <div style="flex:1; height:4px; background:#3E6B35; border-radius:2px;"></div>
+        <div style="flex:1; height:4px; background:#3E6B35; border-radius:2px;"></div>
+        <div style="flex:1; height:4px; background:#D9CCAE; border-radius:2px;"></div>
+      </div>
+
+      <div style="padding:0 16px 24px 16px; display:flex; flex-direction:column; gap:14px;">
+        <!-- players -->
+        <div style="background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:14px; box-shadow:3px 3px 0 #1B1A16;">
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; color:#8C8672; margin-bottom:10px;">MATCHUP</div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; background:#EDE9D2; border:2px solid #3E6B35; border-radius:8px; padding:12px 8px;">
+              <img src="players/michaels.png" style="width:48px; height:48px; border-radius:50%; border:2px solid #1B1A16; object-fit:cover;">
+              <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:13px; color:#1B1A16; letter-spacing:1px;">Kumove</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:#3E6B35;">YOU</div>
+            </div>
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:16px; color:#8C5426;">vs</div>
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; background:#EDE9D2; border:2px solid #1B1A16; border-radius:8px; padding:12px 8px;">
+              <img src="players/jacks.png" style="width:48px; height:48px; border-radius:50%; border:2px solid #1B1A16; object-fit:cover;">
+              <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:13px; color:#1B1A16; letter-spacing:1px;">Bendell</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:#8C8672;">RANK #4</div>
+            </div>
+          </div>
+        </div>
+        <!-- type -->
+        <div style="background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:14px; box-shadow:3px 3px 0 #1B1A16;">
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; color:#8C8672; margin-bottom:10px;">MATCH TYPE</div>
+          <div style="display:flex; gap:8px;">
+            <div style="flex:1; text-align:center; background:#3E6B35; color:#EFE6D0; border:2px solid #1B1A16; border-radius:6px; padding:10px; font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:12px; letter-spacing:1px;">Ranked<div style="font-family:'IBM Plex Mono',monospace; font-weight:400; font-size:9px; color:#C9DA5A; margin-top:2px;">COUNTS FOR POINTS</div></div>
+            <div style="flex:1; text-align:center; background:#EFE6D0; color:#1B1A16; border:2px solid #1B1A16; border-radius:6px; padding:10px; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:12px; letter-spacing:1px;">Exhibition<div style="font-family:'IBM Plex Mono',monospace; font-weight:400; font-size:9px; color:#8C8672; margin-top:2px;">RECORD ONLY</div></div>
+          </div>
+        </div>
+        <!-- format -->
+        <div style="background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:14px; box-shadow:3px 3px 0 #1B1A16;">
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; color:#8C8672; margin-bottom:10px;">FORMAT</div>
+          <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            <div style="border:1.5px solid #1B1A16; border-radius:16px; padding:6px 14px; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px; color:#1B1A16;">One set</div>
+            <div style="background:#1B1A16; color:#EFE6D0; border:1.5px solid #1B1A16; border-radius:16px; padding:6px 14px; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px;">Best of 3</div>
+            <div style="border:1.5px solid #1B1A16; border-radius:16px; padding:6px 14px; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px; color:#1B1A16;">Pro set (8)</div>
+            <div style="border:1.5px solid #1B1A16; border-radius:16px; padding:6px 14px; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px; color:#1B1A16;">Custom</div>
+          </div>
+        </div>
+        <!-- score -->
+        <div style="background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:14px; box-shadow:3px 3px 0 #1B1A16;">
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; color:#8C8672; margin-bottom:10px;">SCORE</div>
+          <div style="display:grid; grid-template-columns:1fr 52px 52px 52px; gap:8px; align-items:center;">
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:12px; color:#1B1A16;">Kumove</div>
+            <div style="border:2px solid #1B1A16; border-radius:6px; background:#EFE6D0; text-align:center; padding:10px 0; font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:16px; color:#1B1A16;">6</div>
+            <div style="border:2px solid #1B1A16; border-radius:6px; background:#EFE6D0; text-align:center; padding:10px 0; font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:16px; color:#1B1A16;">4</div>
+            <div style="border:2px solid #1B1A16; border-radius:6px; background:#EFE6D0; text-align:center; padding:10px 0; font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:16px; color:#1B1A16;">7</div>
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:12px; color:#1B1A16;">Bendell</div>
+            <div style="border:2px solid #1B1A16; border-radius:6px; background:#EFE6D0; text-align:center; padding:10px 0; font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:16px; color:#1B1A16;">4</div>
+            <div style="border:2px solid #1B1A16; border-radius:6px; background:#EFE6D0; text-align:center; padding:10px 0; font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:16px; color:#1B1A16;">6</div>
+            <div style="border:2px solid #1B1A16; border-radius:6px; background:#EFE6D0; text-align:center; padding:10px 0; font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:16px; color:#1B1A16;">5</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; margin-top:10px;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672;">TIE-BREAK SET 3:</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700; color:#1B1A16;">7–3</div>
+            <div style="margin-left:auto; font-family:'IBM Plex Mono',monospace; font-size:10px; color:#3E6B35;">+ Add set</div>
+          </div>
+        </div>
+        <div style="background:#3E6B35; color:#EFE6D0; border:2px solid #1B1A16; border-radius:8px; padding:16px; text-align:center; font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:16px; letter-spacing:2px; box-shadow:3px 3px 0 #1B1A16;">Submit for approval</div>
+        <div style="text-align:center; font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672;">RANKED RESULTS NEED ADMIN APPROVAL BEFORE POINTS MOVE</div>
+      </div>
+    </div>
+
+    <!-- ===== Match submission DESKTOP ===== -->
+    <div style="width:1240px; background:#20221E; border:2px solid #1B1A16; border-radius:12px; overflow:hidden; flex-shrink:0; position:relative; padding:48px 0;">
+      <div style="width:720px; margin:0 auto; background:#EFE6D0; border:2px solid #1B1A16; border-radius:12px; box-shadow:6px 6px 0 #3E6B35; overflow:hidden;">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:18px 26px; background:#F7F0DE; border-bottom:2px solid #1B1A16;">
+          <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:20px; color:#1B1A16; letter-spacing:1px;">Log match</div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#8C8672;">STEP 2 OF 3 · ✕</div>
+        </div>
+        <div style="display:flex; gap:26px; padding:26px;">
+          <div style="flex:1; display:flex; flex-direction:column; gap:16px;">
+            <div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672; margin-bottom:8px;">MATCHUP</div>
+              <div style="display:flex; align-items:center; gap:12px;">
+                <div style="flex:1; display:flex; align-items:center; gap:10px; background:#F7F0DE; border:2px solid #3E6B35; border-radius:8px; padding:10px 12px;">
+                  <img src="players/michaels.png" style="width:36px; height:36px; border-radius:50%; border:2px solid #1B1A16; object-fit:cover;">
+                  <div><div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:13px; color:#1B1A16;">Kumove</div><div style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:#3E6B35;">YOU</div></div>
+                </div>
+                <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:14px; color:#8C5426;">vs</div>
+                <div style="flex:1; display:flex; align-items:center; gap:10px; background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:10px 12px;">
+                  <img src="players/jacks.png" style="width:36px; height:36px; border-radius:50%; border:2px solid #1B1A16; object-fit:cover;">
+                  <div><div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:13px; color:#1B1A16;">Bendell</div><div style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:#8C8672;">RANK #4</div></div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672; margin-bottom:8px;">MATCH TYPE</div>
+              <div style="display:flex; gap:8px;">
+                <div style="flex:1; text-align:center; background:#3E6B35; color:#EFE6D0; border:2px solid #1B1A16; border-radius:6px; padding:10px; font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:12px; letter-spacing:1px;">Ranked</div>
+                <div style="flex:1; text-align:center; background:#EFE6D0; color:#1B1A16; border:2px solid #1B1A16; border-radius:6px; padding:10px; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:12px; letter-spacing:1px;">Exhibition</div>
+              </div>
+            </div>
+            <div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672; margin-bottom:8px;">FORMAT</div>
+              <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                <div style="border:1.5px solid #1B1A16; border-radius:16px; padding:6px 14px; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px; color:#1B1A16;">One set</div>
+                <div style="background:#1B1A16; color:#EFE6D0; border:1.5px solid #1B1A16; border-radius:16px; padding:6px 14px; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px;">Best of 3</div>
+                <div style="border:1.5px solid #1B1A16; border-radius:16px; padding:6px 14px; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px; color:#1B1A16;">Pro set (8)</div>
+                <div style="border:1.5px solid #1B1A16; border-radius:16px; padding:6px 14px; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px; color:#1B1A16;">Custom</div>
+              </div>
+            </div>
+          </div>
+          <div style="width:280px; flex-shrink:0; display:flex; flex-direction:column; gap:16px;">
+            <div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672; margin-bottom:8px;">SCORE</div>
+              <div style="display:grid; grid-template-columns:1fr 48px 48px 48px; gap:6px; align-items:center;">
+                <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:12px; color:#1B1A16;">Kumove</div>
+                <div style="border:2px solid #1B1A16; border-radius:6px; background:#F7F0DE; text-align:center; padding:9px 0; font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:15px; color:#1B1A16;">6</div>
+                <div style="border:2px solid #1B1A16; border-radius:6px; background:#F7F0DE; text-align:center; padding:9px 0; font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:15px; color:#1B1A16;">4</div>
+                <div style="border:2px solid #1B1A16; border-radius:6px; background:#F7F0DE; text-align:center; padding:9px 0; font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:15px; color:#1B1A16;">7</div>
+                <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:12px; color:#1B1A16;">Bendell</div>
+                <div style="border:2px solid #1B1A16; border-radius:6px; background:#F7F0DE; text-align:center; padding:9px 0; font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:15px; color:#1B1A16;">4</div>
+                <div style="border:2px solid #1B1A16; border-radius:6px; background:#F7F0DE; text-align:center; padding:9px 0; font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:15px; color:#1B1A16;">6</div>
+                <div style="border:2px solid #1B1A16; border-radius:6px; background:#F7F0DE; text-align:center; padding:9px 0; font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:15px; color:#1B1A16;">5</div>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px; margin-top:8px; font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672;">TIE-BREAK SET 3: <span style="color:#1B1A16; font-weight:700;">7–3</span><span style="margin-left:auto; color:#3E6B35;">+ Add set</span></div>
+            </div>
+            <div style="background:#3E6B35; color:#EFE6D0; border:2px solid #1B1A16; border-radius:8px; padding:14px; text-align:center; font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:15px; letter-spacing:2px; box-shadow:3px 3px 0 #1B1A16;">Submit for approval</div>
+            <div style="text-align:center; font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672;">RANKED RESULTS NEED ADMIN APPROVAL</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="Screens — Tournaments" style="padding:24px 56px;">
+  <div style="color:#8A9188; font-family:'IBM Plex Mono',monospace; font-size:13px; letter-spacing:2px; margin-bottom:20px;">04 · TOURNAMENTS — LIST + SINGLE VIEW, MOBILE + DESKTOP</div>
+  <div style="display:flex; flex-wrap:wrap; gap:36px; align-items:flex-start;">
+
+    <!-- ===== Tournaments list MOBILE ===== -->
+    <div style="width:390px; background:#EFE6D0; border:2px solid #1B1A16; border-radius:28px; overflow:hidden; flex-shrink:0;">
+      <div style="display:flex; justify-content:space-between; padding:12px 24px 4px 24px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;"><div>9:41</div><div>●●●</div></div>
+      <div style="padding:14px 20px 10px 20px;">
+        <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:34px; color:#1B1A16; letter-spacing:1px; line-height:1;">Tournaments</div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px; padding:8px 16px 24px 16px;">
+        <div style="background:#3E6B35; border:2px solid #1B1A16; border-radius:8px; padding:16px; box-shadow:3px 3px 0 #1B1A16;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; color:#C9DA5A;">● LIVE NOW</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:#BFD3B4;">ROUND 3 OF 5</div>
+          </div>
+          <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:22px; color:#EFE6D0; letter-spacing:1px; margin-top:6px;">Ciabatta Qualifier</div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#BFD3B4; margin-top:2px;">ROUND ROBIN · 5 PLAYERS · 2 COURTS · RANKED</div>
+          <div style="height:8px; background:#2A4A26; border-radius:4px; margin-top:12px; overflow:hidden;"><div style="width:60%; height:100%; background:#C9DA5A;"></div></div>
+        </div>
+        <div style="background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:16px; box-shadow:3px 3px 0 #1B1A16;">
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; color:#8C5426;">UPCOMING · SAT 1 AUG</div>
+          <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:20px; color:#1B1A16; letter-spacing:1px; margin-top:6px;">Summer Knockout</div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8C8672; margin-top:2px;">SINGLE ELIM · 8 SPOTS · 5 ENTERED · RANKED</div>
+          <div style="display:inline-block; background:#1B1A16; color:#EFE6D0; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px; letter-spacing:1px; padding:6px 14px; border-radius:16px; margin-top:10px;">Enter →</div>
+        </div>
+        <div style="background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:16px; box-shadow:3px 3px 0 #1B1A16; opacity:0.85;">
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; color:#8C8672;">COMPLETED · MAY 2026</div>
+          <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:20px; color:#1B1A16; letter-spacing:1px; margin-top:6px;">Spring Open</div>
+          <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+            <img src="players/ben.png" style="width:24px; height:24px; border-radius:50%; border:1.5px solid #1B1A16; object-fit:cover;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#1B1A16;">WON BY <span style="font-weight:700;">COSSAR</span> d. RAY 6–2 7–5</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; border-top:2px solid #1B1A16; background:#F7F0DE;">
+        <div style="flex:1; text-align:center; padding:14px 0 20px 0; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:10px; letter-spacing:1px; color:#8C8672;">Board</div>
+        <div style="flex:1; text-align:center; padding:14px 0 20px 0; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:10px; letter-spacing:1px; color:#8C8672;">Matches</div>
+        <div style="flex:1; text-align:center; padding:14px 0 20px 0; font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:10px; letter-spacing:1px; color:#3E6B35; border-top:3px solid #3E6B35; margin-top:-2px;">Cups</div>
+        <div style="flex:1; text-align:center; padding:14px 0 20px 0; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:10px; letter-spacing:1px; color:#8C8672;">Profile</div>
+      </div>
+    </div>
+
+    <!-- ===== Single tournament MOBILE ===== -->
+    <div style="width:390px; background:#EFE6D0; border:2px solid #1B1A16; border-radius:28px; overflow:hidden; flex-shrink:0;">
+      <div style="display:flex; justify-content:space-between; padding:12px 24px 4px 24px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;"><div>9:41</div><div>●●●</div></div>
+      <div style="background:#3E6B35; padding:16px 20px; border-bottom:2px solid #1B1A16;">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#C9DA5A; letter-spacing:2px;">← CUPS &nbsp;·&nbsp; ● LIVE · ROUND 3 OF 5</div>
+        <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:26px; color:#EFE6D0; letter-spacing:1px; margin-top:6px;">Ciabatta Qualifier</div>
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#BFD3B4; margin-top:2px;">ROUND ROBIN · BEST OF 3 GAMES · TOP 2 TO FINAL</div>
+      </div>
+      <div style="padding:16px; display:flex; flex-direction:column; gap:14px;">
+        <!-- standings -->
+        <div style="background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; overflow:hidden; box-shadow:3px 3px 0 #1B1A16;">
+          <div style="display:grid; grid-template-columns:30px 1fr 60px 60px; padding:8px 14px; background:#1B1A16; font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1px; color:#8A9188;">
+            <div>#</div><div>PLAYER</div><div>W–L</div><div style="text-align:right;">GAMES</div>
+          </div>
+          <div style="display:grid; grid-template-columns:30px 1fr 60px 60px; align-items:center; padding:9px 14px; border-bottom:1px solid #D9CCAE; background:#EDE9D2;">
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:13px; color:#3E6B35;">1</div>
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:12px; color:#1B1A16; letter-spacing:1px;">Cossar</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#1B1A16;">3–0</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#1B1A16; text-align:right;">+9</div>
+          </div>
+          <div style="display:grid; grid-template-columns:30px 1fr 60px 60px; align-items:center; padding:9px 14px; border-bottom:1px solid #D9CCAE; background:#EDE9D2;">
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:13px; color:#3E6B35;">2</div>
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:12px; color:#1B1A16; letter-spacing:1px;">Kumove</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#1B1A16;">2–1</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#1B1A16; text-align:right;">+4</div>
+          </div>
+          <div style="display:grid; grid-template-columns:30px 1fr 60px 60px; align-items:center; padding:9px 14px; border-bottom:1px solid #D9CCAE;">
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:13px; color:#1B1A16;">3</div>
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:12px; color:#1B1A16; letter-spacing:1px;">Bendell</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#1B1A16;">2–1</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#1B1A16; text-align:right;">+1</div>
+          </div>
+          <div style="display:grid; grid-template-columns:30px 1fr 60px 60px; align-items:center; padding:9px 14px; border-bottom:1px solid #D9CCAE;">
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:13px; color:#1B1A16;">4</div>
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:12px; color:#1B1A16; letter-spacing:1px;">Ray</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#1B1A16;">1–2</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#1B1A16; text-align:right;">-3</div>
+          </div>
+          <div style="display:grid; grid-template-columns:30px 1fr 60px 60px; align-items:center; padding:9px 14px;">
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:13px; color:#1B1A16;">5</div>
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:12px; color:#1B1A16; letter-spacing:1px;">Zeus</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#1B1A16;">0–4</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#1B1A16; text-align:right;">-11</div>
+          </div>
+          <div style="padding:7px 14px; background:#EDE9D2; border-top:1px solid #D9CCAE; font-family:'IBM Plex Mono',monospace; font-size:9px; color:#3E6B35;">■ TOP 2 QUALIFY FOR THE FINAL</div>
+        </div>
+        <!-- fixtures -->
+        <div style="background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:14px; box-shadow:3px 3px 0 #1B1A16;">
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; color:#8C8672; margin-bottom:10px;">UP NEXT · ROUND 4</div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <div style="display:flex; align-items:center; gap:10px; background:#EFE6D0; border:1.5px solid #1B1A16; border-radius:6px; padding:10px 12px;">
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:#8C5426; width:52px;">COURT 1</div>
+              <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:13px; color:#1B1A16; letter-spacing:1px;">Cossar <span style="color:#8C5426; font-size:11px;">vs</span> ZEUS</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px; background:#EFE6D0; border:1.5px solid #1B1A16; border-radius:6px; padding:10px 12px;">
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:#8C5426; width:52px;">COURT 2</div>
+              <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:13px; color:#1B1A16; letter-spacing:1px;">Kumove <span style="color:#8C5426; font-size:11px;">vs</span> BENDELL</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px; padding:2px 12px;">
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:#8C8672; width:52px;">RESTING</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8C8672;">RAY</div>
+            </div>
+          </div>
+        </div>
+        <!-- final -->
+        <div style="background:#1B1A16; border:2px solid #1B1A16; border-radius:8px; padding:14px; box-shadow:3px 3px 0 #3E6B35; display:flex; align-items:center; gap:12px;">
+          <div style="position:relative; width:30px; height:16px; background:linear-gradient(175deg, #C98A4B, #8C5426); border-radius:15px 15px 10px 10px / 12px 12px 5px 5px; flex-shrink:0;">
+            <div style="position:absolute; left:7px; top:3px; width:2px; height:7px; background:#F5E7CC; border-radius:2px; transform:rotate(28deg);"></div>
+            <div style="position:absolute; left:14px; top:3px; width:2px; height:7px; background:#F5E7CC; border-radius:2px; transform:rotate(28deg);"></div>
+            <div style="position:absolute; left:21px; top:3px; width:2px; height:7px; background:#F5E7CC; border-radius:2px; transform:rotate(28deg);"></div>
+          </div>
+          <div>
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:11px; letter-spacing:2px; color:#C9DA5A;">The Final</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8A9188; margin-top:2px;">1ST vs 2ND · ONE FULL SET · TIE-BREAK AT 6–6</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Tournament DESKTOP ===== -->
+    <div style="width:1240px; background:#EFE6D0; border:2px solid #1B1A16; border-radius:12px; overflow:hidden; flex-shrink:0;">
+      <div style="display:flex; align-items:center; gap:28px; padding:16px 28px; border-bottom:2px solid #1B1A16; background:#F7F0DE;">
+        <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:18px; color:#1B1A16; letter-spacing:1px;">CIABATTA <span style="color:#3E6B35;">CUP</span></div>
+        <div style="display:flex; gap:22px; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:12px; letter-spacing:1px;">
+          <div style="color:#8C8672;">Leaderboard</div>
+          <div style="color:#8C8672;">Matches</div>
+          <div style="color:#3E6B35; border-bottom:2px solid #3E6B35; padding-bottom:2px;">Tournaments</div>
+          <div style="color:#8C8672;">Players</div>
+        </div>
+        <div style="margin-left:auto; display:flex; align-items:center; gap:10px;">
+          <div style="background:#3E6B35; color:#EFE6D0; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:12px; letter-spacing:1px; padding:8px 16px; border-radius:6px; border:2px solid #1B1A16; box-shadow:2px 2px 0 #1B1A16;">+ Log match</div>
+          <img src="players/michaels.png" style="width:34px; height:34px; border-radius:50%; border:2px solid #1B1A16; object-fit:cover;">
+        </div>
+      </div>
+
+      <div style="display:flex; gap:24px; padding:28px;">
+        <!-- list rail -->
+        <div style="width:300px; flex-shrink:0; display:flex; flex-direction:column; gap:12px;">
+          <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:24px; color:#1B1A16; letter-spacing:1px;">Tournaments</div>
+          <div style="background:#3E6B35; border:2px solid #1B1A16; border-radius:8px; padding:14px; box-shadow:3px 3px 0 #1B1A16;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; color:#C9DA5A;">● LIVE · ROUND 3/5</div>
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:16px; color:#EFE6D0; letter-spacing:1px; margin-top:4px;">Ciabatta Qualifier</div>
+          </div>
+          <div style="background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:14px; box-shadow:3px 3px 0 #1B1A16;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; color:#8C5426;">UPCOMING · 1 AUG</div>
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:16px; color:#1B1A16; letter-spacing:1px; margin-top:4px;">Summer Knockout</div>
+          </div>
+          <div style="background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:14px; box-shadow:3px 3px 0 #1B1A16; opacity:0.8;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; color:#8C8672;">COMPLETED · MAY</div>
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:16px; color:#1B1A16; letter-spacing:1px; margin-top:4px;">Spring Open</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672; margin-top:4px;">🏆 COSSAR</div>
+          </div>
+        </div>
+
+        <!-- detail -->
+        <div style="flex:1; display:flex; flex-direction:column; gap:16px;">
+          <div style="background:#3E6B35; border:2px solid #1B1A16; border-radius:8px; padding:20px 24px; box-shadow:4px 4px 0 #1B1A16; display:flex; align-items:center; justify-content:space-between;">
+            <div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#C9DA5A; letter-spacing:2px;">● LIVE · ROUND 3 OF 5</div>
+              <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:28px; color:#EFE6D0; letter-spacing:1px; margin-top:4px;">Ciabatta Qualifier</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#BFD3B4; margin-top:2px;">ROUND ROBIN · 5 PLAYERS · 2 COURTS · BEST OF 3 GAMES · RANKED</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#C9DA5A; letter-spacing:2px;">TOP 2 → FINAL</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#BFD3B4; margin-top:4px;">ONE FULL SET · TB AT 6–6</div>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:16px;">
+            <!-- standings -->
+            <div style="flex:1; background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; overflow:hidden; box-shadow:4px 4px 0 #1B1A16;">
+              <div style="display:grid; grid-template-columns:40px 1fr 70px 70px 70px; padding:10px 16px; background:#1B1A16; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1px; color:#8A9188;">
+                <div>#</div><div>PLAYER</div><div>W–L</div><div>GAMES</div><div style="text-align:right;">STATUS</div>
+              </div>
+              <div style="display:grid; grid-template-columns:40px 1fr 70px 70px 70px; align-items:center; padding:11px 16px; border-bottom:1px solid #D9CCAE; background:#EDE9D2;">
+                <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:15px; color:#3E6B35;">1</div>
+                <div style="display:flex; align-items:center; gap:8px;"><img src="players/ben.png" style="width:26px; height:26px; border-radius:50%; border:1.5px solid #1B1A16; object-fit:cover;"><span style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:13px; color:#1B1A16; letter-spacing:1px;">Cossar</span></div>
+                <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;">3–0</div>
+                <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;">+9</div>
+                <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#3E6B35; text-align:right;">QUALIFYING</div>
+              </div>
+              <div style="display:grid; grid-template-columns:40px 1fr 70px 70px 70px; align-items:center; padding:11px 16px; border-bottom:1px solid #D9CCAE; background:#EDE9D2;">
+                <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:15px; color:#3E6B35;">2</div>
+                <div style="display:flex; align-items:center; gap:8px;"><img src="players/michaels.png" style="width:26px; height:26px; border-radius:50%; border:1.5px solid #1B1A16; object-fit:cover;"><span style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:13px; color:#1B1A16; letter-spacing:1px;">Kumove</span></div>
+                <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;">2–1</div>
+                <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;">+4</div>
+                <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#3E6B35; text-align:right;">QUALIFYING</div>
+              </div>
+              <div style="display:grid; grid-template-columns:40px 1fr 70px 70px 70px; align-items:center; padding:11px 16px; border-bottom:1px solid #D9CCAE;">
+                <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:15px; color:#1B1A16;">3</div>
+                <div style="display:flex; align-items:center; gap:8px;"><img src="players/jacks.png" style="width:26px; height:26px; border-radius:50%; border:1.5px solid #1B1A16; object-fit:cover;"><span style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:13px; color:#1B1A16; letter-spacing:1px;">Bendell</span></div>
+                <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;">2–1</div>
+                <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;">+1</div>
+                <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672; text-align:right;">IN HUNT</div>
+              </div>
+              <div style="display:grid; grid-template-columns:40px 1fr 70px 70px 70px; align-items:center; padding:11px 16px; border-bottom:1px solid #D9CCAE;">
+                <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:15px; color:#1B1A16;">4</div>
+                <div style="display:flex; align-items:center; gap:8px;"><img src="players/string.png" style="width:26px; height:26px; border-radius:50%; border:1.5px solid #1B1A16; object-fit:cover;"><span style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:13px; color:#1B1A16; letter-spacing:1px;">Ray</span></div>
+                <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;">1–2</div>
+                <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;">-3</div>
+                <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672; text-align:right;">IN HUNT</div>
+              </div>
+              <div style="display:grid; grid-template-columns:40px 1fr 70px 70px 70px; align-items:center; padding:11px 16px;">
+                <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:15px; color:#1B1A16;">5</div>
+                <div style="display:flex; align-items:center; gap:8px;"><img src="players/ringo.png" style="width:26px; height:26px; border-radius:50%; border:1.5px solid #1B1A16; object-fit:cover;"><span style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:13px; color:#1B1A16; letter-spacing:1px;">Zeus</span></div>
+                <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;">0–4</div>
+                <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;">-11</div>
+                <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#A0442C; text-align:right;">OUT</div>
+              </div>
+            </div>
+
+            <!-- schedule -->
+            <div style="width:380px; flex-shrink:0; background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; overflow:hidden; box-shadow:4px 4px 0 #1B1A16;">
+              <div style="display:grid; grid-template-columns:56px 1fr 1fr 70px; padding:10px 16px; background:#1B1A16; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1px; color:#8A9188;">
+                <div>RND</div><div>COURT 1</div><div>COURT 2</div><div style="text-align:right;">REST</div>
+              </div>
+              <div style="display:grid; grid-template-columns:56px 1fr 1fr 70px; padding:10px 16px; border-bottom:1px solid #D9CCAE; font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8C8672;">
+                <div>1 ✓</div><div>COSSAR d. KUMOVE</div><div>RAY d. ZEUS</div><div style="text-align:right;">BENDELL</div>
+              </div>
+              <div style="display:grid; grid-template-columns:56px 1fr 1fr 70px; padding:10px 16px; border-bottom:1px solid #D9CCAE; font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8C8672;">
+                <div>2 ✓</div><div>COSSAR d. RAY</div><div>KUMOVE d. ZEUS</div><div style="text-align:right;">RAY</div>
+              </div>
+              <div style="display:grid; grid-template-columns:56px 1fr 1fr 70px; padding:10px 16px; border-bottom:1px solid #D9CCAE; background:#EDE9D2; font-family:'IBM Plex Mono',monospace; font-size:11px; color:#1B1A16; font-weight:700;">
+                <div style="color:#3E6B35;">3 ●</div><div>COSSAR vs BENDELL</div><div>RAY vs KUMOVE</div><div style="text-align:right;">ZEUS</div>
+              </div>
+              <div style="display:grid; grid-template-columns:56px 1fr 1fr 70px; padding:10px 16px; border-bottom:1px solid #D9CCAE; font-family:'IBM Plex Mono',monospace; font-size:11px; color:#1B1A16;">
+                <div>4</div><div>COSSAR vs ZEUS</div><div>KUMOVE vs BENDELL</div><div style="text-align:right;">RAY</div>
+              </div>
+              <div style="display:grid; grid-template-columns:56px 1fr 1fr 70px; padding:10px 16px; font-family:'IBM Plex Mono',monospace; font-size:11px; color:#1B1A16;">
+                <div>5</div><div>KUMOVE vs RAY</div><div>BENDELL vs ZEUS</div><div style="text-align:right;">COSSAR</div>
+              </div>
+              <div style="display:flex; align-items:center; gap:10px; padding:12px 16px; background:#1B1A16;">
+                <div style="position:relative; width:24px; height:13px; background:linear-gradient(175deg, #C98A4B, #8C5426); border-radius:12px 12px 8px 8px / 9px 9px 4px 4px; flex-shrink:0;">
+                  <div style="position:absolute; left:5px; top:2px; width:2px; height:6px; background:#F5E7CC; border-radius:2px; transform:rotate(28deg);"></div>
+                  <div style="position:absolute; left:11px; top:2px; width:2px; height:6px; background:#F5E7CC; border-radius:2px; transform:rotate(28deg);"></div>
+                  <div style="position:absolute; left:17px; top:2px; width:2px; height:6px; background:#F5E7CC; border-radius:2px; transform:rotate(28deg);"></div>
+                </div>
+                <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#C9DA5A; letter-spacing:1px;">FINAL: 1ST vs 2ND · ONE FULL SET · TB AT 6–6</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="Screens — Sign in" style="padding:24px 56px;">
+  <div style="color:#8A9188; font-family:'IBM Plex Mono',monospace; font-size:13px; letter-spacing:2px; margin-bottom:20px;">05 · SIGN UP / LOG IN — MOBILE + DESKTOP</div>
+  <div style="display:flex; flex-wrap:wrap; gap:36px; align-items:flex-start;">
+
+    <!-- ===== Auth MOBILE ===== -->
+    <div style="width:390px; background:#EFE6D0; border:2px solid #1B1A16; border-radius:28px; overflow:hidden; flex-shrink:0;">
+      <div style="display:flex; justify-content:space-between; padding:12px 24px 4px 24px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;"><div>9:41</div><div>●●●</div></div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:14px; padding:44px 28px 20px 28px;">
+        <div style="position:relative; width:88px; height:78px; display:flex; flex-direction:column; align-items:center; justify-content:flex-end;">
+          <div style="position:relative; width:72px; height:32px; background:linear-gradient(175deg, #C98A4B 0%, #8C5426 75%); border-radius:36px 36px 24px 24px / 28px 28px 11px 11px; box-shadow:inset 0 4px 6px rgba(249,244,233,0.4), inset 0 -5px 7px rgba(50,25,5,0.4);">
+            <div style="position:absolute; left:15px; top:6px; width:4px; height:13px; background:#F5E7CC; border-radius:3px; transform:rotate(28deg);"></div>
+            <div style="position:absolute; left:32px; top:5px; width:4px; height:14px; background:#F5E7CC; border-radius:3px; transform:rotate(28deg);"></div>
+            <div style="position:absolute; left:49px; top:6px; width:4px; height:13px; background:#F5E7CC; border-radius:3px; transform:rotate(28deg);"></div>
+          </div>
+          <div style="width:40px; height:8px; background:#3E6B35; clip-path:polygon(8% 0, 92% 0, 100% 100%, 0 100%); margin-top:5px;"></div>
+          <div style="width:54px; height:6px; background:#2A4A26; clip-path:polygon(4% 0, 96% 0, 100% 100%, 0 100%); margin-top:2px;"></div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:36px; color:#1B1A16; letter-spacing:2px; line-height:1;">CIABATTA</div>
+          <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:24px; color:#3E6B35; letter-spacing:9px; line-height:1.4; padding-left:9px;">CUP</div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; color:#8C5426;">EARN YOUR SEED. EARN YOUR BREAD.</div>
+      </div>
+      <div style="padding:8px 24px 40px 24px; display:flex; flex-direction:column; gap:12px;">
+        <div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672; margin-bottom:6px;">EMAIL</div>
+          <div style="border:2px solid #1B1A16; border-radius:8px; background:#F7F0DE; padding:14px 16px; font-family:'Work Sans',sans-serif; font-size:15px; color:#1B1A16;">michaels@kumove.com</div>
+        </div>
+        <div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672; margin-bottom:6px;">PASSWORD</div>
+          <div style="border:2px solid #1B1A16; border-radius:8px; background:#F7F0DE; padding:14px 16px; font-family:'Work Sans',sans-serif; font-size:15px; color:#1B1A16; display:flex; justify-content:space-between;"><span>••••••••••</span><span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8C8672;">Show</span></div>
+        </div>
+        <div style="background:#3E6B35; color:#EFE6D0; border:2px solid #1B1A16; border-radius:8px; padding:16px; text-align:center; font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:16px; letter-spacing:2px; box-shadow:3px 3px 0 #1B1A16; margin-top:6px;">Step on court</div>
+        <div style="text-align:center; font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8C8672; margin-top:6px;">New player? <span style="color:#3E6B35; font-weight:700;">Create account</span> · Forgot password</div>
+      </div>
+    </div>
+
+    <!-- ===== Auth DESKTOP ===== -->
+    <div style="width:1240px; height:640px; background:#EFE6D0; border:2px solid #1B1A16; border-radius:12px; overflow:hidden; flex-shrink:0; display:flex;">
+      <div style="width:520px; background:#1B1A16; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:18px; border-right:2px solid #1B1A16;">
+        <div style="position:relative; width:110px; height:96px; display:flex; flex-direction:column; align-items:center; justify-content:flex-end;">
+          <div style="position:relative; width:90px; height:40px; background:linear-gradient(175deg, #C98A4B 0%, #8C5426 75%); border-radius:45px 45px 30px 30px / 34px 34px 14px 14px; box-shadow:inset 0 5px 7px rgba(249,244,233,0.4), inset 0 -6px 8px rgba(50,25,5,0.4);">
+            <div style="position:absolute; left:19px; top:8px; width:5px; height:16px; background:#F5E7CC; border-radius:3px; transform:rotate(28deg);"></div>
+            <div style="position:absolute; left:41px; top:7px; width:5px; height:17px; background:#F5E7CC; border-radius:3px; transform:rotate(28deg);"></div>
+            <div style="position:absolute; left:63px; top:8px; width:5px; height:16px; background:#F5E7CC; border-radius:3px; transform:rotate(28deg);"></div>
+          </div>
+          <div style="width:50px; height:10px; background:#C9DA5A; clip-path:polygon(8% 0, 92% 0, 100% 100%, 0 100%); margin-top:6px;"></div>
+          <div style="width:66px; height:7px; background:#3E6B35; clip-path:polygon(4% 0, 96% 0, 100% 100%, 0 100%); margin-top:2px;"></div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:46px; color:#EFE6D0; letter-spacing:3px; line-height:1;">CIABATTA</div>
+          <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:30px; color:#C9DA5A; letter-spacing:12px; line-height:1.4; padding-left:12px;">CUP</div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:3px; color:#8A9188;">EARN YOUR SEED. EARN YOUR BREAD.</div>
+        <div style="display:flex; gap:24px; margin-top:12px; font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8A9188; text-align:center;">
+          <div><div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:22px; color:#EFE6D0;">8</div>PLAYERS</div>
+          <div><div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:22px; color:#EFE6D0;">142</div>MATCHES</div>
+          <div><div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:22px; color:#EFE6D0;">3</div>CUPS</div>
+        </div>
+      </div>
+      <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:0 110px; gap:14px;">
+        <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:28px; color:#1B1A16; letter-spacing:1px;">Sign in</div>
+        <div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672; margin-bottom:6px;">EMAIL</div>
+          <div style="border:2px solid #1B1A16; border-radius:8px; background:#F7F0DE; padding:14px 16px; font-family:'Work Sans',sans-serif; font-size:15px; color:#1B1A16;">michaels@kumove.com</div>
+        </div>
+        <div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672; margin-bottom:6px;">PASSWORD</div>
+          <div style="border:2px solid #1B1A16; border-radius:8px; background:#F7F0DE; padding:14px 16px; font-family:'Work Sans',sans-serif; font-size:15px; color:#1B1A16; display:flex; justify-content:space-between;"><span>••••••••••</span><span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8C8672;">Show</span></div>
+        </div>
+        <div style="background:#3E6B35; color:#EFE6D0; border:2px solid #1B1A16; border-radius:8px; padding:15px; text-align:center; font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:16px; letter-spacing:2px; box-shadow:3px 3px 0 #1B1A16; margin-top:6px;">Step on court</div>
+        <div style="text-align:center; font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8C8672;">New player? <span style="color:#3E6B35; font-weight:700;">Create account</span> · Forgot password</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="Screens — Admin dashboard" style="padding:24px 56px;">
+  <div style="color:#8A9188; font-family:'IBM Plex Mono',monospace; font-size:13px; letter-spacing:2px; margin-bottom:20px;">06 · ADMIN DASHBOARD — MOBILE + DESKTOP</div>
+  <div style="display:flex; flex-wrap:wrap; gap:36px; align-items:flex-start;">
+
+    <!-- ===== Admin dashboard MOBILE ===== -->
+    <div style="width:390px; background:#EFE6D0; border:2px solid #1B1A16; border-radius:28px; overflow:hidden; flex-shrink:0;">
+      <div style="display:flex; justify-content:space-between; padding:12px 24px 4px 24px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;"><div>9:41</div><div>●●●</div></div>
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 20px;">
+        <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:26px; color:#1B1A16; letter-spacing:1px;">Admin</div>
+        <div style="background:#8C5426; color:#EFE6D0; font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; padding:4px 10px; border-radius:12px;">Tournament director</div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; padding:4px 16px 14px 16px;">
+        <div style="background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:12px 10px; box-shadow:3px 3px 0 #1B1A16; text-align:center;">
+          <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:24px; color:#1B1A16;">8</div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:1px; color:#8C8672;">PLAYERS</div>
+        </div>
+        <div style="background:#1B1A16; border:2px solid #1B1A16; border-radius:8px; padding:12px 10px; box-shadow:3px 3px 0 #8C5426; text-align:center;">
+          <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:24px; color:#C9DA5A;">3</div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:1px; color:#8A9188;">PENDING</div>
+        </div>
+        <div style="background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:12px 10px; box-shadow:3px 3px 0 #1B1A16; text-align:center;">
+          <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:24px; color:#1B1A16;">1</div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:1px; color:#8C8672;">LIVE CUP</div>
+        </div>
+      </div>
+      <div style="padding:0 16px 24px 16px; display:flex; flex-direction:column; gap:12px;">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672;">PENDING APPROVALS</div>
+        <div style="background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:14px; box-shadow:3px 3px 0 #1B1A16;">
+          <div style="display:flex; justify-content:space-between; align-items:baseline;">
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:14px; color:#1B1A16; letter-spacing:1px;">Kumove d. Bendell</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:#3E6B35;">RANKED</div>
+          </div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8C8672; margin-top:2px;">6–4 4–6 7–5 (7–3) · TODAY 18:32 · BOTH CONFIRMED</div>
+          <div style="display:flex; gap:8px; margin-top:12px;">
+            <div style="flex:1; background:#3E6B35; color:#EFE6D0; border:2px solid #1B1A16; border-radius:6px; padding:9px; text-align:center; font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:11px; letter-spacing:1px;">Approve</div>
+            <div style="flex:1; border:2px solid #1B1A16; color:#1B1A16; border-radius:6px; padding:9px; text-align:center; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px; letter-spacing:1px;">Query</div>
+          </div>
+        </div>
+        <div style="background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:14px; box-shadow:3px 3px 0 #1B1A16;">
+          <div style="display:flex; justify-content:space-between; align-items:baseline;">
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:14px; color:#1B1A16; letter-spacing:1px;">Ray d. Vance</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:#8C5426;">EXHIBITION</div>
+          </div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8C8672; margin-top:2px;">8–5 PRO SET · YESTERDAY · AWAITING VANCE ✓</div>
+          <div style="display:flex; gap:8px; margin-top:12px;">
+            <div style="flex:1; background:#EFE6D0; color:#8C8672; border:2px solid #8C8672; border-radius:6px; padding:9px; text-align:center; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px; letter-spacing:1px;">Waiting on player</div>
+          </div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672; margin-top:4px;">LIVE TOURNAMENT</div>
+        <div style="background:#3E6B35; border:2px solid #1B1A16; border-radius:8px; padding:14px; box-shadow:3px 3px 0 #1B1A16; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:16px; color:#EFE6D0; letter-spacing:1px;">Ciabatta Qualifier</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#BFD3B4;">ROUND 3/5 · 2 RESULTS DUE</div>
+          </div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#C9DA5A;">Manage →</div>
+        </div>
+      </div>
+      <div style="display:flex; border-top:2px solid #1B1A16; background:#F7F0DE;">
+        <div style="flex:1; text-align:center; padding:14px 0 20px 0; font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:10px; letter-spacing:1px; color:#8C5426; border-top:3px solid #8C5426; margin-top:-2px;">Admin</div>
+        <div style="flex:1; text-align:center; padding:14px 0 20px 0; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:10px; letter-spacing:1px; color:#8C8672;">Cups</div>
+        <div style="flex:1; text-align:center; padding:14px 0 20px 0; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:10px; letter-spacing:1px; color:#8C8672;">Players</div>
+        <div style="flex:1; text-align:center; padding:14px 0 20px 0; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:10px; letter-spacing:1px; color:#8C8672;">Board</div>
+      </div>
+    </div>
+
+    <!-- ===== Admin dashboard DESKTOP ===== -->
+    <div style="width:1240px; background:#EFE6D0; border:2px solid #1B1A16; border-radius:12px; overflow:hidden; flex-shrink:0;">
+      <div style="display:flex; align-items:center; gap:28px; padding:16px 28px; border-bottom:2px solid #1B1A16; background:#F7F0DE;">
+        <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:18px; color:#1B1A16; letter-spacing:1px;">CIABATTA <span style="color:#3E6B35;">CUP</span> <span style="color:#8C5426; font-size:12px; letter-spacing:2px;">/ Admin</span></div>
+        <div style="display:flex; gap:22px; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:12px; letter-spacing:1px;">
+          <div style="color:#8C5426; border-bottom:2px solid #8C5426; padding-bottom:2px;">Overview</div>
+          <div style="color:#8C8672;">Tournaments</div>
+          <div style="color:#8C8672;">Players</div>
+          <div style="color:#8C8672;">Matches</div>
+        </div>
+        <div style="margin-left:auto; display:flex; align-items:center; gap:10px;">
+          <div style="background:#8C5426; color:#EFE6D0; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:12px; letter-spacing:1px; padding:8px 16px; border-radius:6px; border:2px solid #1B1A16; box-shadow:2px 2px 0 #1B1A16;">+ New tournament</div>
+          <img src="players/michaels.png" style="width:34px; height:34px; border-radius:50%; border:2px solid #1B1A16; object-fit:cover;">
+        </div>
+      </div>
+
+      <div style="padding:28px; display:flex; flex-direction:column; gap:20px;">
+        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:16px;">
+          <div style="background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:18px; box-shadow:4px 4px 0 #1B1A16;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672;">PLAYERS</div>
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:34px; color:#1B1A16; margin-top:4px;">8</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#3E6B35; margin-top:2px;">+1 THIS MONTH</div>
+          </div>
+          <div style="background:#1B1A16; border:2px solid #1B1A16; border-radius:8px; padding:18px; box-shadow:4px 4px 0 #8C5426;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8A9188;">PENDING APPROVALS</div>
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:34px; color:#C9DA5A; margin-top:4px;">3</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8A9188; margin-top:2px;">OLDEST: 2 DAYS</div>
+          </div>
+          <div style="background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:18px; box-shadow:4px 4px 0 #1B1A16;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672;">ACTIVE TOURNAMENTS</div>
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:34px; color:#1B1A16; margin-top:4px;">1</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672; margin-top:2px;">1 UPCOMING</div>
+          </div>
+          <div style="background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:18px; box-shadow:4px 4px 0 #1B1A16;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672;">MATCHES LOGGED</div>
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:34px; color:#1B1A16; margin-top:4px;">142</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#3E6B35; margin-top:2px;">12 THIS WEEK</div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:20px;">
+          <div style="flex:1; background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; overflow:hidden; box-shadow:4px 4px 0 #1B1A16;">
+            <div style="padding:12px 18px; background:#1B1A16; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8A9188;">PENDING MATCH SUBMISSIONS</div>
+            <div style="display:flex; align-items:center; gap:14px; padding:14px 18px; border-bottom:1px solid #D9CCAE;">
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:#3E6B35; width:70px;">RANKED</div>
+              <div style="flex:1;">
+                <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:14px; color:#1B1A16; letter-spacing:1px;">Kumove d. Bendell</div>
+                <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672;">6–4 4–6 7–5 (7–3) · TODAY 18:32 · BOTH CONFIRMED</div>
+              </div>
+              <div style="background:#3E6B35; color:#EFE6D0; border:2px solid #1B1A16; border-radius:6px; padding:7px 16px; font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:11px; letter-spacing:1px;">Approve</div>
+              <div style="border:2px solid #1B1A16; color:#1B1A16; border-radius:6px; padding:7px 16px; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px; letter-spacing:1px;">Query</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:14px; padding:14px 18px; border-bottom:1px solid #D9CCAE;">
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:#8C5426; width:70px;">EXHIB.</div>
+              <div style="flex:1;">
+                <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:14px; color:#1B1A16; letter-spacing:1px;">Ray d. Vance</div>
+                <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672;">8–5 PRO SET · YESTERDAY · AWAITING VANCE ✓</div>
+              </div>
+              <div style="border:2px solid #8C8672; color:#8C8672; border-radius:6px; padding:7px 16px; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px; letter-spacing:1px;">Waiting</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:14px; padding:14px 18px;">
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:#3E6B35; width:70px;">RANKED</div>
+              <div style="flex:1;">
+                <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:14px; color:#1B1A16; letter-spacing:1px;">Cossar d. Zeus</div>
+                <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672;">6–1 6–2 · 2 DAYS AGO · BOTH CONFIRMED · QUALIFIER R4</div>
+              </div>
+              <div style="background:#3E6B35; color:#EFE6D0; border:2px solid #1B1A16; border-radius:6px; padding:7px 16px; font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:11px; letter-spacing:1px;">Approve</div>
+              <div style="border:2px solid #1B1A16; color:#1B1A16; border-radius:6px; padding:7px 16px; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px; letter-spacing:1px;">Query</div>
+            </div>
+          </div>
+
+          <div style="width:340px; flex-shrink:0; display:flex; flex-direction:column; gap:16px;">
+            <div style="background:#3E6B35; border:2px solid #1B1A16; border-radius:8px; padding:18px; box-shadow:4px 4px 0 #1B1A16;">
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#C9DA5A;">● LIVE · ROUND 3/5</div>
+              <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:18px; color:#EFE6D0; letter-spacing:1px; margin-top:4px;">Ciabatta Qualifier</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#BFD3B4; margin-top:2px;">2 RESULTS DUE · NEXT: R4 SAT</div>
+              <div style="display:inline-block; background:#EFE6D0; color:#1B1A16; border:2px solid #1B1A16; border-radius:6px; padding:7px 16px; font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:11px; letter-spacing:1px; margin-top:12px;">Manage →</div>
+            </div>
+            <div style="background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:18px; box-shadow:4px 4px 0 #1B1A16;">
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672; margin-bottom:10px;">RECENT ACTIVITY</div>
+              <div style="display:flex; flex-direction:column; gap:9px; font-family:'IBM Plex Mono',monospace; font-size:11px; color:#5C5A48;">
+                <div>18:32 · KUMOVE SUBMITTED A RANKED RESULT</div>
+                <div>17:04 · FENN JOINED SUMMER KNOCKOUT</div>
+                <div>12:11 · YOU APPROVED BENDELL d. RAY</div>
+                <div>09:45 · NEW PLAYER: SAM BRIGHT</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="Screens — Create tournament" style="padding:24px 56px;">
+  <div style="color:#8A9188; font-family:'IBM Plex Mono',monospace; font-size:13px; letter-spacing:2px; margin-bottom:20px;">07 · CREATE / MANAGE TOURNAMENT — MOBILE + DESKTOP</div>
+  <div style="display:flex; flex-wrap:wrap; gap:36px; align-items:flex-start;">
+
+    <!-- ===== Create tournament MOBILE ===== -->
+    <div style="width:390px; background:#EFE6D0; border:2px solid #1B1A16; border-radius:28px; overflow:hidden; flex-shrink:0;">
+      <div style="display:flex; justify-content:space-between; padding:12px 24px 4px 24px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;"><div>9:41</div><div>●●●</div></div>
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 20px 14px 20px;">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:13px; color:#8C8672;">✕</div>
+        <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:18px; color:#1B1A16; letter-spacing:1px;">New tournament</div>
+        <div style="width:14px;"></div>
+      </div>
+      <div style="padding:0 16px 24px 16px; display:flex; flex-direction:column; gap:12px;">
+        <div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672; margin-bottom:6px;">NAME</div>
+          <div style="border:2px solid #1B1A16; border-radius:8px; background:#F7F0DE; padding:13px 16px; font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:16px; letter-spacing:1px; color:#1B1A16;">Summer Knockout</div>
+        </div>
+        <div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672; margin-bottom:6px;">STRUCTURE</div>
+          <div style="display:flex; gap:8px;">
+            <div style="flex:1; text-align:center; border:2px solid #1B1A16; border-radius:6px; padding:10px 4px; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px; color:#1B1A16;">Round robin</div>
+            <div style="flex:1; text-align:center; background:#1B1A16; color:#EFE6D0; border:2px solid #1B1A16; border-radius:6px; padding:10px 4px; font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:11px;">Knockout</div>
+            <div style="flex:1; text-align:center; border:2px solid #1B1A16; border-radius:6px; padding:10px 4px; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px; color:#1B1A16;">Groups + KO</div>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672; margin-bottom:6px;">MATCH FORMAT</div>
+            <div style="border:2px solid #1B1A16; border-radius:8px; background:#F7F0DE; padding:12px 14px; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:12px; color:#1B1A16; display:flex; justify-content:space-between;"><span>ONE SET, TB AT 6–6</span><span>▾</span></div>
+          </div>
+          <div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672; margin-bottom:6px;">COUNTS AS</div>
+            <div style="border:2px solid #1B1A16; border-radius:8px; background:#3E6B35; padding:12px 14px; font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:12px; color:#EFE6D0; text-align:center;">Ranked</div>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672;">PARTICIPANTS</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#3E6B35;">6 OF 8 SELECTED</div>
+          </div>
+          <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            <div style="display:flex; align-items:center; gap:6px; background:#1B1A16; color:#EFE6D0; border:2px solid #1B1A16; border-radius:18px; padding:5px 12px 5px 5px;"><img src="players/ben.png" style="width:22px; height:22px; border-radius:50%; object-fit:cover;"><span style="font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px;">Cossar</span></div>
+            <div style="display:flex; align-items:center; gap:6px; background:#1B1A16; color:#EFE6D0; border:2px solid #1B1A16; border-radius:18px; padding:5px 12px 5px 5px;"><img src="players/michaels.png" style="width:22px; height:22px; border-radius:50%; object-fit:cover;"><span style="font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px;">Kumove</span></div>
+            <div style="display:flex; align-items:center; gap:6px; background:#1B1A16; color:#EFE6D0; border:2px solid #1B1A16; border-radius:18px; padding:5px 12px 5px 5px;"><img src="players/string.png" style="width:22px; height:22px; border-radius:50%; object-fit:cover;"><span style="font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px;">Ray</span></div>
+            <div style="display:flex; align-items:center; gap:6px; background:#1B1A16; color:#EFE6D0; border:2px solid #1B1A16; border-radius:18px; padding:5px 12px 5px 5px;"><img src="players/jacks.png" style="width:22px; height:22px; border-radius:50%; object-fit:cover;"><span style="font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px;">Bendell</span></div>
+            <div style="display:flex; align-items:center; gap:6px; background:#1B1A16; color:#EFE6D0; border:2px solid #1B1A16; border-radius:18px; padding:5px 12px 5px 5px;"><img src="players/ringo.png" style="width:22px; height:22px; border-radius:50%; object-fit:cover;"><span style="font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px;">Zeus</span></div>
+            <div style="display:flex; align-items:center; gap:6px; border:2px solid #1B1A16; border-radius:18px; padding:5px 12px; color:#1B1A16;"><span style="font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px;">Vance</span></div>
+            <div style="display:flex; align-items:center; gap:6px; border:2px dashed #8C8672; border-radius:18px; padding:5px 12px; color:#8C8672;"><span style="font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px;">+ 2 more</span></div>
+          </div>
+        </div>
+        <div style="background:#8C5426; color:#EFE6D0; border:2px solid #1B1A16; border-radius:8px; padding:15px; text-align:center; font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:15px; letter-spacing:2px; box-shadow:3px 3px 0 #1B1A16; margin-top:4px;">Generate fixtures</div>
+        <div style="text-align:center; font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672;">SEEDING FROM CURRENT LEADERBOARD · EDITABLE AFTER</div>
+      </div>
+    </div>
+
+    <!-- ===== Manage tournament DESKTOP ===== -->
+    <div style="width:1240px; background:#EFE6D0; border:2px solid #1B1A16; border-radius:12px; overflow:hidden; flex-shrink:0;">
+      <div style="display:flex; align-items:center; gap:28px; padding:16px 28px; border-bottom:2px solid #1B1A16; background:#F7F0DE;">
+        <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:18px; color:#1B1A16; letter-spacing:1px;">CIABATTA <span style="color:#3E6B35;">CUP</span> <span style="color:#8C5426; font-size:12px; letter-spacing:2px;">/ Admin</span></div>
+        <div style="display:flex; gap:22px; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:12px; letter-spacing:1px;">
+          <div style="color:#8C8672;">Overview</div>
+          <div style="color:#8C5426; border-bottom:2px solid #8C5426; padding-bottom:2px;">Tournaments</div>
+          <div style="color:#8C8672;">Players</div>
+          <div style="color:#8C8672;">Matches</div>
+        </div>
+        <div style="margin-left:auto;"><img src="players/michaels.png" style="width:34px; height:34px; border-radius:50%; border:2px solid #1B1A16; object-fit:cover;"></div>
+      </div>
+
+      <div style="display:flex; gap:24px; padding:28px;">
+        <!-- settings -->
+        <div style="width:400px; flex-shrink:0; display:flex; flex-direction:column; gap:14px;">
+          <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:24px; color:#1B1A16; letter-spacing:1px;">New tournament</div>
+          <div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672; margin-bottom:6px;">NAME</div>
+            <div style="border:2px solid #1B1A16; border-radius:8px; background:#F7F0DE; padding:13px 16px; font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:16px; letter-spacing:1px; color:#1B1A16;">Summer Knockout</div>
+          </div>
+          <div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672; margin-bottom:6px;">STRUCTURE</div>
+            <div style="display:flex; gap:8px;">
+              <div style="flex:1; text-align:center; border:2px solid #1B1A16; border-radius:6px; padding:10px 4px; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px; color:#1B1A16;">Round robin</div>
+              <div style="flex:1; text-align:center; background:#1B1A16; color:#EFE6D0; border:2px solid #1B1A16; border-radius:6px; padding:10px 4px; font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:11px;">Knockout</div>
+              <div style="flex:1; text-align:center; border:2px solid #1B1A16; border-radius:6px; padding:10px 4px; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px; color:#1B1A16;">Groups + KO</div>
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672; margin-bottom:6px;">MATCH FORMAT</div>
+              <div style="border:2px solid #1B1A16; border-radius:8px; background:#F7F0DE; padding:11px 14px; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:12px; color:#1B1A16; display:flex; justify-content:space-between;"><span>ONE SET, TB 6–6</span><span>▾</span></div>
+            </div>
+            <div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672; margin-bottom:6px;">COUNTS AS</div>
+              <div style="border:2px solid #1B1A16; border-radius:8px; background:#3E6B35; padding:11px 14px; font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:12px; color:#EFE6D0; text-align:center;">Ranked</div>
+            </div>
+          </div>
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;">
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672;">PARTICIPANTS · SEEDED BY LEADERBOARD</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#3E6B35;">6 / 8</div>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+              <div style="display:flex; align-items:center; gap:6px; background:#1B1A16; color:#EFE6D0; border-radius:18px; padding:5px 12px 5px 5px;"><img src="players/ben.png" style="width:22px; height:22px; border-radius:50%; object-fit:cover;"><span style="font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px;">1 Cossar</span></div>
+              <div style="display:flex; align-items:center; gap:6px; background:#1B1A16; color:#EFE6D0; border-radius:18px; padding:5px 12px 5px 5px;"><img src="players/michaels.png" style="width:22px; height:22px; border-radius:50%; object-fit:cover;"><span style="font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px;">2 Kumove</span></div>
+              <div style="display:flex; align-items:center; gap:6px; background:#1B1A16; color:#EFE6D0; border-radius:18px; padding:5px 12px 5px 5px;"><img src="players/string.png" style="width:22px; height:22px; border-radius:50%; object-fit:cover;"><span style="font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px;">3 Ray</span></div>
+              <div style="display:flex; align-items:center; gap:6px; background:#1B1A16; color:#EFE6D0; border-radius:18px; padding:5px 12px 5px 5px;"><img src="players/jacks.png" style="width:22px; height:22px; border-radius:50%; object-fit:cover;"><span style="font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px;">4 Bendell</span></div>
+              <div style="display:flex; align-items:center; gap:6px; background:#1B1A16; color:#EFE6D0; border-radius:18px; padding:5px 12px 5px 5px;"><img src="players/ringo.png" style="width:22px; height:22px; border-radius:50%; object-fit:cover;"><span style="font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px;">5 Zeus</span></div>
+              <div style="display:flex; align-items:center; gap:6px; border:2px solid #1B1A16; border-radius:18px; padding:5px 12px; color:#1B1A16;"><span style="font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:11px;">6 Vance</span></div>
+            </div>
+          </div>
+          <div style="background:#8C5426; color:#EFE6D0; border:2px solid #1B1A16; border-radius:8px; padding:14px; text-align:center; font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:15px; letter-spacing:2px; box-shadow:3px 3px 0 #1B1A16;">Generate fixtures</div>
+        </div>
+
+        <!-- bracket preview -->
+        <div style="flex:1; background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:24px; box-shadow:4px 4px 0 #1B1A16;">
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672; margin-bottom:18px;">BRACKET PREVIEW · 6 PLAYERS · TOP 2 SEEDS GET BYES</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:24px; align-items:center;">
+            <!-- QF -->
+            <div style="display:flex; flex-direction:column; gap:14px;">
+              <div style="border:2px solid #1B1A16; border-radius:6px; overflow:hidden;">
+                <div style="display:flex; justify-content:space-between; padding:8px 12px; border-bottom:1px solid #D9CCAE; background:#EFE6D0;"><span style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:12px; color:#1B1A16;">3 Ray</span><span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672;">—</span></div>
+                <div style="display:flex; justify-content:space-between; padding:8px 12px; background:#EFE6D0;"><span style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:12px; color:#1B1A16;">6 Vance</span><span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672;">—</span></div>
+              </div>
+              <div style="border:2px solid #1B1A16; border-radius:6px; overflow:hidden;">
+                <div style="display:flex; justify-content:space-between; padding:8px 12px; border-bottom:1px solid #D9CCAE; background:#EFE6D0;"><span style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:12px; color:#1B1A16;">4 Bendell</span><span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672;">—</span></div>
+                <div style="display:flex; justify-content:space-between; padding:8px 12px; background:#EFE6D0;"><span style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:12px; color:#1B1A16;">5 Zeus</span><span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672;">—</span></div>
+              </div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1px; color:#8C8672; text-align:center;">QUARTERS · SAT AM</div>
+            </div>
+            <!-- SF -->
+            <div style="display:flex; flex-direction:column; gap:14px;">
+              <div style="border:2px solid #1B1A16; border-radius:6px; overflow:hidden;">
+                <div style="display:flex; justify-content:space-between; padding:8px 12px; border-bottom:1px solid #D9CCAE; background:#EDE9D2;"><span style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:12px; color:#1B1A16;">1 Cossar</span><span style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:#3E6B35;">BYE</span></div>
+                <div style="display:flex; justify-content:space-between; padding:8px 12px; background:#EFE6D0;"><span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8C8672;">WINNER QF1</span><span></span></div>
+              </div>
+              <div style="border:2px solid #1B1A16; border-radius:6px; overflow:hidden;">
+                <div style="display:flex; justify-content:space-between; padding:8px 12px; border-bottom:1px solid #D9CCAE; background:#EDE9D2;"><span style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:12px; color:#1B1A16;">2 Kumove</span><span style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:#3E6B35;">BYE</span></div>
+                <div style="display:flex; justify-content:space-between; padding:8px 12px; background:#EFE6D0;"><span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8C8672;">WINNER QF2</span><span></span></div>
+              </div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1px; color:#8C8672; text-align:center;">SEMIS · SAT PM</div>
+            </div>
+            <!-- F -->
+            <div style="display:flex; flex-direction:column; gap:14px;">
+              <div style="border:2px solid #1B1A16; border-radius:6px; overflow:hidden; box-shadow:3px 3px 0 #3E6B35;">
+                <div style="display:flex; align-items:center; gap:8px; padding:8px 12px; background:#1B1A16;">
+                  <div style="position:relative; width:22px; height:12px; background:linear-gradient(175deg, #C98A4B, #8C5426); border-radius:11px 11px 8px 8px / 9px 9px 4px 4px; flex-shrink:0;">
+                    <div style="position:absolute; left:5px; top:2px; width:2px; height:5px; background:#F5E7CC; border-radius:2px; transform:rotate(28deg);"></div>
+                    <div style="position:absolute; left:10px; top:2px; width:2px; height:5px; background:#F5E7CC; border-radius:2px; transform:rotate(28deg);"></div>
+                    <div style="position:absolute; left:15px; top:2px; width:2px; height:5px; background:#F5E7CC; border-radius:2px; transform:rotate(28deg);"></div>
+                  </div>
+                  <span style="font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:10px; letter-spacing:2px; color:#C9DA5A;">The Final</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:8px 12px; border-bottom:1px solid #D9CCAE; background:#EFE6D0;"><span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8C8672;">WINNER SF1</span><span></span></div>
+                <div style="display:flex; justify-content:space-between; padding:8px 12px; background:#EFE6D0;"><span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8C8672;">WINNER SF2</span><span></span></div>
+              </div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1px; color:#8C8672; text-align:center;">FINAL · ONE FULL SET · TB 6–6</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="Screens — Manage players" style="padding:24px 56px 80px 56px;">
+  <div style="color:#8A9188; font-family:'IBM Plex Mono',monospace; font-size:13px; letter-spacing:2px; margin-bottom:20px;">08 · MANAGE PLAYERS — MOBILE + DESKTOP</div>
+  <div style="display:flex; flex-wrap:wrap; gap:36px; align-items:flex-start;">
+
+    <!-- ===== Manage players MOBILE ===== -->
+    <div style="width:390px; background:#EFE6D0; border:2px solid #1B1A16; border-radius:28px; overflow:hidden; flex-shrink:0;">
+      <div style="display:flex; justify-content:space-between; padding:12px 24px 4px 24px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1B1A16;"><div>9:41</div><div>●●●</div></div>
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 20px;">
+        <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:26px; color:#1B1A16; letter-spacing:1px;">Players</div>
+        <div style="background:#3E6B35; color:#EFE6D0; font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:11px; letter-spacing:1px; padding:8px 14px; border-radius:6px; border:2px solid #1B1A16; box-shadow:2px 2px 0 #1B1A16;">+ Invite</div>
+      </div>
+      <div style="padding:0 16px 24px 16px; display:flex; flex-direction:column; gap:10px;">
+        <div style="display:flex; align-items:center; gap:12px; background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:12px 14px; box-shadow:3px 3px 0 #1B1A16;">
+          <img src="players/ben.png" style="width:40px; height:40px; border-radius:50%; border:2px solid #1B1A16; object-fit:cover;">
+          <div>
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:14px; color:#1B1A16; letter-spacing:1px;">Ben Cossar</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672;">ben@cossar.com · JOINED FEB 2026</div>
+          </div>
+          <div style="margin-left:auto; font-family:'IBM Plex Mono',monospace; font-size:10px; color:#3E6B35;">Active · Edit</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px; background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:12px 14px; box-shadow:3px 3px 0 #1B1A16;">
+          <img src="players/michaels.png" style="width:40px; height:40px; border-radius:50%; border:2px solid #1B1A16; object-fit:cover;">
+          <div>
+            <div style="display:flex; align-items:center; gap:6px;"><span style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:14px; color:#1B1A16; letter-spacing:1px;">Michaels Kumove</span><span style="background:#8C5426; color:#EFE6D0; font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:1px; padding:2px 6px; border-radius:8px;">ADMIN</span></div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672;">m@kumove.com · JOINED FEB 2026</div>
+          </div>
+          <div style="margin-left:auto; font-family:'IBM Plex Mono',monospace; font-size:10px; color:#3E6B35;">Active · Edit</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px; background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:12px 14px; box-shadow:3px 3px 0 #1B1A16;">
+          <img src="players/string.png" style="width:40px; height:40px; border-radius:50%; border:2px solid #1B1A16; object-fit:cover;">
+          <div>
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:14px; color:#1B1A16; letter-spacing:1px;">String Ray</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672;">string@ray.net · JOINED MAR 2026</div>
+          </div>
+          <div style="margin-left:auto; font-family:'IBM Plex Mono',monospace; font-size:10px; color:#3E6B35;">Active · Edit</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px; background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; padding:12px 14px; box-shadow:3px 3px 0 #1B1A16; opacity:0.65;">
+          <div style="width:40px; height:40px; border-radius:50%; border:2px dashed #8C8672; display:flex; align-items:center; justify-content:center; font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:13px; color:#8C8672;">Of</div>
+          <div>
+            <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:14px; color:#1B1A16; letter-spacing:1px;">Ollie Fenn</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672;">ollie@fenn.io · INVITE SENT 2 DAYS AGO</div>
+          </div>
+          <div style="margin-left:auto; font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C5426;">Pending · Resend</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Manage players DESKTOP ===== -->
+    <div style="width:1240px; background:#EFE6D0; border:2px solid #1B1A16; border-radius:12px; overflow:hidden; flex-shrink:0;">
+      <div style="display:flex; align-items:center; gap:28px; padding:16px 28px; border-bottom:2px solid #1B1A16; background:#F7F0DE;">
+        <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:18px; color:#1B1A16; letter-spacing:1px;">CIABATTA <span style="color:#3E6B35;">CUP</span> <span style="color:#8C5426; font-size:12px; letter-spacing:2px;">/ Admin</span></div>
+        <div style="display:flex; gap:22px; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:12px; letter-spacing:1px;">
+          <div style="color:#8C8672;">Overview</div>
+          <div style="color:#8C8672;">Tournaments</div>
+          <div style="color:#8C5426; border-bottom:2px solid #8C5426; padding-bottom:2px;">Players</div>
+          <div style="color:#8C8672;">Matches</div>
+        </div>
+        <div style="margin-left:auto; display:flex; align-items:center; gap:10px;">
+          <div style="background:#3E6B35; color:#EFE6D0; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:12px; letter-spacing:1px; padding:8px 16px; border-radius:6px; border:2px solid #1B1A16; box-shadow:2px 2px 0 #1B1A16;">+ Invite player</div>
+          <img src="players/michaels.png" style="width:34px; height:34px; border-radius:50%; border:2px solid #1B1A16; object-fit:cover;">
+        </div>
+      </div>
+
+      <div style="padding:28px;">
+        <div style="border:2px solid #1B1A16; border-radius:8px; overflow:hidden; box-shadow:4px 4px 0 #1B1A16; background:#F7F0DE;">
+          <div style="display:grid; grid-template-columns:1fr 220px 110px 140px 110px 150px; padding:10px 18px; background:#1B1A16; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8A9188;">
+            <div>PLAYER</div><div>EMAIL</div><div>RANK</div><div>RECORD (R/E)</div><div>STATUS</div><div style="text-align:right;">ACTIONS</div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 220px 110px 140px 110px 150px; align-items:center; padding:12px 18px; border-bottom:1px solid #D9CCAE;">
+            <div style="display:flex; align-items:center; gap:10px;"><img src="players/ben.png" style="width:32px; height:32px; border-radius:50%; border:1.5px solid #1B1A16; object-fit:cover;"><span style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:13px; color:#1B1A16; letter-spacing:1px;">Ben Cossar</span></div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8C8672;">ben@cossar.com</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#1B1A16;">#1</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#1B1A16;">12–4 / 8–3</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#3E6B35;">ACTIVE</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672; text-align:right;">Edit · Deactivate</div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 220px 110px 140px 110px 150px; align-items:center; padding:12px 18px; border-bottom:1px solid #D9CCAE;">
+            <div style="display:flex; align-items:center; gap:10px;"><img src="players/michaels.png" style="width:32px; height:32px; border-radius:50%; border:1.5px solid #1B1A16; object-fit:cover;"><span style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:13px; color:#1B1A16; letter-spacing:1px;">Michaels Kumove</span><span style="background:#8C5426; color:#EFE6D0; font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:1px; padding:2px 6px; border-radius:8px;">ADMIN</span></div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8C8672;">m@kumove.com</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#1B1A16;">#2</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#1B1A16;">14–6 / 5–2</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#3E6B35;">ACTIVE</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672; text-align:right;">Edit</div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 220px 110px 140px 110px 150px; align-items:center; padding:12px 18px; border-bottom:1px solid #D9CCAE;">
+            <div style="display:flex; align-items:center; gap:10px;"><img src="players/string.png" style="width:32px; height:32px; border-radius:50%; border:1.5px solid #1B1A16; object-fit:cover;"><span style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:13px; color:#1B1A16; letter-spacing:1px;">String Ray</span></div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8C8672;">string@ray.net</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#1B1A16;">#3</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#1B1A16;">11–8 / 6–6</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#3E6B35;">ACTIVE</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672; text-align:right;">Edit · Deactivate</div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 220px 110px 140px 110px 150px; align-items:center; padding:12px 18px; border-bottom:1px solid #D9CCAE;">
+            <div style="display:flex; align-items:center; gap:10px;"><img src="players/jacks.png" style="width:32px; height:32px; border-radius:50%; border:1.5px solid #1B1A16; object-fit:cover;"><span style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:13px; color:#1B1A16; letter-spacing:1px;">Jacks Bendell</span></div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8C8672;">jacks@bendell.co</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#1B1A16;">#4</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#1B1A16;">9–9 / 4–5</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#3E6B35;">ACTIVE</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672; text-align:right;">Edit · Deactivate</div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 220px 110px 140px 110px 150px; align-items:center; padding:12px 18px; border-bottom:1px solid #D9CCAE;">
+            <div style="display:flex; align-items:center; gap:10px;"><img src="players/ringo.png" style="width:32px; height:32px; border-radius:50%; border:1.5px solid #1B1A16; object-fit:cover;"><span style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:13px; color:#1B1A16; letter-spacing:1px;">Ringo Zeus</span></div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8C8672;">zeus@ringo.gg</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#1B1A16;">#5</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#1B1A16;">7–11 / 3–4</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#3E6B35;">ACTIVE</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672; text-align:right;">Edit · Deactivate</div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 220px 110px 140px 110px 150px; align-items:center; padding:12px 18px; opacity:0.7;">
+            <div style="display:flex; align-items:center; gap:10px;"><div style="width:32px; height:32px; border-radius:50%; border:2px dashed #8C8672; display:flex; align-items:center; justify-content:center; font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:11px; color:#8C8672;">Of</div><span style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:13px; color:#1B1A16; letter-spacing:1px;">Ollie Fenn</span></div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8C8672;">ollie@fenn.io</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8C8672;">—</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8C8672;">—</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C5426;">INVITED</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8C8672; text-align:right;">Resend · Revoke</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section></x-dc>
+</body>
+</html>

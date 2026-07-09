@@ -13,6 +13,10 @@ import type { Match, Standing } from "./types";
  * The real formula (points, ranked vs exhibition weighting, tie-breaks) is not
  * designed yet. For now we rank by raw win count so the module and its test
  * pattern exist. When the real formula lands, update the tests first.
+ *
+ * The real signature will align to the data model in `docs/SCHEMA.md` (match
+ * facts with `type`/`status`/per-set scores) and the Elo points system; it
+ * materialises into `rating_history` / `rating_points` (ADR-0003).
  */
 export function computeRankings(matches: Match[]): Standing[] {
   const byPlayer = new Map<string, Standing>();

@@ -20,9 +20,12 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 - **Knowledge lives in the repo.** Prefer enforced truth (types, tests, schema)
   over prose. Put the *why* in an ADR, the *what next* in `STATUS.md`.
+- **Data model authority:** `docs/SCHEMA.md` is the authoritative schema (built
+  in phases). Reconcile any change against it and the relevant ADR.
 - **Scoring is sacred and pure.** All standings/rankings come from
   `lib/scoring/computeRankings(matches)`. It is a pure function — no I/O, no
-  mutation of inputs, no stored points. Match facts are immutable (ADR-0001).
+  mutation of inputs, no stored points. Match facts are immutable (ADR-0001);
+  `rating_history`/`rating_points` are rebuildable caches (ADR-0003).
 - **Right-size the effort.** ~10-user app. Leave seams, skip machinery. No
   speculative caching/optimisation — add it only for a *measured* problem,
   recorded in an ADR.

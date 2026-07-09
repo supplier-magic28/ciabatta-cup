@@ -100,6 +100,7 @@ Following this is what keeps the documentation system — and therefore the abil
 ## 7. Document map
 
 - `ARCHITECTURE.md` — this file (vision, how we build)
+- `docs/SCHEMA.md` — authoritative data model (built in phases; see the `_(later phase)_` tags)
 - `docs/decisions/` — ADRs (append-only decision history); `ADR-0001` = immutable-facts + computed-scoring
 - `STATUS.md` — current handover (what's built, what's next, known issues)
 - `CLAUDE.md` — operating instructions + definition of done for AI sessions
