@@ -2,7 +2,15 @@
 -- Nickname preference is profile presentation state, not match identity.
 
 alter table public.players
-  add column use_nickname boolean not null default false;
+  add column if not exists use_nickname boolean;
+
+update public.players
+set use_nickname = false
+where use_nickname is null;
+
+alter table public.players
+  alter column use_nickname set default false,
+  alter column use_nickname set not null;
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (
@@ -16,6 +24,11 @@ on conflict (id) do update
 set public = excluded.public,
     file_size_limit = excluded.file_size_limit,
     allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "avatars_public_read" on storage.objects;
+drop policy if exists "avatars_insert_own" on storage.objects;
+drop policy if exists "avatars_update_own" on storage.objects;
+drop policy if exists "avatars_delete_own" on storage.objects;
 
 create policy "avatars_public_read"
   on storage.objects
