@@ -11,6 +11,8 @@ This is the short operational handover. Durable intent belongs in
   leaderboard.
 - Admins can invite players, review both-confirmed ranked results, and manage
   the current roster.
+- Invitees accept a server-verified email token, choose a durable password, and
+  become active before entering the league.
 - Players can submit a singles match with validated set scores; the opponent
   confirms it. Ranked matches then await admin approval, while exhibitions are
   approved automatically.
@@ -28,18 +30,17 @@ This is the short operational handover. Durable intent belongs in
 
 ## Current blockers
 
-- The Vercel deployment is live at `ciabatta-cup.app`; `www` redirects to the
-  apex domain and the production canonical-site environment variable is set.
-- Resend has verified `ciabatta-cup.app`; Supabase custom SMTP, the Auth Site
-  URL/redirect allow-list, and the invite template still need final setup.
-- `SUPABASE_SECRET_KEY` and `NEXT_PUBLIC_SITE_URL=https://ciabatta-cup.app` must
-  be confirmed in Vercel before the credentialed production smoke test.
+- Vercel, the apex-domain redirect, Resend SMTP, Supabase Auth URLs/template,
+  and server environment are operator-configured but still need one real
+  invite acceptance and sign-back-in verification.
+- The credentialed ranked submission, opponent confirmation, admin approval,
+  cache rebuild, leaderboard, and profile production loop remains unverified.
 
 ## Next product slice
 
-Finish the custom-domain Auth/email setup and run the credentialed production
-release smoke test. Then start the tournament spine: entities, participants,
-fixtures, and admin tournament management.
+Run the credentialed invite and ranked-match production smoke test. Then start
+the tournament spine: entities, participants, fixtures, and admin tournament
+management.
 
 ## Documentation rule
 

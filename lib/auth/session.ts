@@ -1,5 +1,6 @@
 import "server-only";
 
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 export interface SessionPlayer {
@@ -21,28 +22,13 @@ export async function getUser() {
 }
 
 /**
- * Flip an `invited` player to `active` the first time they reach the app after
- * completing signup (ADR-0002, ADR-0004). The DB permits exactly this self
- * transition; role/points stay frozen. No-op for already-active players.
- */
-async function ensureActivated(userId: string): Promise<void> {
-  const supabase = await createClient();
-  await supabase
-    .from("players")
-    .update({ status: "active", joined_at: new Date().toISOString() })
-    .eq("id", userId)
-    .eq("status", "invited");
-}
-
-/**
- * The current user's players profile (or null if not signed in). Activates an
- * invited profile on first authenticated entry before returning it.
+ * The current user's players profile, or null if not signed in. Pending
+ * invitees stay in password setup; only that completion action activates them
+ * (ADR-0013).
  */
 export async function getSessionPlayer(): Promise<SessionPlayer | null> {
   const user = await getUser();
   if (!user) return null;
-
-  await ensureActivated(user.id);
 
   const supabase = await createClient();
   const { data } = await supabase
@@ -50,6 +36,8 @@ export async function getSessionPlayer(): Promise<SessionPlayer | null> {
     .select("id, email, first_name, last_name, role, status")
     .eq("id", user.id)
     .single();
+
+  if (data?.status === "invited") redirect("/accept-invite");
 
   if (!data) {
     // Auth user exists but no profile row yet (e.g. trigger not applied).

@@ -23,7 +23,7 @@ pattern changes, update this guide and the component inventory in the same task.
 | 02 Player profile | `/players/[playerId]` | Partial | Hero, records, points history, head-to-head, and match log are live; avatar upload/editing and richer trend interaction are pending. |
 | 03 Log match | `/matches/new` | Partial | Submission and score validation are live; the flow is not yet a full visual recreation of every handoff state. |
 | 04 Tournaments | None | Planned | Tournament, participant, and fixture tables do not exist yet. |
-| 05 Sign in | `/sign-in`, `/sign-up` | Implemented | Auth flow and token-driven visual treatment are live. |
+| 05 Sign in | `/sign-in`, `/sign-up`, `/accept-invite` | Implemented | Sign-in, signup, and invite password setup use the token-driven auth shell. |
 | 06 Admin dashboard | `/admin/approvals`, `/admin/players` | Partial | Approval queue and roster exist as focused routes; dashboard stats and activity feed are pending. |
 | 07 Manage tournament | None | Planned | Depends on the tournament spine. |
 | 08 Manage players | `/admin/players` | Partial | Invite and roster status are live; edit, deactivate, resend, and revoke flows are pending. |

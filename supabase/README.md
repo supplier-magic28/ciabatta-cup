@@ -61,8 +61,8 @@ dashboard:
    `ciabatta-cup.app` sender and disable provider click tracking for Auth links.
 3. **Authentication -> Email Templates -> Invite user:** use
    `<a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=invite">Accept invitation</a>`.
-   `/auth/confirm` verifies that OTP; `ensureActivated` then flips the invitee
-   from `invited` to `active`.
+   `/auth/confirm` verifies that OTP and sends invitees to `/accept-invite`.
+   Their password submission then flips the profile from `invited` to `active`.
 
 ## Applying migrations
 

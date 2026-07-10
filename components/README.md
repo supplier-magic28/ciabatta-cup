@@ -20,6 +20,8 @@ of Done (`CLAUDE.md`).
 **Auth**
 - `auth/SignInForm` — email + password sign-in (client, `useActionState`).
 - `auth/SignUpForm` — create-account (name + email + password).
+- `auth/AcceptInviteForm` — invite-only password setup before profile
+  activation (client, `useActionState`).
 
 **Match**
 - `match/LogMatchForm` — the log-match wizard (design screen 03): 3 steps

@@ -66,11 +66,13 @@ and redirect allow-list are saved.
 1. Open `https://ciabatta-cup.app`, sign in as an admin, and use **Rebuild
    ratings** on `/admin/approvals`.
 2. Invite a new player and confirm the email link begins with
-   `https://ciabatta-cup.app/auth/confirm` before completing it.
-3. Submit a ranked match, confirm as the opponent, and approve as the admin.
-4. Verify the leaderboard, holder banner, reign count, and both player profiles
+   `https://ciabatta-cup.app/auth/confirm` before completing it. Confirm it lands
+   on `/accept-invite`, choose a password, sign out, and sign back in with it.
+3. Confirm the accepted player's roster status changed from invited to active.
+4. Submit a ranked match, confirm as the opponent, and approve as the admin.
+5. Verify the leaderboard, holder banner, reign count, and both player profiles
    update from the approved result.
-5. Run `npm run test:e2e` locally; CI runs the same anonymous-route browser
+6. Run `npm run test:e2e` locally; CI runs the same anonymous-route browser
    smoke test for every push and pull request.
 
 If cache rebuilding fails, keep the match facts intact, fix the server secret or
