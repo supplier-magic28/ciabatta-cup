@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 /** Paths reachable while signed out. Everything else requires a session. */
-const PUBLIC_PREFIXES = ["/sign-in", "/sign-up", "/auth"];
+const PUBLIC_PREFIXES = ["/sign-in", "/sign-up", "/forgot-password", "/auth"];
 
 function isPublic(pathname: string): boolean {
   return PUBLIC_PREFIXES.some(
