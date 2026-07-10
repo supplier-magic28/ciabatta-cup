@@ -25,28 +25,31 @@ This is the short operational handover. Durable intent belongs in
   is published only after their first approved ranked result.
 - Player profiles provide rank, current holder state, separate ranked and
   exhibition records, points history, head-to-head summaries, and match logs.
+- Admins can create a four-player round-robin tournament, seed its participants,
+  generate a deterministic court schedule, record immutable results directly,
+  and advance through a qualification decider, final, and third-place match.
+- Authenticated players can follow tournament details, live standings, fixtures,
+  results, progress, and the derived champion from `/tournaments`.
 
 ## Database state
 
 | Migration | State |
 | --- | --- |
-| `20260709000000` through `20260710050000` | Applied to production (operator reported) |
-| `20260710060000_unranked_players_zero_points.sql` | Committed; operator must apply |
+| `20260709000000` through `20260710070000` | Applied to production (operator reported) |
 
 ## Current blockers
 
 - The production invite, email delivery, acceptance, activation, and new-player
   display have been exercised successfully.
-- `20260710060000` must be applied so production cache defaults and existing
-  unranked player rows match the zero-point policy.
 - The credentialed ranked submission, opponent confirmation, admin approval,
   cache rebuild, leaderboard, and profile production loop remains unverified.
 
 ## Next product slice
 
-Apply the zero-point migration and run the credentialed ranked-match production
-smoke test. Then start the tournament spine: entities, participants, fixtures,
-and admin tournament management.
+Deploy the tournament release, create the Ciabatta Qualifier, verify its exact
+six-match draw, and rehearse the director workflow without committing a fake
+production result. After the event, add an append-only correction workflow and
+generalise setup beyond the first four-player round robin.
 
 ## Documentation rule
 

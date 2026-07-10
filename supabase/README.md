@@ -39,9 +39,12 @@ Database migrations for Ciabatta Cup. The authoritative data model is
 - `20260710060000_unranked_players_zero_points.sql` changes the public/cache
   default to zero until a player's first approved ranked match and backfills
   existing unranked players (ADR-0014).
+- `20260710070000_tournament_day_release.sql` adds tournaments, ordered
+  participants, fixtures, authenticated-read/admin-write RLS, the deferred match
+  foreign keys, and the admin-only atomic tournament-result RPC (ADR-0016).
 
-The players, match, confirmation, rating-history, and reign tables exist in
-migration form. Tournaments, fixtures, and activity arrive in later phases.
+The player, match, confirmation, rating-history, reign, tournament, participant,
+and fixture tables exist in migration form. Activity remains a later phase.
 
 ## Environment variables
 
@@ -49,8 +52,8 @@ migration form. Tournaments, fixtures, and activity arrive in later phases.
   client config.
 - `SUPABASE_SECRET_KEY` — **server-only** service-role key. Required for player
   invites, safe deletion of unused identities, and rebuilding derived ratings
-  after ranked approval. Never expose it to the browser or commit it; `.env*`
-  is git-ignored.
+  after ranked or tournament approval. Never expose it to the browser or commit
+  it; `.env*` is git-ignored.
 - `NEXT_PUBLIC_SITE_URL` — canonical invite origin. Set it to
   `https://ciabatta-cup.app` in production.
 

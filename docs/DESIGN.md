@@ -21,11 +21,11 @@ pattern changes, update this guide and the component inventory in the same task.
 | --- | --- | --- | --- |
 | 01 Leaderboard | `/` | Partial | Holder history, reign duration, profile links, earned ratings, zero-point unranked states, records, and movement are live; filters, last-five form, and side rail are pending. |
 | 02 Player profile | `/players/[playerId]` | Partial | Hero, records, points history, head-to-head, and match log are live; avatar upload/editing and richer trend interaction are pending. |
-| 03 Log match | `/matches/new` | Partial | Submission and score validation are live; the flow is not yet a full visual recreation of every handoff state. |
-| 04 Tournaments | None | Planned | Tournament, participant, and fixture tables do not exist yet. |
+| 03 Log match | `/matches`, `/matches/new` | Partial | Submission, confirmation, history, and score validation are live; the flow is not yet a full visual recreation of every handoff state. |
+| 04 Tournaments | `/tournaments`, `/tournaments/[tournamentId]` | Implemented | Event cards, live standings, qualification state, round/court schedule, results, final rules, and champion are live. Self-entry and multi-structure filtering remain deferred. |
 | 05 Sign in | `/sign-in`, `/sign-up`, `/accept-invite` | Implemented | Sign-in, signup, and invite password setup use the token-driven auth shell. |
 | 06 Admin dashboard | `/admin/approvals`, `/admin/players` | Partial | Approval queue and roster exist as focused routes; dashboard stats and activity feed are pending. |
-| 07 Manage tournament | None | Planned | Depends on the tournament spine. |
+| 07 Manage tournament | `/admin/tournaments/new`, `/admin/tournaments/[tournamentId]` | Partial | Four-player round-robin setup, deterministic fixture generation, reviewed admin result entry, decider planning, finals, and completion are live. Knockout preview and mid-event roster changes are deferred. |
 | 08 Manage players | `/admin/players` | Partial | Invite, roster status, and safe deletion of unused players are live; edit, deactivate, resend, and revoke flows are pending. |
 
 ## Implementation rules

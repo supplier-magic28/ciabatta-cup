@@ -7,9 +7,10 @@ artifact and is preserved unchanged. Field names are suggestions; relationships
 and enums are the contract.
 
 > **Built in phases.** The full model below is the destination, not a single
-> migration. Players, match facts, confirmations, and rating history are now
-> implemented in migration form. Tournaments, reigns, and activity land in
-> later phases. See ADR-0003 and ADR-0011.
+> migration. Players, match facts, confirmations, ratings, reigns, and the first
+> round-robin tournament spine are implemented in migration form. Activity and
+> additional tournament structures land in later phases. See ADR-0003,
+> ADR-0011, and ADR-0016.
 
 ## Reconciliation with ADR-0001 (read this)
 
@@ -71,9 +72,8 @@ _(`password_hash` from the original handoff is intentionally removed — see ADR
 ### matches _(Phase 3a — implemented)_
 Immutable match facts (ADR-0001). Once `status = approved` a row is frozen by a
 trigger (`enforce_match_immutable()`); corrections are new facts, never edits.
-`tournament_id` / `fixture_id` are nullable **plain uuid** columns until their
-tables exist — the FK constraints are added in the tournaments/fixtures phase
-(ADR-0006).
+`tournament_id` / `fixture_id` are nullable foreign keys after Phase 4. A unique
+partial index permits only one match fact per fixture (ADR-0016).
 | field | type | notes |
 |---|---|---|
 | id | uuid PK | |
@@ -83,7 +83,7 @@ tables exist — the FK constraints are added in the tournaments/fixtures phase
 | player1_id / player2_id | FK players | singles only for now — consider a match_players join table if doubles ever matters |
 | winner_id | FK players nullable | null until scored |
 | status | enum: pending_confirmation, pending_approval, approved, queried, rejected | see lifecycle below |
-| submitted_by | FK players | who logged it |
+| submitted_by | FK players | player who submitted it, or admin who recorded a tournament result |
 | played_at | timestamptz | |
 | duration_minutes | int nullable | shown as "2h 14m" |
 | tournament_id | FK tournaments nullable | null = casual match |
@@ -91,6 +91,11 @@ tables exist — the FK constraints are added in the tournaments/fixtures phase
 | created_at / updated_at | timestamptz | |
 
 **Match lifecycle**: `pending_confirmation` (opponent hasn't confirmed) → `pending_approval` (both confirmed; ranked only — exhibitions can auto-approve) → `approved` (points applied, stats count) | `queried` (admin flagged, back to submitter) | `rejected`.
+
+Admin-recorded tournament results use a transactional RPC: insert at
+`pending_approval`, insert the score, then transition to `approved`. They do not
+claim participant confirmations. The transaction finishes before the existing
+immutable-fact triggers seal the match (ADR-0016).
 
 ### match_sets _(Phase 3a — implemented)_
 | field | type | notes |
@@ -107,38 +112,44 @@ tables exist — the FK constraints are added in the tournaments/fixtures phase
 Once both rows exist, a database trigger advances a ranked result to
 `pending_approval` and an exhibition result to `approved` (ADR-0010).
 
-### tournaments _(later phase — not yet built)_
+### tournaments _(Phase 4 — implemented for round robin)_
 | field | type | notes |
 |---|---|---|
 | id | uuid PK | |
 | name | text | e.g. "Ciabatta Qualifier" |
-| structure | enum: round_robin, knockout, groups_knockout | |
-| match_format | enum (same as matches.format) + format_note | default for generated fixtures |
+| structure | enum: round_robin, knockout, groups_knockout | only round_robin is exposed in the first UI |
 | counts_as | enum: ranked, exhibition | |
-| status | enum: draft, open, live, completed, cancelled | open = entries accepted |
+| status | enum: draft, scheduled, live, completed, cancelled | first result moves scheduled → live |
 | courts | int | drives schedule generation (who plays / who rests) |
 | starts_at | timestamptz | |
-| final_rules | text nullable | e.g. "1st vs 2nd · one full set · TB at 6–6" |
-| winner_id | FK players nullable | set on completion |
+| timezone | text | IANA timezone used to display `starts_at` |
+| location_name | text | event venue |
+| group_ruleset / playoff_ruleset | enum: short_first_to_3, standard_set_tiebreak_6_all | exact validation contract for generated fixtures |
+| rules_note | text nullable | human event summary; not used for scoring |
 | created_by | FK players | admin |
+| created_at / updated_at | timestamptz | |
 
-### tournament_participants _(later phase — not yet built)_
-| tournament_id FK, player_id FK, seed int nullable, entered_at | seed defaults from leaderboard rank at generation time |
+Tournament status is operational state. Progress and the champion are derived
+from linked immutable matches rather than stored on this row.
 
-### fixtures _(later phase — not yet built)_
+### tournament_participants _(Phase 4 — implemented)_
+| tournament_id FK, player_id FK, seed int, entered_at | composite identity; seed is unique within a tournament and drives deterministic generation |
+
+### fixtures _(Phase 4 — implemented for round robin)_
 | field | type | notes |
 |---|---|---|
 | id | uuid PK | |
 | tournament_id | FK | |
-| stage | enum: group, quarterfinal, semifinal, final, playoff | round-robin rounds use `group` + round_number |
-| round_number | int nullable | RR round 1..n |
-| court | int nullable | court assignment |
-| player1_id / player2_id | FK players nullable | nullable for "Winner SF1" placeholders |
-| feeds_from_fixture1_id / feeds_from_fixture2_id | FK fixtures nullable | bracket wiring |
-| bye_player_id | FK players nullable | top seeds get byes |
-| resting_player_id | FK players nullable | RR "resting" column |
-| match_id | FK matches nullable | filled when result submitted |
-| status | enum: scheduled, in_progress, complete | |
+| stage | enum: group, tiebreak, quarterfinal, semifinal, final, playoff | first release uses group, tiebreak, final, playoff |
+| round_number / slot_number | int | logical round and court wave |
+| court_number | int | court assignment within the wave |
+| ruleset | tournament_ruleset | controls score validation and match format mapping |
+| player1_id / player2_id | FK players | both must be registered tournament participants |
+
+A fixture does not store status, winner, score, or `match_id`. Its result is the
+single `matches` row whose `fixture_id` points back to it. Odd-field rests are
+derived as the participant absent from that round rather than stored as fake
+fixtures. Future bracket wiring remains deferred.
 
 ### rating_history _(Phase 3d — implemented)_
 Persisted materialisation of the pure scoring function. It is a rebuildable
@@ -174,7 +185,9 @@ holder. A new holder closes the old reign at the deciding match time.
   progressive display features derived from approved ranked matches.
 - **Records**: ranked W–L and exhibition W–L are always separate; sets/games totals from match_sets.
 - **Head-to-head**: per player-pair W–L over approved matches (filterable ranked/exhibition).
-- **Tournament standings** (round robin): W–L then game difference ("+9") from fixtures→matches.
+- **Tournament standings** (round robin): W–L, game difference, head-to-head,
+  then seed from fixtures→approved matches. A tie on wins crossing second/third
+  creates an on-court decider; final placement comes from the final and playoff.
 
 ## Points system (recommendation)
 Elo with K=32 and floor 100 uses 1000 as the internal entry baseline. Players
@@ -186,8 +199,12 @@ This is `lib/scoring/computeRankings` (ADR-0014).
 
 ## Auth & permissions
 - **Supabase Auth** (email + password managed by Supabase; **no `password_hash` in our schema**). `players.id` = `auth.users.id`. Invited players are created via Supabase Auth invite (tokenised link); `players.status`: invited → active on registration. See ADR-0002.
-- `player`: submit/confirm matches, enter open tournaments, edit **own profile only** (not role/status/rating_points).
-- `admin`: everything + approve/query results, create/manage tournaments, invite/deactivate players. Admin approval UI expects both-confirmed ranked matches surfaced oldest-first.
+- `player`: submit/confirm casual matches, read tournaments, and edit **own
+  profile only** (not role/status/rating_points).
+- `admin`: everything + approve/query results, create/manage tournaments,
+  atomically record tournament fixtures, and invite/deactivate players. Admin
+  approval UI expects both-confirmed player submissions surfaced oldest-first;
+  director-recorded tournament matches are approved inside their transaction.
 - Admins may hard-delete only unused player identities with no match references;
   historical players must be deactivated so immutable facts retain their
   participant identity (ADR-0015).

@@ -7,6 +7,10 @@ on:
 jobs:
   checks:
     runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder
+      SUPABASE_SECRET_KEY: ci-placeholder
     steps:
       - uses: actions/checkout@v4
 
@@ -29,6 +33,12 @@ jobs:
 
       - name: Documentation checks
         run: npm run docs:check
+
+      - name: Documentation check tests
+        run: npm run docs:check:test
+
+      - name: Production build
+        run: npm run build
 
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium

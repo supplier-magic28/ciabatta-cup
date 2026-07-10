@@ -26,6 +26,23 @@ function read(root, relativePath) {
   return readFileSync(resolve(root, relativePath), "utf8");
 }
 
+function walkFiles(directory) {
+  if (!existsSync(directory)) return [];
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const target = path.join(directory, entry.name);
+    return entry.isDirectory() ? walkFiles(target) : [target];
+  });
+}
+
+function relativeUnix(root, file) {
+  return path.relative(root, file).split(path.sep).join("/");
+}
+
+function pageRoute(relativePath) {
+  const segments = relativePath.split("/").slice(1, -1).filter((segment) => !/^\(.+\)$/.test(segment));
+  return segments.length === 0 ? "/" : `/${segments.join("/")}`;
+}
+
 function isValidIsoDate(value) {
   const date = new Date(`${value}T00:00:00.000Z`);
   return !Number.isNaN(date.valueOf()) && date.toISOString().slice(0, 10) === value;
@@ -93,6 +110,28 @@ export function checkDocs(root = process.cwd()) {
       }
       for (const section of ADR_SECTIONS) {
         if (!adr.includes(section)) errors.push(`${relativePath} is missing '${section}'.`);
+      }
+    }
+  }
+
+  const designPath = "docs/DESIGN.md";
+  if (existsSync(resolve(root, designPath))) {
+    const design = read(root, designPath);
+    for (const file of walkFiles(resolve(root, "app")).filter((file) => file.endsWith(`${path.sep}page.tsx`))) {
+      const route = pageRoute(relativeUnix(root, file));
+      if (!design.includes(`\`${route}\``)) {
+        errors.push(`Application route is not listed in docs/DESIGN.md: ${route}`);
+      }
+    }
+  }
+
+  const componentReadmePath = "components/README.md";
+  if (existsSync(resolve(root, componentReadmePath))) {
+    const inventory = read(root, componentReadmePath);
+    for (const file of walkFiles(resolve(root, "components")).filter((file) => file.endsWith(".tsx"))) {
+      const componentPath = relativeUnix(resolve(root, "components"), file).replace(/\.tsx$/, "");
+      if (!inventory.includes(`\`${componentPath}\``)) {
+        errors.push(`Shared component is not listed in components/README.md: ${componentPath}`);
       }
     }
   }

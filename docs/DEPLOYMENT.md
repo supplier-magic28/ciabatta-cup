@@ -16,7 +16,9 @@ supabase db push
 Confirm that `20260710020000_advance_on_confirmation.sql`,
 `20260710030000_rating_cache.sql`, and
 `20260710040000_ciabatta_reigns.sql` are present in the project migration
-history. Do not run the cache rebuild until the final migration is applied.
+history. Apply `20260710060000_unranked_players_zero_points.sql` before
+`20260710070000_tournament_day_release.sql`. Do not deploy tournament routes or
+run the cache rebuild until the final migration is applied.
 
 ## 2. Configure Vercel
 
@@ -74,6 +76,25 @@ and redirect allow-list are saved.
    update from the approved result.
 6. Run `npm run test:e2e` locally; CI runs the same anonymous-route browser
    smoke test for every push and pull request.
+
+## 5. Prepare the Ciabatta Qualifier
+
+1. Open `/admin/tournaments/new` and keep the defaults: **Ciabatta Qualifier**,
+   11 July 2026 at 10:30 AM, Northcote Tennis Club, and two courts.
+2. Set seed order to Ben, String, Michaels, then Ringo. Create the tournament and
+   select **Generate fixtures**.
+3. Verify Round 1 is Ben/String and Michaels/Ringo; Round 2 is Ben/Michaels and
+   Ringo/String; Round 3 is Ben/Ringo and String/Michaels.
+4. Open the player view and verify the event time, venue, empty standings, and
+   six pending fixtures. Do not enter a production score as a rehearsal because
+   approved match facts are immutable.
+5. On the day, enter each score from the director console. Select **Advance
+   tournament** after all six group matches, after any generated decider, and
+   after both placement matches to mark the event complete.
+
+If a result succeeds but the Elo rebuild fails, keep the approved match intact,
+repair the service-key or migration configuration, and use **Rebuild ratings**
+on `/admin/approvals`.
 
 If cache rebuilding fails, keep the match facts intact, fix the server secret or
 migration state, then run the admin rebuild again.

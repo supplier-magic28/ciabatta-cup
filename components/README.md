@@ -17,6 +17,10 @@ of Done (`CLAUDE.md`).
 - `ui/Chip` — selectable pill (2px ink border; fills green when selected). Used
   for the match type/format choices; reusable for any one-of-many selection.
 
+**Layout**
+- `layout/SiteHeader` — shared wordmark and primary navigation for the ladder,
+  tournaments, matches, admin tools, and sign-out.
+
 **Auth**
 - `auth/SignInForm` — email + password sign-in (client, `useActionState`).
 - `auth/SignUpForm` — create-account (name + email + password).
@@ -42,5 +46,15 @@ of Done (`CLAUDE.md`).
 - `players/PlayerAvatar` — Supabase Storage avatar with deterministic initials
   fallback; used by leaderboard and profiles.
 - `players/ReignSummary` — hydrated current-holder duration and reign count.
+
+**Tournaments**
+- `tournament/NewTournamentForm` — director setup for event details, courts,
+  and four ordered participant seeds.
+- `tournament/TournamentAdminActions` — fixture-generation and stage-advance
+  controls with inline operational feedback.
+- `tournament/TournamentBoard` — shared standings and round/court schedule used
+  by the player and director views.
+- `tournament/TournamentResultForm` — two-step admin score review and atomic
+  approval for a scheduled fixture.
 
 Planned next (from ARCHITECTURE.md): `Card`, `RankBadge`, `StatBlock`.

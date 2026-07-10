@@ -2,11 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionPlayer } from "@/lib/auth/session";
 import { displayName } from "@/lib/auth/displayName";
-import { signOut } from "@/lib/auth/actions";
 import { buildRatingCache, type ScoringMatchRow } from "@/lib/scoring";
 import { createClient } from "@/lib/supabase/server";
 import { LoafBadge } from "@/components/brand/LoafBadge";
-import { Wordmark } from "@/components/brand/Wordmark";
+import { SiteHeader } from "@/components/layout/SiteHeader";
 import { PlayerAvatar } from "@/components/players/PlayerAvatar";
 import { ReignSummary } from "@/components/players/ReignSummary";
 
@@ -62,34 +61,7 @@ export default async function Home() {
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 pb-10 pt-5 sm:px-6">
-      <header className="mb-7 flex items-start justify-between gap-4 border-b-2 border-ink pb-4">
-        <Link href="/" aria-label="Ciabatta Cup leaderboard">
-          <Wordmark className="origin-left scale-[0.72] sm:scale-90" />
-        </Link>
-        <div className="flex flex-wrap justify-end gap-x-4 gap-y-2 pt-1 font-mono text-[10px] uppercase tracking-[1.5px]">
-          <Link href="/matches" className="text-ink underline decoration-green decoration-2 underline-offset-4">
-            Matches
-          </Link>
-          <Link href="/matches/new" className="text-green">
-            Log result
-          </Link>
-          {sessionPlayer.role === "admin" && (
-            <>
-              <Link href="/admin/approvals" className="text-crust">
-                Approvals
-              </Link>
-              <Link href="/admin/players" className="text-crust">
-                Players
-              </Link>
-            </>
-          )}
-          <form action={signOut}>
-            <button type="submit" className="text-muted underline underline-offset-4">
-              Log out
-            </button>
-          </form>
-        </div>
-      </header>
+      <SiteHeader role={sessionPlayer.role} active="leaderboard" />
 
       <section className="mb-6 border-2 border-ink bg-green px-4 py-3 shadow-[3px_3px_0_var(--color-ink)]">
         <div className="flex items-center gap-3">

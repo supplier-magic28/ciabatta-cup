@@ -3,6 +3,8 @@
 Ciabatta Cup is a private, mobile-first tennis ladder for a small group of
 friends. Players submit results, both players confirm them, an admin approves
 ranked matches, and the Elo ladder is rebuilt from the immutable match facts.
+Tournament directors can also generate a seeded round-robin draw, record linked
+results directly, and advance an event through deciders and placement matches.
 
 The product is intentionally small. The engineering priority is being able to
 change the rules, UI, and tournament format without losing confidence in the
@@ -29,7 +31,7 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
 The secret key is server-only. It is required for player invites and for
-rebuilding derived ratings when an admin approves a ranked match.
+rebuilding derived ratings when an admin approves a ranked or tournament match.
 `NEXT_PUBLIC_SITE_URL` is the canonical origin used in invitation links; the
 production value is `https://ciabatta-cup.app`.
 
@@ -48,9 +50,13 @@ npm run typecheck
 npm run test
 npm run test:e2e
 npm run docs:check
+npm run docs:check:test
+npm run build
 ```
 
-CI runs the same checks on every push and pull request.
+CI runs the same checks on every push and pull request. The documentation check
+also requires every route in `docs/DESIGN.md`, every shared component in
+`components/README.md`, and every migration in `supabase/README.md`.
 
 ## Production
 
@@ -59,6 +65,10 @@ serve that domain as the production domain, and Supabase Auth must use the same
 origin for its Site URL and invite redirect allow-list. The account-bound DNS,
 SMTP, Auth-template, deployment, and smoke-test sequence lives in
 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
+For a tournament release, apply database migrations before deploying routes
+that depend on them. Create and verify the draw from `/admin/tournaments/new`;
+the event-day procedure is in the production runbook.
 
 ## Documentation map
 

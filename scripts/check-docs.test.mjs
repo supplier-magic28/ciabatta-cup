@@ -29,6 +29,10 @@ function createFixture() {
   write(root, "STATUS.md", "# Status\n\n**Last updated:** 2026-07-10\n");
   write(root, "supabase/migrations/20260710000000_fixture.sql", "select 1;\n");
   write(root, "supabase/README.md", "20260710000000_fixture.sql\n");
+  write(root, "app/page.tsx", "export default function Page() {}\n");
+  write(root, "docs/DESIGN.md", "# Fixture\n\n`/`\n");
+  write(root, "components/ui/Button.tsx", "export function Button() {}\n");
+  write(root, "components/README.md", "# Fixture\n\n`ui/Button`\n");
   write(
     root,
     "docs/decisions/0001-fixture.md",
@@ -75,5 +79,19 @@ test("rejects an invalid status date", () => {
   withFixture((root) => {
     write(root, "STATUS.md", "# Status\n\n**Last updated:** 2026-02-30\n");
     assert.match(checkDocs(root).join("\n"), /STATUS\.md must contain a valid/);
+  });
+});
+
+test("rejects an application route missing from the design tracker", () => {
+  withFixture((root) => {
+    write(root, "app/tournaments/page.tsx", "export default function Page() {}\n");
+    assert.match(checkDocs(root).join("\n"), /route is not listed.*\/tournaments/);
+  });
+});
+
+test("rejects a shared component missing from the component inventory", () => {
+  withFixture((root) => {
+    write(root, "components/tournament/Board.tsx", "export function Board() {}\n");
+    assert.match(checkDocs(root).join("\n"), /component is not listed.*tournament\/Board/);
   });
 });
