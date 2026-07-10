@@ -27,12 +27,13 @@ This is the short operational handover. Durable intent belongs in
 | Migration | State |
 | --- | --- |
 | `20260709000000` through `20260710040000` | Applied to production (operator reported) |
+| `20260710050000_fix_invited_profile_status_cast.sql` | Committed; operator must apply |
 
 ## Current blockers
 
 - Vercel, the apex-domain redirect, Resend SMTP, Supabase Auth URLs/template,
-  and server environment are operator-configured but still need one real
-  invite acceptance and sign-back-in verification.
+  and server environment are operator-configured. Production invites currently
+  fail until `20260710050000` fixes the Auth profile trigger's enum cast.
 - The credentialed ranked submission, opponent confirmation, admin approval,
   cache rebuild, leaderboard, and profile production loop remains unverified.
 

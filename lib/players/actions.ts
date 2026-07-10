@@ -50,11 +50,15 @@ export async function inviteUser(_prev: InviteState, formData: FormData): Promis
   });
 
   if (error) {
+    console.error("Supabase inviteUserByEmail failed", error);
     const alreadyExists = /already|registered|exist/i.test(error.message);
+    const databaseFailure = /database|saving new user/i.test(error.message);
     return {
       error: alreadyExists
         ? "That email already belongs to a player."
-        : "Couldn't send the invite — please try again.",
+        : databaseFailure
+          ? "Couldn't create the player profile. Check the latest database migration."
+          : "Couldn't send the invite — please try again.",
     };
   }
 

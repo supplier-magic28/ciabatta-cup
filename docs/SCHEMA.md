@@ -44,6 +44,9 @@ Identity is managed by **Supabase Auth**; there are **no self-managed passwords*
 always corresponds to an auth user. An `invited` player is a Supabase Auth
 **invited** user (the `auth.users` row is created at invite time via
 `inviteUserByEmail`), which is why the FK holds even before they register.
+`handle_new_user()` maps `auth.users.invited_at` to the explicitly cast
+`player_status` enum so invited and self-signup profiles are created atomically
+with their Auth identity.
 
 | field | type | notes |
 |---|---|---|

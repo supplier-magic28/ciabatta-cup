@@ -33,6 +33,9 @@ Database migrations for Ciabatta Cup. The authoritative data model is
 - `20260710040000_ciabatta_reigns.sql` adds the rebuildable holder-history cache
   and a compatible three-payload replacement RPC that refreshes ratings,
   history, and reigns together (ADR-0012).
+- `20260710050000_fix_invited_profile_status_cast.sql` fixes Auth invite
+  creation by explicitly casting the `handle_new_user()` status branch to the
+  `player_status` enum.
 
 The players, match, confirmation, rating-history, and reign tables exist in
 migration form. Tournaments, fixtures, and activity arrive in later phases.
