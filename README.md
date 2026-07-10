@@ -25,10 +25,13 @@ Create `.env.local` with:
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 SUPABASE_SECRET_KEY=
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
 The secret key is server-only. It is required for player invites and for
 rebuilding derived ratings when an admin approves a ranked match.
+`NEXT_PUBLIC_SITE_URL` is the canonical origin used in invitation links; the
+production value is `https://ciabatta-cup.app`.
 
 ## Database operations
 
@@ -48,6 +51,14 @@ npm run docs:check
 ```
 
 CI runs the same checks on every push and pull request.
+
+## Production
+
+The canonical production origin is `https://ciabatta-cup.app`. Vercel must
+serve that domain as the production domain, and Supabase Auth must use the same
+origin for its Site URL and invite redirect allow-list. The account-bound DNS,
+SMTP, Auth-template, deployment, and smoke-test sequence lives in
+[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## Documentation map
 

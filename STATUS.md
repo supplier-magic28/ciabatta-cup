@@ -24,26 +24,22 @@ This is the short operational handover. Durable intent belongs in
 
 | Migration | State |
 | --- | --- |
-| `20260709000000` through `20260710010000` | Applied to the known Supabase project |
-| `20260710020000_advance_on_confirmation.sql` | Committed; operator must apply |
-| `20260710030000_rating_cache.sql` | Committed; operator must apply |
-| `20260710040000_ciabatta_reigns.sql` | Committed; operator must apply |
-
-Until the pending migrations are applied, confirmations do not advance and
-ranked approval cannot materialise ratings or reigns.
+| `20260709000000` through `20260710040000` | Applied to production (operator reported) |
 
 ## Current blockers
 
-- `SUPABASE_SECRET_KEY` must be configured in the server environment for
-  invites and rating-cache rebuilds.
-- Supabase redirect URLs and the invite email template still need an
-  end-to-end verification.
-- No production deployment is connected yet.
+- The Vercel deployment is connected, but `ciabatta-cup.app` still needs to be
+  attached to the project and selected as the canonical production domain.
+- Resend has verified `ciabatta-cup.app`; Supabase custom SMTP, the Auth Site
+  URL/redirect allow-list, and the invite template still need final setup.
+- `SUPABASE_SECRET_KEY` and `NEXT_PUBLIC_SITE_URL=https://ciabatta-cup.app` must
+  be confirmed in Vercel before the credentialed production smoke test.
 
 ## Next product slice
 
-Apply and verify the production release runbook, then start the tournament
-spine: entities, participants, fixtures, and admin tournament management.
+Finish the custom-domain Auth/email setup and run the credentialed production
+release smoke test. Then start the tournament spine: entities, participants,
+fixtures, and admin tournament management.
 
 ## Documentation rule
 

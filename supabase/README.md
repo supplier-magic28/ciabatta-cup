@@ -44,6 +44,8 @@ migration form. Tournaments, fixtures, and activity arrive in later phases.
 - `SUPABASE_SECRET_KEY` — **server-only** service-role key. Required for player
   invites and for rebuilding derived ratings after ranked approval. Never expose
   it to the browser or commit it; `.env*` is git-ignored.
+- `NEXT_PUBLIC_SITE_URL` — canonical invite origin. Set it to
+  `https://ciabatta-cup.app` in production.
 
 ## Inviting players (Supabase project config)
 
@@ -51,12 +53,16 @@ Admin invites call `inviteUserByEmail` with a `redirectTo` of
 `<site>/auth/confirm?next=/`. For the link to work end-to-end, in the Supabase
 dashboard:
 
-1. **Auth → URL Configuration → Redirect URLs:** allow-list your site origin
-   (e.g. `http://localhost:3000/**` and the deployed origin).
-2. **Auth → Email Templates → Invite user:** ensure the confirmation link carries
-   the OTP so `/auth/confirm` can `verifyOtp` (`token_hash` + `type=invite`), or
-   rely on the hosted verify redirect. On landing, `ensureActivated` flips the
-   invitee `invited → active`.
+1. **Authentication -> URL Configuration:** set the Site URL to
+   `https://ciabatta-cup.app`; allow
+   `https://ciabatta-cup.app/auth/confirm?next=%2F` and the corresponding local
+   URL for development.
+2. **Authentication -> SMTP Settings:** configure the verified
+   `ciabatta-cup.app` sender and disable provider click tracking for Auth links.
+3. **Authentication -> Email Templates -> Invite user:** use
+   `<a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=invite">Accept invitation</a>`.
+   `/auth/confirm` verifies that OTP; `ensureActivated` then flips the invitee
+   from `invited` to `active`.
 
 ## Applying migrations
 

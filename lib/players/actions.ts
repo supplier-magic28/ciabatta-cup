@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { getSessionPlayer } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { validateInvite } from "./invite";
+import { buildInviteRedirectTo, validateInvite } from "./invite";
 
 export type InviteState = { error: string } | { sent: string } | undefined;
 
@@ -38,9 +38,10 @@ export async function inviteUser(_prev: InviteState, formData: FormData): Promis
   // Where Supabase sends the invitee after they accept. The existing
   // /auth/confirm route + ensureActivated handle the session and invited->active
   // flip. Must be allow-listed in the Supabase project (see supabase/README.md).
-  const origin =
-    (await headers()).get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL ?? "";
-  const redirectTo = origin ? `${origin}/auth/confirm?next=/` : undefined;
+  const redirectTo = buildInviteRedirectTo(
+    process.env.NEXT_PUBLIC_SITE_URL,
+    (await headers()).get("origin"),
+  );
 
   const admin = createAdminClient();
   const { error } = await admin.auth.admin.inviteUserByEmail(email, {

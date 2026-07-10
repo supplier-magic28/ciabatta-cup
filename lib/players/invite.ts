@@ -17,6 +17,22 @@ export type InviteValidation =
 // Deliberately loose — enough to catch typos, not to police valid addresses.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+export function buildInviteRedirectTo(
+  configuredSiteUrl: string | undefined,
+  requestOrigin: string | null,
+): string | undefined {
+  const origin = configuredSiteUrl?.trim() || requestOrigin?.trim();
+  if (!origin) return undefined;
+
+  try {
+    const redirect = new URL("/auth/confirm", origin);
+    redirect.searchParams.set("next", "/");
+    return redirect.toString();
+  } catch {
+    return undefined;
+  }
+}
+
 export function validateInvite(input: InviteInput): InviteValidation {
   const firstName = input.firstName?.trim() ?? "";
   const lastName = input.lastName?.trim() ?? "";
