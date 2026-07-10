@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Ciabatta Cup
 
-## Getting Started
+Ciabatta Cup is a private, mobile-first tennis ladder for a small group of
+friends. Players submit results, both players confirm them, an admin approves
+ranked matches, and the Elo ladder is rebuilt from the immutable match facts.
 
-First, run the development server:
+The product is intentionally small. The engineering priority is being able to
+change the rules, UI, and tournament format without losing confidence in the
+history behind the ladder.
+
+## Local development
+
+Requirements: Node.js 20+ and a Supabase project.
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create `.env.local` with:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+SUPABASE_SECRET_KEY=
+```
 
-## Learn More
+The secret key is server-only. It is required for player invites and for
+rebuilding derived ratings when an admin approves a ranked match.
 
-To learn more about Next.js, take a look at the following resources:
+## Database operations
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Migrations are committed under `supabase/migrations/` and must be applied in
+filename order. Use `supabase db push` after linking the project, or run the SQL
+files in the Supabase SQL Editor. The current migration inventory, invite setup,
+and first-admin bootstrap instructions live in [supabase/README.md](supabase/README.md).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Validation
 
-## Deploy on Vercel
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run docs:check
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+CI runs the same checks on every push and pull request.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Documentation map
+
+| Need | Source of truth |
+| --- | --- |
+| Current capabilities, blockers, and next work | [STATUS.md](STATUS.md) |
+| Architecture and engineering practices | [ARCHITECTURE.md](ARCHITECTURE.md) |
+| Agent operating instructions and definition of done | [CLAUDE.md](CLAUDE.md) |
+| Data model and implementation phase of each entity | [docs/SCHEMA.md](docs/SCHEMA.md) |
+| Why a durable technical decision was made | [docs/decisions/](docs/decisions/) |
+| Design handoff coverage and visual source material | [docs/DESIGN.md](docs/DESIGN.md) |
+| Supabase setup and migration operations | [supabase/README.md](supabase/README.md) |
+| Production deployment and smoke-test steps | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) |
+| Shared UI vocabulary | [components/README.md](components/README.md) |
+
+The raw files under `design-reference/` are preserved handoff artifacts. Do not
+edit them; record implementation progress in `docs/DESIGN.md` instead.

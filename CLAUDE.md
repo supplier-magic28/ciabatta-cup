@@ -15,6 +15,8 @@ This version has breaking changes — APIs, conventions, and file structure may 
 1. Read `STATUS.md` — what's built, what's next, known issues.
 2. Skim `ARCHITECTURE.md` if touching anything architectural.
 3. Check `docs/decisions/` for relevant ADRs before changing a settled decision.
+4. Read `docs/DESIGN.md` before changing a route, shared component, or visual
+   pattern represented in the design handoff.
 
 ## Conventions
 
@@ -25,12 +27,16 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **Scoring is sacred and pure.** All standings/rankings come from
   `lib/scoring/computeRankings(matches)`. It is a pure function — no I/O, no
   mutation of inputs, no stored points. Match facts are immutable (ADR-0001);
-  `rating_history`/`rating_points` are rebuildable caches (ADR-0003).
+  `rating_history`/`rating_points`/`ciabatta_reigns` are rebuildable caches
+  (ADR-0003, ADR-0012).
 - **Right-size the effort.** ~10-user app. Leave seams, skip machinery. No
   speculative caching/optimisation — add it only for a *measured* problem,
   recorded in an ADR.
 - **UI is token-driven.** Screens are assembled from `components/` primitives
   driven by design tokens (`components/tokens.ts`), not bespoke markup.
+- **Documentation impact is part of implementation.** Update the canonical docs
+  named in the matrix below, not just this status handover. Run
+  `npm run docs:check` before closing work.
 - **Commands:** `npm run lint`, `npm run typecheck`, `npm run test`
   (`test:watch` for TDD), `npm run dev`.
 - **Commit messages.** The **first line is a clear, concise subject** under ~70
@@ -41,12 +47,22 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **Secrets:** the publishable key is browser-safe; the secret key never touches
   client code or the repo. Env files (`.env*`) are git-ignored.
 
+## Documentation impact matrix
+
+| Change | Required documentation update |
+|---|---|
+| Schema, RLS, migration, or security behaviour | `docs/SCHEMA.md`, `supabase/README.md`, and an ADR when the decision is durable |
+| Product capability, route workflow, or current blocker | `STATUS.md`; also `docs/DESIGN.md` when it changes a handoff screen |
+| Shared component, token, or visual pattern | `components/README.md` and `docs/DESIGN.md` when coverage changes |
+| Local setup, environment variable, deployment, or operator process | Root `README.md` and `supabase/README.md` as applicable |
+| Durable architecture or policy decision | Append an ADR; never rewrite accepted history |
+
 ## Definition of Done
 
 A task is **not complete** until all of the following hold:
 
-1. **Tests are green.** `npm run lint`, `npm run typecheck`, and
-   `npm run test` (Vitest) all pass.
+1. **Checks are green.** `npm run lint`, `npm run typecheck`, `npm run test`,
+   and `npm run docs:check` all pass.
 2. **`STATUS.md` is updated** to reflect what changed and what's next.
 3. **An ADR is appended** to `docs/decisions/` for any architectural decision
    (never rewrite an old ADR — supersede it).

@@ -47,9 +47,15 @@ Architectural decisions are recorded as **ADRs** in `docs/decisions/`, one short
 
 **Stack:** Next.js (App Router, TypeScript, Tailwind) · Supabase (Postgres + Auth + Storage) · Vercel (hosting, preview deploys per PR). GitHub is the source of truth; push → CI → preview → merge → production.
 
-**The data model rule (see ADR-0001):** Match results are stored as **immutable facts** ("A beat B, 6–3 6–4, ranked, on this date"). Points and rankings are **never stored** — they are *computed* from match facts by a pure function. This is what lets the scoring formula evolve every season without migrating history, and it gives all-time exhibition/ranked records for free as filtered views of the same facts.
+**The data model rule (see ADR-0001 and ADR-0003):** Match results are stored as
+**immutable facts** ("A beat B, 6-3 6-4, ranked, on this date"). Standings are
+always derived by the pure scoring function from those facts. `rating_history`,
+`rating_points`, and `ciabatta_reigns` may be persisted only as fully rebuildable
+materialisations; they are never authoritative. This lets the scoring formula evolve without
+migrating history and keeps ranked and exhibition records available as filtered
+views of the same facts.
 
-**Scoring is an isolated pure function** in `lib/scoring/` — `computeRankings(matches) → standings`. It is the one piece of logic guaranteed to change repeatedly, so it is kept pure, isolated, and well-tested. *Where* it runs (on read now; cached or materialised later if ever needed) is a swappable decision behind this seam.
+**Scoring is an isolated pure function** in `lib/scoring/` — `computeRankings(matches) → standings`. It is the one piece of logic guaranteed to change repeatedly, so it is kept pure, isolated, and well-tested. The current cache materialisation is rebuilt from the function after approval; read surfaces still derive standings through the same seam.
 
 **Data fetching** defaults to Server Components (App Router default) to avoid client-side waterfalls. **Images** (avatars/photos) go through Supabase Storage + Next `<Image>` — the only heavy asset, so worth doing right from the start.
 
@@ -87,7 +93,7 @@ Do not add caching, edge tricks, or query optimisation speculatively. Add them o
 
 A task is not complete until:
 
-1. Lint, typecheck, and Vitest all pass.
+1. Lint, typecheck, Vitest, and `docs:check` all pass.
 2. `STATUS.md` reflects what changed and what's next.
 3. An **ADR is appended** if any architectural decision was made.
 4. The **component inventory** in this file (or `components/README`) is updated if components were added.
@@ -95,14 +101,28 @@ A task is not complete until:
 
 Following this is what keeps the documentation system — and therefore the ability to improve this app forever — alive.
 
+## 6a. Documentation impact matrix
+
+| When work changes | Update before completion |
+|---|---|
+| Schema, RLS, migration, or security | `docs/SCHEMA.md`, `supabase/README.md`, and an ADR for a durable decision |
+| Current product workflow or blocker | `STATUS.md`, plus `docs/DESIGN.md` for a handoff screen |
+| Shared UI component, token, or visual pattern | `components/README.md` and `docs/DESIGN.md` |
+| Setup, environment, deployment, or operator process | Root `README.md` and/or `supabase/README.md` |
+
+This is intentionally a small matrix. It makes the documentation update a
+predictable part of every implementation task instead of a separate cleanup.
+
 ---
 
 ## 7. Document map
 
 - `ARCHITECTURE.md` — this file (vision, how we build)
-- `docs/SCHEMA.md` — authoritative data model (built in phases; see the `_(later phase)_` tags)
+- `docs/SCHEMA.md` — authoritative data model and implementation phase of each entity
 - `docs/decisions/` — ADRs (append-only decision history); `ADR-0001` = immutable-facts + computed-scoring
 - `STATUS.md` — current handover (what's built, what's next, known issues)
+- `docs/DESIGN.md` — maintained implementation coverage for the immutable design handoff
+- `docs/DEPLOYMENT.md` — account-bound production rollout and smoke-test runbook
 - `CLAUDE.md` — operating instructions + definition of done for AI sessions
 - `lib/scoring/` — the pure scoring function + its tests
 - `components/` — the shared UI vocabulary + design tokens

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getSessionPlayer } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
+import { rebuildRatingCache } from "@/lib/scoring/rebuild";
 import { validateSubmission } from "./submission";
 import type { MatchSubmission } from "./types";
 
@@ -70,8 +71,8 @@ export async function submitMatch(input: MatchSubmission): Promise<SubmitResult>
     return { ok: false, error: SAVE_FAILED };
   }
 
-  // The submitter has implicitly confirmed by submitting; record their row. The
-  // both-confirmed -> pending_approval transition stays deferred (ADR-0006).
+  // The submitter has implicitly confirmed by submitting; the confirmation
+  // trigger advances the result once both players have confirmed (ADR-0010).
   const { error: confirmError } = await supabase
     .from("match_confirmations")
     .insert({ match_id: created.id, player_id: player.id });
@@ -112,8 +113,8 @@ export async function confirmMatch(matchId: string): Promise<MatchActionResult> 
 /**
  * Admin-only transition of a `pending_approval` match to a terminal decision.
  * Admin-gated in code (Server Actions are POST-reachable) and at the DB by the
- * `matches_update_admin` (`is_admin()`) RLS policy. Approve carries NO scoring —
- * it only sets `status = 'approved'`; materialising ratings is a later phase.
+ * `matches_update_admin` (`is_admin()`) RLS policy. Ranked approval then rebuilds
+ * the derived rating cache from the complete set of immutable match facts.
  */
 async function adminSetStatus(
   matchId: string,
@@ -139,8 +140,48 @@ async function adminSetStatus(
   const { error } = await supabase.from("matches").update({ status: to }).eq("id", matchId);
   if (error) return { ok: false, error: "Couldn't update this match — please try again." };
 
+  if (to === "approved") {
+    try {
+      // A late approval can alter every later Elo step, so rebuild from all
+      // immutable facts instead of trying to apply one incremental delta.
+      await rebuildRatingCache();
+    } catch {
+      revalidatePath("/admin/approvals");
+      revalidatePath("/matches");
+      revalidateRatingSurfaces();
+      return {
+        ok: false,
+        error: "Match was approved, but ratings could not be rebuilt. Check the server configuration.",
+      };
+    }
+  }
+
   revalidatePath("/admin/approvals");
   revalidatePath("/matches");
+  revalidateRatingSurfaces();
+  return { ok: true };
+}
+
+function revalidateRatingSurfaces() {
+  revalidatePath("/");
+  revalidatePath("/players/[playerId]", "page");
+}
+
+/** Rebuild all derived rating data; an admin recovery path after deployment. */
+export async function rebuildRatings(): Promise<MatchActionResult> {
+  const player = await getSessionPlayer();
+  if (!player || player.role !== "admin") {
+    return { ok: false, error: "Only admins can rebuild ratings." };
+  }
+
+  try {
+    await rebuildRatingCache();
+  } catch {
+    return { ok: false, error: "Couldn't rebuild ratings. Check the server configuration." };
+  }
+
+  revalidatePath("/admin/approvals");
+  revalidateRatingSurfaces();
   return { ok: true };
 }
 

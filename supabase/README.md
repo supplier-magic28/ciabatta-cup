@@ -24,17 +24,26 @@ Database migrations for Ciabatta Cup. The authoritative data model is
   **invited** auth user (`invited_at` set) gets a `players` row at status
   `invited`, while self-signups stay `active` (ADR-0009). Supersedes the
   profile-status logic in `20260709010000`.
+- `20260710020000_advance_on_confirmation.sql` documents the confirmation
+  trigger: ranked results await admin approval and exhibitions are approved
+  automatically (ADR-0010).
+- `20260710030000_rating_cache.sql` adds the rebuildable `rating_history`
+  materialisation and the service-role-only cache replacement RPC that refreshes
+  `players.rating_points` (ADR-0011).
+- `20260710040000_ciabatta_reigns.sql` adds the rebuildable holder-history cache
+  and a compatible three-payload replacement RPC that refreshes ratings,
+  history, and reigns together (ADR-0012).
 
-The `players` and match tables exist so far. Tournaments, fixtures, rating
-history, etc. arrive in later phases.
+The players, match, confirmation, rating-history, and reign tables exist in
+migration form. Tournaments, fixtures, and activity arrive in later phases.
 
 ## Environment variables
 
 - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` — browser-safe
   client config.
-- `SUPABASE_SECRET_KEY` — **server-only** service-role key. Required for admin
-  operations (inviting players via `inviteUserByEmail`). Never expose it to the
-  browser or commit it; `.env*` is git-ignored.
+- `SUPABASE_SECRET_KEY` — **server-only** service-role key. Required for player
+  invites and for rebuilding derived ratings after ranked approval. Never expose
+  it to the browser or commit it; `.env*` is git-ignored.
 
 ## Inviting players (Supabase project config)
 
@@ -51,7 +60,7 @@ dashboard:
 
 ## Applying migrations
 
-Both migrations must be applied for auth to work. Either:
+Apply migrations in filename order. Either:
 
 - **Supabase CLI:** `supabase db push` (requires `supabase link` to the project).
 - **Dashboard:** paste each file's SQL into the SQL Editor and run them in order.

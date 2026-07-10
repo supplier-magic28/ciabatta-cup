@@ -20,11 +20,24 @@ function isPublic(pathname: string): boolean {
  * whose cookies are written must be the one returned (or copied into any redirect).
  */
 export async function updateSession(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+  // Lets public auth screens render in local/CI smoke tests without credentials,
+  // while still failing closed for every protected route.
+  if (process.env.E2E_SMOKE_MODE === "1" || !url || !publishableKey) {
+    if (isPublic(pathname)) return NextResponse.next({ request });
+    const signInUrl = request.nextUrl.clone();
+    signInUrl.pathname = "/sign-in";
+    return NextResponse.redirect(signInUrl);
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    url,
+    publishableKey,
     {
       cookies: {
         getAll() {
@@ -47,8 +60,6 @@ export async function updateSession(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  const { pathname } = request.nextUrl;
 
   if (!user && !isPublic(pathname)) {
     const url = request.nextUrl.clone();

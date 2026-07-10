@@ -8,8 +8,7 @@ of Done (`CLAUDE.md`).
 ## Inventory
 
 **Brand**
-- `brand/LoafBadge` — the Ciabatta loaf (SVG), the trophy motif; reused for the
-  #1 badge later.
+- `brand/LoafBadge` — the Ciabatta loaf (SVG), the current-holder trophy motif.
 - `brand/Wordmark` — "CIABATTA CUP" wordmark, `tone` light/dark.
 
 **UI primitives**
@@ -30,9 +29,14 @@ of Done (`CLAUDE.md`).
   DB trigger advances the status once both players confirm.
 - `match/ApprovalActions` — admin Approve / Query / Reject for a `pending_approval`
   match (calls the admin match actions).
+- `match/RebuildRatingsButton` — admin recovery control that rebuilds ratings,
+  history, and reign caches from immutable facts.
 
 **Players (admin)**
 - `players/InvitePlayerForm` — admin invite form (design screen 08): name + email
   → `inviteUser` server action (`useActionState`).
+- `players/PlayerAvatar` — Supabase Storage avatar with deterministic initials
+  fallback; used by leaderboard and profiles.
+- `players/ReignSummary` — hydrated current-holder duration and reign count.
 
 Planned next (from ARCHITECTURE.md): `Card`, `RankBadge`, `StatBlock`.

@@ -79,10 +79,22 @@ export interface RatingHistoryEntry {
   playedAt: string;
 }
 
+/** A continuous period in which a player held the #1 ranked position. */
+export interface CiabattaReign {
+  /** Player holding the Ciabatta for this period. */
+  playerId: string;
+  /** ISO-8601 time of the ranked result that established the holder. */
+  startedAt: string;
+  /** ISO-8601 time the next holder took over; null for the current reign. */
+  endedAt: string | null;
+}
+
 /** The full computed result: the current ladder plus the history that built it. */
 export interface ScoringResult {
   /** Every rostered player, sorted by rank (rating desc, then playerId). */
   rankings: PlayerRating[];
   /** Two entries per ranked+approved match, in chronological application order. */
   ratingHistory: RatingHistoryEntry[];
+  /** Rebuildable #1-holder periods, beginning with the first scored match. */
+  reigns: CiabattaReign[];
 }

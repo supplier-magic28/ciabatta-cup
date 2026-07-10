@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { displayName } from "@/lib/auth/displayName";
 import { formatScore, type ScoreSet } from "@/lib/match/score";
 import { ApprovalActions } from "@/components/match/ApprovalActions";
+import { RebuildRatingsButton } from "@/components/match/RebuildRatingsButton";
 
 const eyebrow = "font-mono text-[10px] uppercase tracking-[2px] text-muted";
 
@@ -62,8 +63,11 @@ export default async function ApprovalsPage() {
 
   return (
     <main className="mx-auto w-full max-w-lg flex-1 px-6 py-10">
-      <header className="mb-6 flex items-center justify-between">
-        <h1 className="font-heading text-2xl font-bold text-ink">Approvals</h1>
+      <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="font-heading text-2xl font-bold text-ink">Approvals</h1>
+          <RebuildRatingsButton />
+        </div>
         <Link href="/" className="font-mono text-[12px] uppercase tracking-[1.5px] text-muted">
           ← Home
         </Link>

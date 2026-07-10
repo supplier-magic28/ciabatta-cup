@@ -7,9 +7,9 @@ artifact and is preserved unchanged. Field names are suggestions; relationships
 and enums are the contract.
 
 > **Built in phases.** The full model below is the destination, not a single
-> migration. **Phase 2 (current) implements the `players` spine only.** Other
-> tables land in their own phases (matches → tournaments → rating history →
-> activity). See ADR-0003.
+> migration. Players, match facts, confirmations, and rating history are now
+> implemented in migration form. Tournaments, reigns, and activity land in
+> later phases. See ADR-0003 and ADR-0011.
 
 ## Reconciliation with ADR-0001 (read this)
 
@@ -98,10 +98,11 @@ tables exist — the FK constraints are added in the tournaments/fixtures phase
 | p1_games / p2_games | int | e.g. 7 / 5 |
 | tiebreak_p1 / tiebreak_p2 | int nullable | e.g. 7 / 3 when set went to TB |
 
-### match_confirmations _(Phase 3a — implemented)_
-| match_id FK, player_id FK, confirmed_at timestamptz | one row per participant; both rows present ⇒ move to pending_approval |
+### match_confirmations _(Phase 3a, lifecycle automated in Phase 3c)_
+| match_id FK, player_id FK, confirmed_at timestamptz | one row per participant; both rows trigger lifecycle advance |
 
-_The "both present ⇒ pending_approval" transition is a lifecycle behaviour and is **not** automated in Phase 3a — the schema records confirmations; the transition lands with the confirm/approve surfaces (ADR-0006)._
+Once both rows exist, a database trigger advances a ranked result to
+`pending_approval` and an exhibition result to `approved` (ADR-0010).
 
 ### tournaments _(later phase — not yet built)_
 | field | type | notes |
@@ -136,9 +137,9 @@ _The "both present ⇒ pending_approval" transition is a lifecycle behaviour and
 | match_id | FK matches nullable | filled when result submitted |
 | status | enum: scheduled, in_progress, complete | |
 
-### rating_history _(later phase — not yet built)_
-Persisted materialisation of the pure scoring function; **source of truth for
-`rating_points`**, itself rebuildable from match facts (see reconciliation note).
+### rating_history _(Phase 3d — implemented)_
+Persisted materialisation of the pure scoring function. It is a rebuildable
+cache, not a source of truth; match facts remain authoritative.
 | field | type | notes |
 |---|---|---|
 | id | uuid PK | |
@@ -148,11 +149,15 @@ Persisted materialisation of the pure scoring function; **source of truth for
 | rank_before / rank_after | int | powers the ▲/▼ movement arrows |
 | created_at | timestamptz | |
 
-Written **only** when a ranked match is approved. Approving in the right order keeps history clean; if an old match is approved late, recompute forward from that point.
+Rebuilt from every approved ranked match whenever one is approved. This keeps
+the history correct even if an old result is approved late; the database write
+is a single cache-replacement transaction (ADR-0011).
 
-### ciabatta_reigns _(later phase — not yet built)_
-Tracks the #1 spot ("The Ciabatta") over time — powers "Held 24 days · 3rd reign".
-| player_id FK, started_at, ended_at nullable | open row (ended_at null) = current holder. New row whenever rank #1 changes after an approval. |
+### ciabatta_reigns _(Phase 3e — implemented)_
+Rebuildable materialisation of #1 holder periods. The first row is created by
+the first approved ranked result; an open row (`ended_at` null) is the current
+holder. A new holder closes the old reign at the deciding match time.
+| id uuid PK, player_id FK, started_at, ended_at nullable | derived by the pure Elo replay; never authoritative over match facts |
 
 ### activity_log _(later phase — not yet built)_
 | id, actor_id FK players nullable, verb enum (match_submitted, match_confirmed, match_approved, match_queried, player_invited, player_joined, tournament_created, tournament_entered, …), subject_type + subject_id, created_at | powers the admin "Recent activity" feed |
@@ -160,7 +165,10 @@ Tracks the #1 spot ("The Ciabatta") over time — powers "Held 24 days · 3rd re
 ---
 
 ## Derived data (compute, don't store — or materialise as views)
-- **Leaderboard**: order active players by rating_points; movement = rank now vs rank 7 days ago (from rating_history); streak + last-5 from approved ranked matches.
+- **Leaderboard**: order active players by the pure scoring output. The current
+  root route derives this from match facts; `rating_points` is a rebuildable
+  cache for later read surfaces. Movement, streak, and last-five remain
+  progressive display features derived from approved ranked matches.
 - **Records**: ranked W–L and exhibition W–L are always separate; sets/games totals from match_sets.
 - **Head-to-head**: per player-pair W–L over approved matches (filterable ranked/exhibition).
 - **Tournament standings** (round robin): W–L then game difference ("+9") from fixtures→matches.

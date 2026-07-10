@@ -1,5 +1,5 @@
 import { ELO_DIVISOR, K_FACTOR, RATING_FLOOR, START_RATING } from "./constants";
-import type { Match, PlayerRating, RatingHistoryEntry, ScoringResult } from "./types";
+import type { CiabattaReign, Match, PlayerRating, RatingHistoryEntry, ScoringResult } from "./types";
 
 /**
  * Compute every player's Elo rating, rank, and the rating history it implies,
@@ -45,6 +45,7 @@ export function computeRankings(matches: Match[]): ScoringResult {
     .sort((a, b) => a.playedAt.localeCompare(b.playedAt) || a.id.localeCompare(b.id));
 
   const ratingHistory: RatingHistoryEntry[] = [];
+  const reigns: CiabattaReign[] = [];
 
   for (const match of scoringMatches) {
     const winnerId = match.winnerId;
@@ -92,6 +93,13 @@ export function computeRankings(matches: Match[]): ScoringResult {
       rankAfter: rankOf(ratings, loserId),
       playedAt: match.playedAt,
     });
+
+    const holderId = orderByRating(ratings)[0];
+    const currentReign = reigns.at(-1);
+    if (holderId && currentReign?.playerId !== holderId) {
+      if (currentReign) currentReign.endedAt = match.playedAt;
+      reigns.push({ playerId: holderId, startedAt: match.playedAt, endedAt: null });
+    }
   }
 
   const rankings: PlayerRating[] = orderByRating(ratings).map((playerId, index) => {
@@ -106,7 +114,7 @@ export function computeRankings(matches: Match[]): ScoringResult {
     };
   });
 
-  return { rankings, ratingHistory };
+  return { rankings, ratingHistory, reigns };
 }
 
 /** Elo expected score for player A against player B. */

@@ -1,145 +1,52 @@
-# STATUS — Ciabatta Cup
-
-_Short, disposable handover. Updated every session (see the Definition of Done
-in `CLAUDE.md`). For vision and how-we-build, read `ARCHITECTURE.md`._
+# Ciabatta Cup Status
 
 **Last updated:** 2026-07-10
 
-## What's built
+This is the short operational handover. Durable intent belongs in
+`ARCHITECTURE.md`, the data model in `docs/SCHEMA.md`, and decisions in ADRs.
 
-- **Phase 0 — scaffold:** Next.js (App Router, TypeScript, Tailwind, ESLint);
-  Supabase browser + server clients in `lib/supabase/`; a placeholder landing
-  page (`app/page.tsx`) reading "Ciabatta Cup".
-- **Phase 0.5 — engineering foundation:**
-  - Documentation system live: `ARCHITECTURE.md` (foundational),
-    `docs/decisions/` with an ADR template + **ADR-0001** (immutable match facts
-    + computed scoring), this `STATUS.md`, and `CLAUDE.md` as the operating doc.
-  - `CLAUDE.md` is the single source of truth for agent instructions;
-    `AGENTS.md` points to it.
-  - **Vitest** wired up; `lib/scoring/` created as a pure `computeRankings`
-    stub with a unit-test battery establishing the testing pattern.
-  - **CI** (`.github/workflows/ci.yml`) runs lint + typecheck + Vitest on every
-    push and PR.
-  - `components/` + `components/tokens.ts` placeholders ready for design handoff.
-- **Phase 2 — players spine + authentication (COMPLETE):**
-  - Design handoff landed in `design-reference/`. Reconciled it into
-    **`docs/SCHEMA.md`** as the authoritative, phased data model.
-  - **`players` table + RLS** (`20260709000000_players_spine.sql`): enums,
-    `is_admin()` helper, policies (read all / update own / admin all), and a
-    trigger freezing privileged columns. **ADR-0002** (Supabase Auth; dropped
-    `password_hash`; `players.id` → `auth.users.id`), **ADR-0003** (rating is a
-    rebuildable cache; phased schema).
-  - **Supabase Auth** (email + password) on the `@supabase/ssr` clients:
-    sign-up / log-in / log-out (`lib/auth/actions.ts`), session refresh +
-    protected-route gating in `proxy.ts`. **`handle_new_user` trigger**
-    auto-creates the profile on signup; self `invited → active` allowed
-    (`20260709010000_handle_new_user.sql`). **ADR-0004.**
-  - **Sign-in / sign-up screens** as real token-driven components from design
-    screen 05 (`app/(auth)/…`, `components/{brand,ui,auth}/…`); `/auth/confirm`
-    route; protected placeholder landing (`app/page.tsx`, "logged in as {name}").
-    Design tokens + brand fonts wired (`app/globals.css`, `components/tokens.ts`).
-  - **Admin-bootstrap fix** (`20260709020000_guard_exempt_backend.sql`,
-    **ADR-0005**): guard exempts backend contexts (`auth.uid()` null).
-  - **Applied & live on Supabase:** all three migrations run; **first admin
-    (`ringo@spectoolbox.com`) seeded** and auth flow working end-to-end.
-- **Phase 3a — match-facts schema + RLS (COMPLETE):**
-  - **`matches` / `match_sets` / `match_confirmations`**
-    (`20260710000000_matches_spine.sql`): enums (`match_type`, `match_format`,
-    `match_status`), integrity checks (submitter/winner are participants,
-    approved ⇒ has winner, custom-only `format_note`, paired tiebreaks), and RLS
-    reusing `is_admin()` (all read approved; participants read/submit/confirm own;
-    admins approve/query/reject; submitter edits own non-approved).
-  - **Immutable-facts guard (ADR-0001)** via triggers, mirroring the players
-    pattern: `enforce_match_immutable()` seals a match once `approved`, and
-    `enforce_parent_match_immutable()` seals its sets/confirmations too — with a
-    **deliberate no-backend-exemption** difference from the players guard. **ADR-0006.**
-  - `tournament_id`/`fixture_id` are nullable plain-uuid columns (FKs added when
-    those tables land). **File-only — NOT yet applied to Supabase** (see caveats).
-  - Out of scope by design: no Elo, no UI, no lifecycle-transition automation.
-- **Phase 3b — Elo scoring engine, tests-first (COMPLETE):**
-  - `computeRankings` is now the **real Elo engine** (`lib/scoring/`): pure
-    function of match facts → `{ rankings, ratingHistory }`. K=32, start 1000,
-    100 floor (`constants.ts`); ranked + approved only; roster = every
-    participant (exhibition-only players sit at 1000); chronological
-    recompute-forward; two `rating_history` entries per scored match with
-    points/rank before & after. **Returns** the data — **no DB writes, no UI, no
-    reigns.** **ADR-0007.**
-  - **10-case test battery written first** (`computeRankings.test.ts`): empty
-    input, single win (+16/-16), K/start pinned, gap-weighted underdog win +
-    rank flip, exhibition/pending ignored, no-ranked-matches stays at 1000,
-    input-order independence, chronological order-dependence, the 100 floor
-    invariant, purity. All green.
+## Current capability
 
-- **Phase 3c-part-1 — log-match submission (COMPLETE):**
-  - **Log-match wizard** (design screen 03) as token-driven components
-    (`components/match/LogMatchForm`, new `components/ui/Chip`): 3 steps —
-    matchup → type & format → per-set scores with tie-breaks. Linked from the
-    home page.
-  - **`submitMatch` server action** (`lib/match/actions.ts`): writes `matches`
-    (status `pending_confirmation`) + `match_sets` + the submitter's
-    `match_confirmations` row, through the user's authenticated client (RLS
-    applies), with compensating delete on partial failure. **No auto-approve, no
-    scoring, no rating writes.**
-  - **Shared pure validation** (`lib/match/submission.ts`, tests-first, 12 cases):
-    mirrors the DB constraints for friendly errors; **winner is derived from the
-    set scores** (draws rejected). **ADR-0008.**
-  - **"Your matches" list** (`app/matches`) shows submitted matches + lifecycle
-    status — the minimal "submission is working" surface (not the leaderboard).
-- **Invite-players flow (admin) (COMPLETE):**
-  - **Admin invite action** (`lib/players/actions.ts#inviteUser`): secret-key
-    server-only admin client (`lib/supabase/admin.ts`) calls `inviteUserByEmail`;
-    the invitee's `players` row is created at status `invited`. Admin-only via a
-    role guard + the existing `is_admin()` players RLS. Pure `validateInvite`
-    (tests-first, 5 cases) for friendly errors. **ADR-0009.**
-  - **Trigger fix** (`20260710010000_invited_profile_status.sql`):
-    `handle_new_user` now creates `invited` profiles for invited auth users
-    (`invited_at` set) and keeps `active` for self-signups.
-  - **Manage-players screen** (`app/admin/players`, design screen 08): admin-only
-    roster with status pills + the `InvitePlayerForm`. Home page shows a
-    **Manage players** link to admins only.
-  - **invited → active reused**, not duplicated: `/auth/confirm` (`type=invite`)
-    + `ensureActivated`. Acceptance link/password is Supabase project config
-    (documented in `supabase/README.md`).
-- **Phase 3c-part-2 — confirm / approve (COMPLETE):**
-  - **Confirm→advance trigger** (`20260710020000_advance_on_confirmation.sql`):
-    once both participants confirm, a `pending_confirmation` match moves to
-    `pending_approval` (ranked) or `approved` (exhibition auto-approve). A
-    SECURITY DEFINER trigger because the opponent has no RLS path to update
-    matches. **ADR-0010.**
-  - **Server actions** (`lib/match/actions.ts`): `confirmMatch` (opponent inserts
-    their confirmation); admin `approveMatch` / `queryMatch` / `rejectMatch`
-    (guarded to `pending_approval`, run under `is_admin()` RLS). **Approve sets
-    status only — still no scoring / rating writes.**
-  - **UI:** `app/matches` gains score + a **Confirm result** button for the
-    awaiting participant (`ConfirmMatchButton`); new admin **`app/admin/approvals`**
-    lists both-confirmed ranked matches oldest-first with Approve/Query/Reject
-    (`ApprovalActions`). Pure `formatScore` (`lib/match/score.ts`, tested). Home
-    page links admins to Approvals.
+- Authenticated players can sign up, sign in, and view the active-player Elo
+  leaderboard.
+- Admins can invite players, review both-confirmed ranked results, and manage
+  the current roster.
+- Players can submit a singles match with validated set scores; the opponent
+  confirms it. Ranked matches then await admin approval, while exhibitions are
+  approved automatically.
+- Approved ranked facts are fed into the pure Elo engine. The derived
+  `rating_history`, `players.rating_points`, and `ciabatta_reigns` caches are
+  rebuilt from the full chronological match history after approval.
+- Player profiles provide rank, current holder state, separate ranked and
+  exhibition records, points history, head-to-head summaries, and match logs.
 
-## Next up — Phase 3d (scoring wired to the DB → leaderboard)
+## Database state
 
-The **DB adapter** that feeds approved ranked facts into `computeRankings` and
-materialises `rating_history` + the `rating_points` cache (written on approval),
-then the **leaderboard** read surface, and finally **Ciabatta reigns**. Decisions
-(how approval writes `rating_history`; rebuild-vs-incremental) get an ADR.
+| Migration | State |
+| --- | --- |
+| `20260709000000` through `20260710010000` | Applied to the known Supabase project |
+| `20260710020000_advance_on_confirmation.sql` | Committed; operator must apply |
+| `20260710030000_rating_cache.sql` | Committed; operator must apply |
+| `20260710040000_ciabatta_reigns.sql` | Committed; operator must apply |
 
-## Known issues / caveats
+Until the pending migrations are applied, confirmations do not advance and
+ranked approval cannot materialise ratings or reigns.
 
-- `computeRankings` is the real Elo engine but is **not yet wired to the DB**:
-  nothing feeds it live match facts and nothing persists its `rating_history` /
-  `rating_points` output. That adapter is Phase 3c.
-- **Migrations are applied by the operator out-of-band.** Applied per operator:
-  `20260710000000_matches_spine.sql`, `20260710010000_invited_profile_status.sql`.
-  **`20260710020000_advance_on_confirmation.sql` is file-only — apply it** (CLI
-  `supabase db push` or SQL editor) or confirming a match won't advance its status.
-- **Invites need `SUPABASE_SECRET_KEY`** set in the server environment; without
-  it `inviteUser` fails. Supabase redirect allow-list / invite email template
-  also need configuring (see `supabase/README.md`). Not verified end-to-end here.
-- Match **lifecycle transitions are not automated** (deferred to 3c, ADR-0006):
-  confirmations are recorded, but nothing yet flips `pending_confirmation →
-  pending_approval` or auto-approves exhibitions.
-- Tables that still don't exist: `tournaments`, `tournament_participants`,
-  `fixtures`, `rating_history`, `ciabatta_reigns`, `activity_log`.
-- **Not deployed:** no hosting connected — pushing to `main` does not publish a
-  site. Vercel setup (+ env vars) is still pending when a live URL is wanted;
-  it does not block Phase 3.
+## Current blockers
+
+- `SUPABASE_SECRET_KEY` must be configured in the server environment for
+  invites and rating-cache rebuilds.
+- Supabase redirect URLs and the invite email template still need an
+  end-to-end verification.
+- No production deployment is connected yet.
+
+## Next product slice
+
+Apply and verify the production release runbook, then start the tournament
+spine: entities, participants, fixtures, and admin tournament management.
+
+## Documentation rule
+
+Before closing a task, update this handover and every affected canonical doc.
+Run `npm run docs:check` with the normal validation suite. See the documentation
+impact matrix in `CLAUDE.md` and `ARCHITECTURE.md`.

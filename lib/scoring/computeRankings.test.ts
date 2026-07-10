@@ -27,7 +27,7 @@ function pending(id: string, winner: string, loser: string, playedAt: string): M
 
 describe("computeRankings — Elo engine", () => {
   it("returns empty rankings and history for empty input", () => {
-    expect(computeRankings([])).toEqual({ rankings: [], ratingHistory: [] });
+    expect(computeRankings([])).toEqual({ rankings: [], ratingHistory: [], reigns: [] });
   });
 
   it("everyone starts at 1000 with K=32 — a single win is +16 / -16", () => {
@@ -165,5 +165,51 @@ describe("computeRankings — Elo engine", () => {
     computeRankings(matches);
 
     expect(matches).toEqual(snapshot);
+  });
+
+  it("starts no reign before a ranked result, then opens one for the first holder", () => {
+    const ignored = exhibition("x1", "alice", "bob", "2026-07-01T10:00:00Z");
+    expect(computeRankings([ignored]).reigns).toEqual([]);
+
+    const result = computeRankings([ranked("m1", "alice", "bob", "2026-07-02T10:00:00Z")]);
+    expect(result.reigns).toEqual([
+      { playerId: "alice", startedAt: "2026-07-02T10:00:00Z", endedAt: null },
+    ]);
+  });
+
+  it("closes a reign when a later ranked result changes the holder", () => {
+    const result = computeRankings([
+      ranked("m1", "alice", "bob", "2026-07-01T10:00:00Z"),
+      ranked("m2", "bob", "alice", "2026-07-02T10:00:00Z"),
+    ]);
+
+    expect(result.reigns).toEqual([
+      { playerId: "alice", startedAt: "2026-07-01T10:00:00Z", endedAt: "2026-07-02T10:00:00Z" },
+      { playerId: "bob", startedAt: "2026-07-02T10:00:00Z", endedAt: null },
+    ]);
+  });
+
+  it("uses match id to order holder changes at the same timestamp", () => {
+    const sameTime = "2026-07-01T10:00:00Z";
+    const first = ranked("a", "alice", "bob", sameTime);
+    const second = ranked("b", "bob", "alice", sameTime);
+
+    expect(computeRankings([second, first]).reigns).toEqual([
+      { playerId: "alice", startedAt: sameTime, endedAt: sameTime },
+      { playerId: "bob", startedAt: sameTime, endedAt: null },
+    ]);
+  });
+
+  it("recomputes reigns when a previously missing older result is approved", () => {
+    const newer = ranked("m2", "bob", "alice", "2026-07-02T10:00:00Z");
+    const older = ranked("m1", "alice", "bob", "2026-07-01T10:00:00Z");
+
+    expect(computeRankings([newer]).reigns).toEqual([
+      { playerId: "bob", startedAt: "2026-07-02T10:00:00Z", endedAt: null },
+    ]);
+    expect(computeRankings([newer, older]).reigns).toEqual([
+      { playerId: "alice", startedAt: "2026-07-01T10:00:00Z", endedAt: "2026-07-02T10:00:00Z" },
+      { playerId: "bob", startedAt: "2026-07-02T10:00:00Z", endedAt: null },
+    ]);
   });
 });
