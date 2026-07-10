@@ -62,6 +62,8 @@ of Done (`CLAUDE.md`).
   and four ordered participant seeds.
 - `tournament/TournamentAdminActions` — fixture-generation and stage-advance
   controls with inline operational feedback.
+- `tournament/TournamentParticipantEditor` — pre-play admin replacement that
+  preserves a seed and regenerates the complete round-robin draw.
 - `tournament/TournamentBoard` — shared standings and round/court schedule used
   by the player and director views.
 - `tournament/TournamentResultForm` — two-step admin score review and atomic

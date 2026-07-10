@@ -2,17 +2,28 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { TournamentAdminActions } from "@/components/tournament/TournamentAdminActions";
 import { TournamentBoard } from "@/components/tournament/TournamentBoard";
+import { TournamentParticipantEditor } from "@/components/tournament/TournamentParticipantEditor";
 import { getSessionPlayer } from "@/lib/auth/session";
-import { loadTournamentBoard } from "@/lib/tournament/read";
+import { loadActiveTournamentPlayers, loadTournamentBoard } from "@/lib/tournament/read";
 
 export default async function ManageTournamentPage({ params }: { params: Promise<{ tournamentId: string }> }) {
   const admin = await getSessionPlayer();
   if (!admin) redirect("/sign-in");
   if (admin.role !== "admin") redirect("/");
   const { tournamentId } = await params;
-  const board = await loadTournamentBoard(tournamentId);
+  const [board, activePlayers] = await Promise.all([
+    loadTournamentBoard(tournamentId),
+    loadActiveTournamentPlayers(),
+  ]);
   if (!board) notFound();
   const canGenerate = board.fixtures.length === 0;
+  const canEditParticipants = board.completedResults === 0
+    && (board.tournament.status === "draft" || board.tournament.status === "scheduled");
+  const participants = board.participants.map((participant) => ({
+    id: participant.player_id,
+    seed: participant.seed,
+    name: board.playerById.get(participant.player_id)?.name ?? "Player",
+  }));
 
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
@@ -37,6 +48,14 @@ export default async function ManageTournamentPage({ params }: { params: Promise
         </div>
         {board.tournament.status !== "completed" && <TournamentAdminActions tournamentId={tournamentId} canGenerate={canGenerate} />}
       </section>
+
+      {canEditParticipants && (
+        <TournamentParticipantEditor
+          tournamentId={tournamentId}
+          participants={participants}
+          activePlayers={activePlayers}
+        />
+      )}
 
       {canGenerate ? (
         <div className="border-2 border-dashed border-muted bg-surface p-10 text-center">

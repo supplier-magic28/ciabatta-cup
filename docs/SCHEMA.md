@@ -135,6 +135,11 @@ from linked immutable matches rather than stored on this row.
 ### tournament_participants _(Phase 4 — implemented)_
 | tournament_id FK, player_id FK, seed int, entered_at | composite identity; seed is unique within a tournament and drives deterministic generation |
 
+Admins may replace a participant before the first linked match result. The
+replacement preserves the seed and redraws the pre-play fixtures. The existing
+participant lock trigger rejects all participant changes once a tournament has
+any match, protecting the immutable result history.
+
 ### fixtures _(Phase 4 — implemented for round robin)_
 | field | type | notes |
 |---|---|---|

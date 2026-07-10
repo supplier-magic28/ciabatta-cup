@@ -43,6 +43,11 @@ Database migrations for Ciabatta Cup. The authoritative data model is
   participants, fixtures, authenticated-read/admin-write RLS, the deferred match
   foreign keys, and the admin-only atomic tournament-result RPC (ADR-0016).
 
+The tournament participant table is editable only before the first tournament
+result. The admin console's replacement action preserves the selected seed and
+regenerates the complete pre-play draw; the database participant-lock trigger
+rejects the same operation after play begins.
+
 The player, match, confirmation, rating-history, reign, tournament, participant,
 and fixture tables exist in migration form. Activity remains a later phase.
 

@@ -38,6 +38,36 @@ function invalidateTournament(tournamentId: string) {
   revalidatePath("/");
 }
 
+type TournamentSetup = {
+  id: string;
+  courts: number;
+  group_ruleset: TournamentRuleset;
+  status: string;
+};
+
+type TournamentParticipantRow = { player_id: string; seed: number };
+
+async function writeRoundRobinFixtures(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  tournament: TournamentSetup,
+  tournamentId: string,
+  participants: TournamentParticipantRow[],
+) {
+  const rounds = generateRoundRobin(participants.map((row) => row.player_id), tournament.courts);
+  return supabase.from("fixtures").insert(
+    rounds.flatMap((round) => round.fixtures.map((fixture) => ({
+      tournament_id: tournamentId,
+      stage: "group",
+      round_number: fixture.roundNumber,
+      slot_number: fixture.slotNumber,
+      court_number: fixture.courtNumber,
+      ruleset: tournament.group_ruleset,
+      player1_id: fixture.player1Id,
+      player2_id: fixture.player2Id,
+    }))),
+  );
+}
+
 export async function createTournament(
   _previous: TournamentActionState | undefined,
   formData: FormData,
@@ -113,25 +143,104 @@ export async function generateTournamentFixtures(
   }
   if ((participants ?? []).length !== 4) return { ok: false, error: "The draw needs exactly four players." };
 
-  const rounds = generateRoundRobin((participants ?? []).map((row) => row.player_id), tournament.courts);
-  await supabase.from("fixtures").delete().eq("tournament_id", tournamentId);
-  const { error } = await supabase.from("fixtures").insert(
-    rounds.flatMap((round) => round.fixtures.map((fixture) => ({
-      tournament_id: tournamentId,
-      stage: "group",
-      round_number: fixture.roundNumber,
-      slot_number: fixture.slotNumber,
-      court_number: fixture.courtNumber,
-      ruleset: tournament.group_ruleset,
-      player1_id: fixture.player1Id,
-      player2_id: fixture.player2Id,
-    }))),
-  );
+  const { error: deleteError } = await supabase.from("fixtures").delete().eq("tournament_id", tournamentId);
+  if (deleteError) return { ok: false, error: "Couldn't clear the existing draw." };
+  const { error } = await writeRoundRobinFixtures(supabase, tournament, tournamentId, participants ?? []);
   if (error) return { ok: false, error: "Couldn't generate the draw." };
 
   await supabase.from("tournaments").update({ status: "scheduled" }).eq("id", tournamentId);
   invalidateTournament(tournamentId);
   return { ok: true, message: "Draw generated and tournament scheduled." };
+}
+
+export async function replaceTournamentParticipant(
+  _previous: TournamentActionState | undefined,
+  formData: FormData,
+): Promise<TournamentActionState> {
+  if (!(await requireAdmin())) return FORBIDDEN;
+
+  const tournamentId = textValue(formData, "tournamentId");
+  const outgoingPlayerId = textValue(formData, "outgoingPlayerId");
+  const replacementPlayerId = textValue(formData, "replacementPlayerId");
+  if (!tournamentId || !outgoingPlayerId || !replacementPlayerId) {
+    return { ok: false, error: "Choose the player leaving and their replacement." };
+  }
+  if (outgoingPlayerId === replacementPlayerId) {
+    return { ok: false, error: "Choose a different replacement player." };
+  }
+
+  const supabase = await createClient();
+  const [
+    { data: tournament },
+    { data: participants },
+    { data: matches },
+    { data: fixtures },
+    { data: replacement },
+  ] = await Promise.all([
+    supabase.from("tournaments").select("id, courts, group_ruleset, status").eq("id", tournamentId).single(),
+    supabase.from("tournament_participants").select("player_id, seed").eq("tournament_id", tournamentId).order("seed"),
+    supabase.from("matches").select("id").eq("tournament_id", tournamentId).limit(1),
+    supabase.from("fixtures").select("id").eq("tournament_id", tournamentId).limit(1),
+    supabase.from("players").select("id, status").eq("id", replacementPlayerId).single(),
+  ]);
+
+  if (!tournament) return { ok: false, error: "Tournament not found." };
+  if (!(tournament.status === "draft" || tournament.status === "scheduled")) {
+    return { ok: false, error: "The field is locked once tournament play has started." };
+  }
+  if ((matches ?? []).length > 0) {
+    return { ok: false, error: "The field is locked after the first result." };
+  }
+  const currentParticipants = (participants ?? []) as TournamentParticipantRow[];
+  const outgoing = currentParticipants.find((participant) => participant.player_id === outgoingPlayerId);
+  if (!outgoing) return { ok: false, error: "That player is not in this tournament." };
+  if (currentParticipants.some((participant) => participant.player_id === replacementPlayerId)) {
+    return { ok: false, error: "That player is already in this tournament." };
+  }
+  if (!replacement || replacement.status !== "active") {
+    return { ok: false, error: "Choose an active player as the replacement." };
+  }
+  if (currentParticipants.length !== 4) {
+    return { ok: false, error: "This release requires exactly four tournament players." };
+  }
+
+  const hadFixtures = (fixtures ?? []).length > 0;
+  const { error: deleteError } = await supabase.from("fixtures").delete().eq("tournament_id", tournamentId);
+  if (deleteError) return { ok: false, error: "Couldn't clear the existing draw." };
+
+  const { error: participantError } = await supabase
+    .from("tournament_participants")
+    .update({ player_id: replacementPlayerId })
+    .eq("tournament_id", tournamentId)
+    .eq("player_id", outgoingPlayerId);
+  if (participantError) return { ok: false, error: "Couldn't replace that tournament player." };
+
+  const updatedParticipants = currentParticipants.map((participant) =>
+    participant.player_id === outgoingPlayerId
+      ? { ...participant, player_id: replacementPlayerId }
+      : participant,
+  );
+  const { error: fixtureError } = await writeRoundRobinFixtures(
+    supabase,
+    tournament as TournamentSetup,
+    tournamentId,
+    updatedParticipants,
+  );
+  if (fixtureError) {
+    await supabase.from("fixtures").delete().eq("tournament_id", tournamentId);
+    await supabase
+      .from("tournament_participants")
+      .update({ player_id: outgoingPlayerId })
+      .eq("tournament_id", tournamentId)
+      .eq("player_id", replacementPlayerId);
+    return { ok: false, error: "Couldn't regenerate the draw, so the original field was restored." };
+  }
+
+  if (hadFixtures) {
+    await supabase.from("tournaments").update({ status: "scheduled" }).eq("id", tournamentId);
+  }
+  invalidateTournament(tournamentId);
+  return { ok: true, message: "Player replaced and the draw was regenerated." };
 }
 
 export async function recordTournamentResult(

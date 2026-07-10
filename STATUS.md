@@ -26,8 +26,9 @@ This is the short operational handover. Durable intent belongs in
 - Player profiles provide rank, current holder state, separate ranked and
   exhibition records, points history, head-to-head summaries, and match logs.
 - Admins can create a four-player round-robin tournament, seed its participants,
-  generate a deterministic court schedule, record immutable results directly,
-  and advance through a qualification decider, final, and third-place match.
+  replace a pre-play participant while preserving their seed, regenerate the
+  deterministic court schedule, record immutable results directly, and advance
+  through a qualification decider, final, and third-place match.
 - Authenticated players can follow tournament details, live standings, fixtures,
   results, progress, and the derived champion from `/tournaments`.
 - Every current navigation surface has a route-shaped loading boundary and a
@@ -59,7 +60,8 @@ after that password update succeeds.
 Deploy the responsive tournament release, create the Ciabatta Qualifier, verify
 its exact six-match draw, and rehearse the director workflow without committing
 a fake production result. After the event, add an append-only correction
-workflow and generalise setup beyond the first four-player round robin.
+workflow and generalise setup beyond the first four-player round robin. Mid-event
+withdrawals remain intentionally deferred.
 
 ## Documentation rule
 

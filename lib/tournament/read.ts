@@ -56,3 +56,18 @@ export async function loadTournamentBoard(tournamentId: string) {
     completedResults: approved.length,
   };
 }
+
+export async function loadActiveTournamentPlayers() {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("players")
+    .select("id, first_name, last_name, email")
+    .eq("status", "active")
+    .order("first_name")
+    .order("last_name");
+
+  return (data ?? []).map((player) => ({
+    id: player.id,
+    name: displayName({ firstName: player.first_name, lastName: player.last_name, email: player.email }),
+  }));
+}
