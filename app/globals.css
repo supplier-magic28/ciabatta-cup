@@ -30,3 +30,19 @@ body {
   color: var(--color-ink);
   font-family: var(--font-body);
 }
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.52; }
+  50% { opacity: 0.9; }
+}
+
+.skeleton-pulse {
+  animation: skeleton-pulse 1.35s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-pulse {
+    animation: none;
+    opacity: 0.72;
+  }
+}

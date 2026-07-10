@@ -8,6 +8,11 @@ export default defineConfig({
     },
   },
   test: {
-    exclude: [...configDefaults.exclude, "scripts/**/*.test.mjs", "tests/e2e/**"],
+    exclude: [
+      ...configDefaults.exclude,
+      "scripts/**/*.test.mjs",
+      "tests/e2e/**",
+      "tests/performance/**",
+    ],
   },
 });

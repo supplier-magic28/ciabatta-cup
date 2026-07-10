@@ -30,8 +30,18 @@ This is the short operational handover. Durable intent belongs in
   and advance through a qualification decider, final, and third-place match.
 - Authenticated players can follow tournament details, live standings, fixtures,
   results, progress, and the derived champion from `/tournaments`.
+- Every current navigation surface has a route-shaped loading boundary and a
+  shared retryable error state. Mutations acknowledge clicks immediately with
+  stable, accessible pending controls while confirmed data waits for the server.
+- Match history, approvals, profiles, and tournament boards embed score sets in
+  one Supabase read wave; browser performance budgets protect loading geometry,
+  mobile overflow, reduced motion, and duplicate-submission prevention.
 
 ## Database state
+
+Players can request a recovery email from `/forgot-password` and set a
+replacement password at `/update-password`; invited profiles activate only
+after that password update succeeds.
 
 | Migration | State |
 | --- | --- |
@@ -46,10 +56,10 @@ This is the short operational handover. Durable intent belongs in
 
 ## Next product slice
 
-Deploy the tournament release, create the Ciabatta Qualifier, verify its exact
-six-match draw, and rehearse the director workflow without committing a fake
-production result. After the event, add an append-only correction workflow and
-generalise setup beyond the first four-player round robin.
+Deploy the responsive tournament release, create the Ciabatta Qualifier, verify
+its exact six-match draw, and rehearse the director workflow without committing
+a fake production result. After the event, add an append-only correction
+workflow and generalise setup beyond the first four-player round robin.
 
 ## Documentation rule
 

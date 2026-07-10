@@ -12,10 +12,20 @@ of Done (`CLAUDE.md`).
 - `brand/Wordmark` — "CIABATTA CUP" wordmark, `tone` light/dark.
 
 **UI primitives**
-- `ui/Button` — primary action button (green, 2px ink border, offset shadow).
+- `ui/Button` — primary action button (green, 2px ink border, offset shadow);
+  `loading` preserves its dimensions, disables repeat submission, and exposes
+  an accessible pending label.
 - `ui/Field` — labelled input; `reveal` adds a password Show/Hide toggle.
 - `ui/Chip` — selectable pill (2px ink border; fills green when selected). Used
   for the match type/format choices; reusable for any one-of-many selection.
+- `ui/LoadingSpinner` — fixed-size solid spinner for compact pending controls;
+  animation stops when reduced motion is requested.
+- `ui/Skeleton` — fixed-geometry solid-opacity loading block with
+  reduced-motion support.
+
+**Loading**
+- `loading/PageSkeletons` — route-shaped compositions for leaderboard, auth,
+  compact lists, forms, profiles, tournament lists, and tournament boards.
 
 **Layout**
 - `layout/SiteHeader` — shared wordmark and primary navigation for the ladder,
@@ -56,5 +66,10 @@ of Done (`CLAUDE.md`).
   by the player and director views.
 - `tournament/TournamentResultForm` — two-step admin score review and atomic
   approval for a scheduled fixture.
+
+- `auth/PasswordResetRequestForm` - email recovery request with generic
+  delivery feedback and stable pending state.
+- `auth/UpdatePasswordForm` - recovery-link password replacement; invited
+  profiles activate only after the password update succeeds.
 
 Planned next (from ARCHITECTURE.md): `Card`, `RankBadge`, `StatBlock`.

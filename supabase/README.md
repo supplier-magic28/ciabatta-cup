@@ -81,6 +81,22 @@ Apply migrations in filename order. Either:
 - **Supabase CLI:** `supabase db push` (requires `supabase link` to the project).
 - **Dashboard:** paste each file's SQL into the SQL Editor and run them in order.
 
+## Password recovery
+
+The app requests recovery mail from `/forgot-password` and sends users through
+`/auth/confirm?next=%2Fupdate-password` before rendering the password form.
+Allow both the production and local callback URLs in **Authentication -> URL
+Configuration**:
+
+```text
+https://ciabatta-cup.app/auth/confirm?next=%2Fupdate-password
+http://localhost:3000/auth/confirm?next=%2Fupdate-password
+```
+
+Keep Supabase's `{{ .ConfirmationURL }}` in the **Password recovery** email
+template. The callback exchanges its PKCE code for a session, and the app then
+updates the password without exposing the service key.
+
 ## Email confirmation setting
 
 Signup works with email confirmation on **or** off:

@@ -50,11 +50,17 @@ export function TournamentResultForm({
           <input aria-label={`${player2Name} tie-break`} className={inputClass} name="tiebreakP2" type="number" min="0" max="99" />
         </div>
       )}
-      {state && !state.ok && <p className="mt-2 font-mono text-[11px] text-rust">{state.error}</p>}
-      {state?.ok && <p className="mt-2 font-mono text-[11px] text-green">{state.message}</p>}
+      {state && !state.ok && <p className="mt-2 font-mono text-[11px] text-rust" aria-live="polite">{state.error}</p>}
+      {state?.ok && <p className="mt-2 font-mono text-[11px] text-green" aria-live="polite">{state.message}</p>}
       {reviewing && <p className="mt-2 font-mono text-[10px] text-crust">Check the score. Approval makes this result immutable.</p>}
-      <Button type="submit" disabled={pending || state?.ok} className={`mt-3 py-2.5 text-sm ${reviewing ? "bg-crust" : "bg-green"}`}>
-        {pending ? "Recording..." : reviewing ? "Confirm final score" : "Review score"}
+      <Button
+        type="submit"
+        loading={pending}
+        loadingLabel="Recording result..."
+        disabled={state?.ok}
+        className={`mt-3 py-2.5 text-sm ${reviewing ? "bg-crust" : "bg-green"}`}
+      >
+        {reviewing ? "Confirm final score" : "Review score"}
       </Button>
     </form>
   );

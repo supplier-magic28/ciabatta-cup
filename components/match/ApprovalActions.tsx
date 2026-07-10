@@ -2,9 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { approveMatch, queryMatch, rejectMatch, type MatchActionResult } from "@/lib/match/actions";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 const base =
-  "rounded-[8px] border-2 border-ink px-3 py-2 font-heading text-[12px] font-bold " +
+  "inline-flex min-w-[108px] items-center justify-center gap-2 rounded-[8px] border-2 border-ink px-3 py-2 font-heading text-[12px] font-bold " +
   "tracking-[1px] shadow-[2px_2px_0_var(--color-ink)] active:translate-x-[2px] " +
   "active:translate-y-[2px] active:shadow-none disabled:cursor-not-allowed disabled:opacity-60";
 
@@ -15,12 +16,18 @@ const base =
 export function ApprovalActions({ matchId }: { matchId: string }) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<"approve" | "query" | "reject" | null>(null);
 
-  const run = (action: (id: string) => Promise<MatchActionResult>) => {
+  const run = (kind: "approve" | "query" | "reject", action: (id: string) => Promise<MatchActionResult>) => {
     setError(null);
+    setPendingAction(kind);
     startTransition(async () => {
-      const result = await action(matchId);
-      if (!result.ok) setError(result.error);
+      try {
+        const result = await action(matchId);
+        if (!result.ok) setError(result.error);
+      } finally {
+        setPendingAction(null);
+      }
     });
   };
 
@@ -30,29 +37,35 @@ export function ApprovalActions({ matchId }: { matchId: string }) {
         <button
           type="button"
           disabled={pending}
-          onClick={() => run(approveMatch)}
+          aria-busy={pendingAction === "approve" || undefined}
+          onClick={() => run("approve", approveMatch)}
           className={`${base} bg-green text-cream`}
         >
-          Approve
+          {pendingAction === "approve" && <LoadingSpinner size={13} />}
+          {pendingAction === "approve" ? "Approving..." : "Approve"}
         </button>
         <button
           type="button"
           disabled={pending}
-          onClick={() => run(queryMatch)}
+          aria-busy={pendingAction === "query" || undefined}
+          onClick={() => run("query", queryMatch)}
           className={`${base} bg-surface text-crust`}
         >
-          Query
+          {pendingAction === "query" && <LoadingSpinner size={13} />}
+          {pendingAction === "query" ? "Querying..." : "Query"}
         </button>
         <button
           type="button"
           disabled={pending}
-          onClick={() => run(rejectMatch)}
+          aria-busy={pendingAction === "reject" || undefined}
+          onClick={() => run("reject", rejectMatch)}
           className={`${base} bg-surface text-rust`}
         >
-          Reject
+          {pendingAction === "reject" && <LoadingSpinner size={13} />}
+          {pendingAction === "reject" ? "Rejecting..." : "Reject"}
         </button>
       </div>
-      {error && <p className="mt-1 font-mono text-[11px] text-rust">{error}</p>}
+      {error && <p className="mt-1 font-mono text-[11px] text-rust" aria-live="polite">{error}</p>}
     </div>
   );
 }

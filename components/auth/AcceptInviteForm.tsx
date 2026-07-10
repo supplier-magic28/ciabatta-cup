@@ -31,9 +31,7 @@ export function AcceptInviteForm() {
           {state.error}
         </p>
       )}
-      <Button type="submit" disabled={pending} className="mt-1.5">
-        {pending ? "Joining the cup..." : "Join the cup"}
-      </Button>
+      <Button type="submit" loading={pending} loadingLabel="Joining the cup..." className="mt-1.5">Join the cup</Button>
     </form>
   );
 }

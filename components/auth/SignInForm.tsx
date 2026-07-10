@@ -25,11 +25,9 @@ export function SignInForm() {
         required
       />
       {state?.error && (
-        <p className="font-mono text-[12px] text-rust">{state.error}</p>
+        <p className="font-mono text-[12px] text-rust" aria-live="polite">{state.error}</p>
       )}
-      <Button type="submit" disabled={pending} className="mt-1.5">
-        {pending ? "Stepping on court…" : "Step on court"}
-      </Button>
+      <Button type="submit" loading={pending} loadingLabel="Stepping on court..." className="mt-1.5">Step on court</Button>
     </form>
   );
 }

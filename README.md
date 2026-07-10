@@ -48,15 +48,18 @@ and first-admin bootstrap instructions live in [supabase/README.md](supabase/REA
 npm run lint
 npm run typecheck
 npm run test
-npm run test:e2e
 npm run docs:check
 npm run docs:check:test
 npm run build
+npm run test:performance
+npm run test:e2e
 ```
 
 CI runs the same checks on every push and pull request. The documentation check
 also requires every route in `docs/DESIGN.md`, every shared component in
-`components/README.md`, and every migration in `supabase/README.md`.
+`components/README.md`, and every migration in `supabase/README.md`. The
+performance suite runs after `npm run build`; it exercises pending controls and
+responsive loading shells against the compiled production CSS.
 
 ## Production
 

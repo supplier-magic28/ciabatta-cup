@@ -44,11 +44,9 @@ export function SignUpForm() {
         required
       />
       {state?.error && (
-        <p className="font-mono text-[12px] text-rust">{state.error}</p>
+        <p className="font-mono text-[12px] text-rust" aria-live="polite">{state.error}</p>
       )}
-      <Button type="submit" disabled={pending} className="mt-1.5">
-        {pending ? "Creating account…" : "Create account"}
-      </Button>
+      <Button type="submit" loading={pending} loadingLabel="Creating account..." className="mt-1.5">Create account</Button>
     </form>
   );
 }

@@ -57,7 +57,12 @@ views of the same facts.
 
 **Scoring is an isolated pure function** in `lib/scoring/` — `computeRankings(matches) → standings`. It is the one piece of logic guaranteed to change repeatedly, so it is kept pure, isolated, and well-tested. The current cache materialisation is rebuilt from the function after approval; read surfaces still derive standings through the same seam.
 
-**Data fetching** defaults to Server Components (App Router default) to avoid client-side waterfalls. **Images** (avatars/photos) go through Supabase Storage + Next `<Image>` — the only heavy asset, so worth doing right from the start.
+**Data fetching** defaults to Server Components (App Router default). Independent
+reads begin together, and relational data needed by one read model is embedded
+in that query instead of fetched in a dependent wave. App Router loading
+boundaries stream route-shaped skeletons while the server completes. **Images**
+(avatars/photos) go through Supabase Storage + Next `<Image>` — the only heavy
+asset, so worth doing right from the start.
 
 **UI is built from a small component vocabulary** (`components/`) driven by design tokens. Screens are assembled from shared primitives (Button, Card, `RankBadge`, Ciabatta badge, StatBlock, …). This is both what makes the UX feel consistent and what makes visual change cheap (edit a token, everything updates). The component inventory is kept current per the definition of done.
 
@@ -73,7 +78,11 @@ We deliberately **do not** pursue comprehensive coverage. We test the few things
 - **Critical happy-path smoke tests** (Playwright, added once screens exist): e.g. log in → see leaderboard; submit a match. A handful, not exhaustive.
 - Everything else: rely on TypeScript + lint. Don't write tests for the sake of coverage.
 
-**CI (GitHub Actions):** lint + typecheck + Vitest run on every push and PR, gating merges. Combined with Vercel's per-PR preview deploys, the loop is: push → checks green → eyeball preview → merge → auto-deploy. Deployments get *safer and more automated* over time without extra effort.
+**CI (GitHub Actions):** lint, typecheck, Vitest, documentation checks, a
+production build, Playwright performance budgets, and browser smoke tests run on
+every push and PR. Combined with Vercel's per-PR preview deploys, the loop is:
+push → checks green → eyeball preview → merge → auto-deploy. Deployments get
+*safer and more automated* over time without extra effort.
 
 ---
 
@@ -81,11 +90,19 @@ We deliberately **do not** pursue comprehensive coverage. We test the few things
 
 At this scale, performance is a non-problem unless we do something pathological. The three defaults that matter:
 
-1. **Fetch on the server** (Server Components) — no data waterfalls.
+1. **Fetch on the server** (Server Components), start independent reads
+   together, and embed child rows needed by the same read model.
 2. **Optimise images** (Next `<Image>` + Supabase Storage) — the one heavy asset.
-3. **Keep scoring swappable** — compute from raw matches on read now; cache/materialise later only if ever needed. The seam exists; the machinery doesn't.
+3. **Acknowledge work immediately** with stable pending controls and
+   route-shaped loading boundaries, without optimistically changing immutable
+   facts.
+4. **Keep scoring swappable** — materialised ratings remain rebuildable from
+   raw matches, and approval does not report success until the rebuild finishes.
 
-Do not add caching, edge tricks, or query optimisation speculatively. Add them only in response to a *measured* problem, recorded in an ADR.
+Do not add caching, edge tricks, indexes, or background jobs speculatively. Add
+them only in response to a *measured* problem, recorded in an ADR. Browser
+budgets enforce stable loading and pending UI against compiled production CSS;
+see ADR-0017.
 
 ---
 

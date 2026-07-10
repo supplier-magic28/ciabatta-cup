@@ -98,3 +98,10 @@ on `/admin/approvals`.
 
 If cache rebuilding fails, keep the match facts intact, fix the server secret or
 migration state, then run the admin rebuild again.
+
+## Password recovery verification
+
+Request a reset from `/forgot-password` and confirm the email redirects through
+`/auth/confirm?next=%2Fupdate-password`. The Password recovery template should
+retain Supabase's `{{ .ConfirmationURL }}` so the callback receives its PKCE
+code. Set the new password at `/update-password`, then sign in again.

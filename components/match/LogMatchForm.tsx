@@ -348,9 +348,7 @@ export function LogMatchForm({
           </div>
         ) : (
           <div className="w-[200px]">
-            <Button type="button" disabled={pending} onClick={onSubmit}>
-              {pending ? "Submitting…" : "Submit for approval"}
-            </Button>
+            <Button type="button" loading={pending} loadingLabel="Submitting..." onClick={onSubmit}>Submit for approval</Button>
           </div>
         )}
       </div>

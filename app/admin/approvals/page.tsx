@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { getSessionPlayer } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { displayName } from "@/lib/auth/displayName";
-import { formatScore, type ScoreSet } from "@/lib/match/score";
+import { formatScore } from "@/lib/match/score";
+import { indexEmbeddedScoreSets } from "@/lib/match/embeddedSets";
 import { ApprovalActions } from "@/components/match/ApprovalActions";
 import { RebuildRatingsButton } from "@/components/match/RebuildRatingsButton";
 
@@ -22,25 +23,15 @@ export default async function ApprovalsPage() {
 
   const supabase = await createClient();
 
-  const { data: matches } = await supabase
-    .from("matches")
-    .select("id, format, format_note, player1_id, player2_id, winner_id, played_at")
-    .eq("status", "pending_approval")
-    .order("played_at", { ascending: true });
-
-  const rows = matches ?? [];
-  const matchIds = rows.map((m) => m.id);
-
-  const [{ data: players }, { data: sets }] = await Promise.all([
+  const [{ data: matches }, { data: players }] = await Promise.all([
+    supabase
+      .from("matches")
+      .select("id, format, format_note, player1_id, player2_id, winner_id, played_at, match_sets(set_number, p1_games, p2_games, tiebreak_p1, tiebreak_p2)")
+      .eq("status", "pending_approval")
+      .order("played_at", { ascending: true }),
     supabase.from("players").select("id, first_name, last_name, email"),
-    matchIds.length
-      ? supabase
-          .from("match_sets")
-          .select("match_id, set_number, p1_games, p2_games, tiebreak_p1, tiebreak_p2")
-          .in("match_id", matchIds)
-          .order("set_number", { ascending: true })
-      : Promise.resolve({ data: [] as never[] }),
   ]);
+  const rows = matches ?? [];
 
   const nameOf = new Map(
     (players ?? []).map((p) => [
@@ -49,17 +40,7 @@ export default async function ApprovalsPage() {
     ]),
   );
 
-  const setsByMatch = new Map<string, ScoreSet[]>();
-  for (const s of sets ?? []) {
-    const list = setsByMatch.get(s.match_id) ?? [];
-    list.push({
-      p1Games: s.p1_games,
-      p2Games: s.p2_games,
-      tiebreakP1: s.tiebreak_p1,
-      tiebreakP2: s.tiebreak_p2,
-    });
-    setsByMatch.set(s.match_id, list);
-  }
+  const setsByMatch = indexEmbeddedScoreSets(rows);
 
   return (
     <main className="mx-auto w-full max-w-lg flex-1 px-6 py-10">

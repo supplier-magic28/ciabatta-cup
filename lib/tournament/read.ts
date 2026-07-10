@@ -1,6 +1,7 @@
 import "server-only";
 
 import { displayName } from "@/lib/auth/displayName";
+import { indexEmbeddedSets } from "@/lib/match/embeddedSets";
 import { createClient } from "@/lib/supabase/server";
 import { deriveTournamentStandings } from "./logic";
 import type { TournamentResult } from "./types";
@@ -8,30 +9,16 @@ import type { TournamentResult } from "./types";
 export async function loadTournamentBoard(tournamentId: string) {
   const supabase = await createClient();
   const [{ data: tournament }, { data: participants }, { data: fixtures }, { data: matches }, { data: players }] = await Promise.all([
-    supabase.from("tournaments").select("*").eq("id", tournamentId).single(),
+    supabase.from("tournaments").select("id, name, status, starts_at, timezone, location_name, courts").eq("id", tournamentId).single(),
     supabase.from("tournament_participants").select("player_id, seed").eq("tournament_id", tournamentId).order("seed"),
-    supabase.from("fixtures").select("*").eq("tournament_id", tournamentId).order("round_number").order("court_number"),
-    supabase.from("matches").select("id, fixture_id, player1_id, player2_id, winner_id, status").eq("tournament_id", tournamentId),
+    supabase.from("fixtures").select("id, stage, round_number, slot_number, court_number, ruleset, player1_id, player2_id").eq("tournament_id", tournamentId).order("round_number").order("court_number"),
+    supabase.from("matches").select("id, fixture_id, player1_id, player2_id, winner_id, status, match_sets(set_number, p1_games, p2_games, tiebreak_p1, tiebreak_p2)").eq("tournament_id", tournamentId),
     supabase.from("players").select("id, first_name, last_name, email, avatar_url"),
   ]);
 
   if (!tournament) return null;
   const approved = (matches ?? []).filter((match) => match.status === "approved");
-  const matchIds = approved.map((match) => match.id);
-  const { data: sets } = matchIds.length
-    ? await supabase
-        .from("match_sets")
-        .select("match_id, set_number, p1_games, p2_games, tiebreak_p1, tiebreak_p2")
-        .in("match_id", matchIds)
-        .order("set_number")
-    : { data: [] as Array<{ match_id: string; set_number: number; p1_games: number; p2_games: number; tiebreak_p1: number | null; tiebreak_p2: number | null }> };
-
-  const setsByMatch = new Map<string, typeof sets>();
-  for (const set of sets ?? []) {
-    const current = setsByMatch.get(set.match_id) ?? [];
-    current.push(set);
-    setsByMatch.set(set.match_id, current);
-  }
+  const setsByMatch = indexEmbeddedSets(approved);
   const matchByFixture = new Map(approved.map((match) => [match.fixture_id, match]));
   const groupFixtureIds = new Set((fixtures ?? []).filter((fixture) => fixture.stage === "group").map((fixture) => fixture.id));
   const groupResults: TournamentResult[] = approved.flatMap((match) => {

@@ -19,16 +19,20 @@ pattern changes, update this guide and the component inventory in the same task.
 
 | Handoff screen | Production route | State | Current gap |
 | --- | --- | --- | --- |
-| 01 Leaderboard | `/` | Partial | Holder history, reign duration, profile links, earned ratings, zero-point unranked states, records, and movement are live; filters, last-five form, and side rail are pending. |
-| 02 Player profile | `/players/[playerId]` | Partial | Hero, records, points history, head-to-head, and match log are live; avatar upload/editing and richer trend interaction are pending. |
-| 03 Log match | `/matches`, `/matches/new` | Partial | Submission, confirmation, history, and score validation are live; the flow is not yet a full visual recreation of every handoff state. |
-| 04 Tournaments | `/tournaments`, `/tournaments/[tournamentId]` | Implemented | Event cards, live standings, qualification state, round/court schedule, results, final rules, and champion are live. Self-entry and multi-structure filtering remain deferred. |
-| 05 Sign in | `/sign-in`, `/sign-up`, `/accept-invite` | Implemented | Sign-in, signup, and invite password setup use the token-driven auth shell. |
-| 06 Admin dashboard | `/admin/approvals`, `/admin/players` | Partial | Approval queue and roster exist as focused routes; dashboard stats and activity feed are pending. |
-| 07 Manage tournament | `/admin/tournaments/new`, `/admin/tournaments/[tournamentId]` | Partial | Four-player round-robin setup, deterministic fixture generation, reviewed admin result entry, decider planning, finals, and completion are live. Knockout preview and mid-event roster changes are deferred. |
-| 08 Manage players | `/admin/players` | Partial | Invite, roster status, and safe deletion of unused players are live; edit, deactivate, resend, and revoke flows are pending. |
+| 01 Leaderboard | `/` | Partial | Holder history, reign duration, profile links, earned ratings, zero-point unranked states, records, movement, and a layout-matched loading state are live; filters, last-five form, and side rail are pending. |
+| 02 Player profile | `/players/[playerId]` | Partial | Hero, records, points history, head-to-head, match log, and a profile-shaped loading state are live; avatar upload/editing and richer trend interaction are pending. |
+| 03 Log match | `/matches`, `/matches/new` | Partial | Submission, confirmation, history, score validation, stable pending actions, and route-shaped loading are live; the flow is not yet a full visual recreation of every handoff state. |
+| 04 Tournaments | `/tournaments`, `/tournaments/[tournamentId]` | Implemented | Event cards, live standings, qualification state, round/court schedule, results, final rules, champion, and responsive loading boards are live. Self-entry and multi-structure filtering remain deferred. |
+| 05 Sign in | `/sign-in`, `/sign-up`, `/accept-invite` | Implemented | Sign-in, signup, and invite password setup use the token-driven auth shell with stable pending controls and a matching form skeleton. |
+| 06 Admin dashboard | `/admin/approvals`, `/admin/players` | Partial | Approval queue, roster, per-action pending feedback, and loading queues exist as focused routes; dashboard stats and activity feed are pending. |
+| 07 Manage tournament | `/admin/tournaments/new`, `/admin/tournaments/[tournamentId]` | Partial | Four-player round-robin setup, deterministic fixture generation, reviewed admin result entry, decider planning, finals, completion, and stable pending/loading states are live. Knockout preview and mid-event roster changes are deferred. |
+| 08 Manage players | `/admin/players` | Partial | Invite, roster status, safe deletion of unused players, and stable pending/loading states are live; edit, deactivate, resend, and revoke flows are pending. |
+| Password recovery | `/forgot-password`, `/update-password` | Implemented | Recovery email request, PKCE callback, replacement password form, invited-profile activation, and stable pending feedback are live. |
 
 ## Implementation rules
+
+Password recovery is implemented at `/forgot-password` and `/update-password`
+inside the existing auth shell; the callback route is `/auth/confirm`.
 
 - Reuse tokens and shared components before adding page-specific styling.
 - Keep the handoff's mobile-first information hierarchy, hard borders, solid
@@ -36,3 +40,6 @@ pattern changes, update this guide and the component inventory in the same task.
 - A new shared component requires an entry in `components/README.md`.
 - A changed route or screen state requires an update to the table above and to
   `STATUS.md` when it changes the current product capability.
+- Loading states must reserve the major geometry of their final route at mobile
+  and desktop widths. Mutation controls acknowledge immediately but never imply
+  that an immutable result or rating changed before server confirmation.

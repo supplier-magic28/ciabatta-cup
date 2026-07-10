@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { getSessionPlayer } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { displayName } from "@/lib/auth/displayName";
-import { formatScore, type ScoreSet } from "@/lib/match/score";
+import { formatScore } from "@/lib/match/score";
+import { indexEmbeddedScoreSets } from "@/lib/match/embeddedSets";
 import { Button } from "@/components/ui/Button";
 import { ConfirmMatchButton } from "@/components/match/ConfirmMatchButton";
 
@@ -35,26 +36,16 @@ export default async function MatchesPage() {
 
   const supabase = await createClient();
 
-  const { data: matches } = await supabase
-    .from("matches")
-    .select("id, type, format, format_note, status, played_at, player1_id, player2_id, winner_id")
-    .or(`player1_id.eq.${player.id},player2_id.eq.${player.id}`)
-    .order("played_at", { ascending: false });
-
-  const rows = matches ?? [];
-  const matchIds = rows.map((m) => m.id);
-
-  const [{ data: players }, { data: sets }, { data: myConfirmations }] = await Promise.all([
+  const [{ data: matches }, { data: players }, { data: myConfirmations }] = await Promise.all([
+    supabase
+      .from("matches")
+      .select("id, type, format, format_note, status, played_at, player1_id, player2_id, winner_id, match_sets(set_number, p1_games, p2_games, tiebreak_p1, tiebreak_p2)")
+      .or(`player1_id.eq.${player.id},player2_id.eq.${player.id}`)
+      .order("played_at", { ascending: false }),
     supabase.from("players").select("id, first_name, last_name, email"),
-    matchIds.length
-      ? supabase
-          .from("match_sets")
-          .select("match_id, set_number, p1_games, p2_games, tiebreak_p1, tiebreak_p2")
-          .in("match_id", matchIds)
-          .order("set_number", { ascending: true })
-      : Promise.resolve({ data: [] as never[] }),
     supabase.from("match_confirmations").select("match_id").eq("player_id", player.id),
   ]);
+  const rows = matches ?? [];
 
   const nameOf = new Map(
     (players ?? []).map((p) => [
@@ -63,17 +54,7 @@ export default async function MatchesPage() {
     ]),
   );
 
-  const setsByMatch = new Map<string, ScoreSet[]>();
-  for (const s of sets ?? []) {
-    const list = setsByMatch.get(s.match_id) ?? [];
-    list.push({
-      p1Games: s.p1_games,
-      p2Games: s.p2_games,
-      tiebreakP1: s.tiebreak_p1,
-      tiebreakP2: s.tiebreak_p2,
-    });
-    setsByMatch.set(s.match_id, list);
-  }
+  const setsByMatch = indexEmbeddedScoreSets(rows);
 
   const confirmedByMe = new Set((myConfirmations ?? []).map((c) => c.match_id));
 

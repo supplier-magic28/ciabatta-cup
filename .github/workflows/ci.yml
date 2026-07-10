@@ -43,5 +43,8 @@ jobs:
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
 
+      - name: Performance budgets
+        run: npm run test:performance
+
       - name: Browser smoke test
         run: npm run test:e2e

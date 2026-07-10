@@ -2,6 +2,7 @@
 
 import { useActionState, type FormEvent } from "react";
 import { deletePlayer } from "@/lib/players/actions";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 export function DeletePlayerButton({
   playerId,
@@ -27,8 +28,10 @@ export function DeletePlayerButton({
       <button
         type="submit"
         disabled={pending}
-        className="font-mono text-[10px] uppercase tracking-[1.5px] text-rust underline decoration-2 underline-offset-4 disabled:cursor-not-allowed disabled:opacity-60"
+        aria-busy={pending || undefined}
+        className="inline-flex min-h-6 items-center gap-2 font-mono text-[10px] uppercase tracking-[1.5px] text-rust underline decoration-2 underline-offset-4 disabled:cursor-not-allowed disabled:opacity-60"
       >
+        {pending && <LoadingSpinner size={12} />}
         {pending ? "Deleting..." : "Delete player"}
       </button>
     </form>

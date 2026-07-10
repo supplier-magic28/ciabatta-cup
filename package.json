@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "docs:check": "node scripts/check-docs.mjs",
     "docs:check:test": "node --test scripts/check-docs.test.mjs",
-    "test:e2e": "node scripts/run-e2e.mjs"
+    "test:e2e": "node scripts/run-e2e.mjs",
+    "test:performance": "playwright test --config=playwright.performance.config.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",

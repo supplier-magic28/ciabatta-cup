@@ -4,7 +4,8 @@ import { PlayerAvatar } from "@/components/players/PlayerAvatar";
 import { ReignSummary } from "@/components/players/ReignSummary";
 import { displayName } from "@/lib/auth/displayName";
 import { getSessionPlayer } from "@/lib/auth/session";
-import { formatScore, type ScoreSet } from "@/lib/match/score";
+import { formatScore } from "@/lib/match/score";
+import { indexEmbeddedScoreSets } from "@/lib/match/embeddedSets";
 import { derivePlayerProfile, type ProfileMatch } from "@/lib/players/profile";
 import { buildRatingCache, type ScoringMatchRow } from "@/lib/scoring";
 import { createClient } from "@/lib/supabase/server";
@@ -48,32 +49,12 @@ export default async function PlayerProfilePage({
       .order("first_name", { ascending: true }),
     supabase
       .from("matches")
-      .select("id, player1_id, player2_id, winner_id, type, status, played_at")
+      .select("id, player1_id, player2_id, winner_id, type, status, played_at, match_sets(set_number, p1_games, p2_games, tiebreak_p1, tiebreak_p2)")
       .eq("status", "approved"),
   ]);
 
   if (!target) notFound();
-
-  const matchIds = (matchRows ?? []).map((match) => match.id);
-  const { data: setRows } = matchIds.length
-    ? await supabase
-        .from("match_sets")
-        .select("match_id, set_number, p1_games, p2_games, tiebreak_p1, tiebreak_p2")
-        .in("match_id", matchIds)
-        .order("set_number", { ascending: true })
-    : { data: [] as never[] };
-
-  const setsByMatch = new Map<string, ScoreSet[]>();
-  for (const set of setRows ?? []) {
-    const sets = setsByMatch.get(set.match_id) ?? [];
-    sets.push({
-      p1Games: set.p1_games,
-      p2Games: set.p2_games,
-      tiebreakP1: set.tiebreak_p1,
-      tiebreakP2: set.tiebreak_p2,
-    });
-    setsByMatch.set(set.match_id, sets);
-  }
+  const setsByMatch = indexEmbeddedScoreSets(matchRows ?? []);
 
   const players = (playerRows ?? []).map((player) => ({
     ...player,

@@ -50,13 +50,13 @@ export function NewTournamentForm({ players }: { players: PlayerOption[] }) {
       <div className="border-2 border-hairline bg-row p-4 font-mono text-[11px] leading-5 text-muted">
         Round robin: first to 3 games. Top two play a full-set final; bottom two play for third. Every result is ranked Elo.
       </div>
-      {state && !state.ok && <p className="font-mono text-[12px] text-rust">{state.error}</p>}
+      {state && !state.ok && <p className="font-mono text-[12px] text-rust" aria-live="polite">{state.error}</p>}
       {state?.ok && state.tournamentId ? (
         <Link href={`/admin/tournaments/${state.tournamentId}`} className="rounded-[8px] border-2 border-ink bg-green px-5 py-4 text-center font-heading font-bold tracking-[1px] text-cream shadow-[3px_3px_0_var(--color-ink)]">
           Review tournament
         </Link>
       ) : (
-        <Button type="submit" disabled={pending}>{pending ? "Creating..." : "Create tournament"}</Button>
+        <Button type="submit" loading={pending} loadingLabel="Creating tournament...">Create tournament</Button>
       )}
     </form>
   );

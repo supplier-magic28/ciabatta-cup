@@ -25,14 +25,12 @@ export function InvitePlayerForm() {
       </div>
       <Field label="Email" name="email" type="email" autoComplete="off" required />
       {state && "error" in state && (
-        <p className="font-mono text-[12px] text-rust">{state.error}</p>
+        <p className="font-mono text-[12px] text-rust" aria-live="polite">{state.error}</p>
       )}
       {state && "sent" in state && (
-        <p className="font-mono text-[12px] text-green">Invite sent to {state.sent}.</p>
+        <p className="font-mono text-[12px] text-green" aria-live="polite">Invite sent to {state.sent}.</p>
       )}
-      <Button type="submit" disabled={pending} className="mt-1.5">
-        {pending ? "Sending invite…" : "Send invite"}
-      </Button>
+      <Button type="submit" loading={pending} loadingLabel="Sending invite..." className="mt-1.5">Send invite</Button>
     </form>
   );
 }

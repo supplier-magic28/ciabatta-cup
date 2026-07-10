@@ -10,10 +10,15 @@ export function TournamentAdminActions({ tournamentId, canGenerate }: { tourname
   return (
     <form action={submit} className="mt-4">
       <input type="hidden" name="tournamentId" value={tournamentId} />
-      {state && !state.ok && <p className="mb-2 font-mono text-[11px] text-rust">{state.error}</p>}
-      {state?.ok && <p className="mb-2 font-mono text-[11px] text-green">{state.message}</p>}
-      <Button type="submit" disabled={pending} className={canGenerate ? "bg-crust" : ""}>
-        {pending ? "Working..." : canGenerate ? "Generate fixtures" : "Advance tournament"}
+      {state && !state.ok && <p className="mb-2 font-mono text-[11px] text-rust" aria-live="polite">{state.error}</p>}
+      {state?.ok && <p className="mb-2 font-mono text-[11px] text-green" aria-live="polite">{state.message}</p>}
+      <Button
+        type="submit"
+        loading={pending}
+        loadingLabel={canGenerate ? "Generating fixtures..." : "Advancing tournament..."}
+        className={canGenerate ? "bg-crust" : ""}
+      >
+        {canGenerate ? "Generate fixtures" : "Advance tournament"}
       </Button>
     </form>
   );

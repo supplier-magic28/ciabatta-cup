@@ -1,0 +1,119 @@
+import { Skeleton } from "@/components/ui/Skeleton";
+
+function LoadingRegion({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <main role="status" aria-live="polite" aria-busy="true" className={className}>
+      <span className="sr-only">Loading page</span>
+      {children}
+    </main>
+  );
+}
+
+function HeaderSkeleton() {
+  return (
+    <div className="mb-7 flex items-start justify-between gap-4 border-b-2 border-ink pb-4">
+      <Skeleton className="h-16 w-40" />
+      <Skeleton className="mt-2 h-5 w-52 max-w-[48vw]" />
+    </div>
+  );
+}
+
+function ListCards({ count = 4 }: { count?: number }) {
+  return (
+    <div className="flex flex-col gap-3">
+      {Array.from({ length: count }, (_, index) => (
+        <div key={index} className="min-h-28 border-2 border-ink bg-surface p-4 shadow-[3px_3px_0_var(--color-ink)]">
+          <div className="flex items-center justify-between gap-4">
+            <Skeleton className="h-5 w-2/3" />
+            <Skeleton className="h-4 w-14" />
+          </div>
+          <Skeleton className="mt-4 h-3 w-1/2" />
+          <Skeleton className="mt-2 h-3 w-1/3" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function LeaderboardSkeleton() {
+  return (
+    <LoadingRegion className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 pb-10 pt-5 sm:px-6">
+      <HeaderSkeleton />
+      <Skeleton className="mb-7 h-24 w-full border-2 border-ink" />
+      <Skeleton className="mb-3 h-4 w-32" />
+      <Skeleton className="mb-6 h-10 w-56" />
+      <ListCards count={4} />
+    </LoadingRegion>
+  );
+}
+
+export function AuthFormSkeleton() {
+  return (
+    <div role="status" aria-live="polite" aria-busy="true" className="flex flex-col gap-5">
+      <span className="sr-only">Loading form</span>
+      <Skeleton className="h-10 w-48" />
+      <Skeleton className="h-[70px] w-full" />
+      <Skeleton className="h-[70px] w-full" />
+      <Skeleton className="h-[58px] w-full border-2 border-ink" />
+      <Skeleton className="mx-auto h-4 w-44" />
+    </div>
+  );
+}
+
+export function CompactListSkeleton() {
+  return (
+    <LoadingRegion className="mx-auto w-full max-w-lg flex-1 px-6 py-10">
+      <div className="mb-6 flex items-center justify-between"><Skeleton className="h-8 w-40" /><Skeleton className="h-4 w-20" /></div>
+      <ListCards count={4} />
+    </LoadingRegion>
+  );
+}
+
+export function FormPageSkeleton({ wide = false }: { wide?: boolean }) {
+  return (
+    <LoadingRegion className={`mx-auto w-full flex-1 px-6 py-10 ${wide ? "max-w-2xl" : "max-w-md"}`}>
+      <div className="mb-7 flex justify-between border-b-2 border-ink pb-4"><Skeleton className="h-10 w-52" /><Skeleton className="h-4 w-20" /></div>
+      <section className="border-2 border-ink bg-surface p-5 shadow-[4px_4px_0_var(--color-ink)] sm:p-7">
+        <Skeleton className="h-[70px] w-full" />
+        <div className="mt-4 grid gap-4 sm:grid-cols-2"><Skeleton className="h-[70px] w-full" /><Skeleton className="h-[70px] w-full" /></div>
+        <Skeleton className="mt-4 h-[70px] w-full" />
+        <Skeleton className="mt-6 h-14 w-full border-2 border-ink" />
+      </section>
+    </LoadingRegion>
+  );
+}
+
+export function ProfileSkeleton() {
+  return (
+    <LoadingRegion className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6">
+      <Skeleton className="h-5 w-24" />
+      <section className="mt-5 min-h-52 border-2 border-ink bg-ink p-6 shadow-[4px_4px_0_var(--color-green)]">
+        <div className="flex gap-5"><Skeleton className="h-20 w-20 rounded-full bg-muted-dark" /><div className="flex-1"><Skeleton className="h-8 w-52 bg-muted-dark" /><Skeleton className="mt-3 h-4 w-32 bg-muted-dark" /><Skeleton className="mt-7 h-10 w-full max-w-sm bg-muted-dark" /></div></div>
+      </section>
+      <div className="mt-7 grid gap-7 lg:grid-cols-2"><ListCards count={3} /><ListCards count={3} /></div>
+    </LoadingRegion>
+  );
+}
+
+export function TournamentListSkeleton() {
+  return (
+    <LoadingRegion className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 pb-12 pt-5 sm:px-6">
+      <HeaderSkeleton />
+      <div className="mb-6 flex justify-between"><Skeleton className="h-10 w-52" /><Skeleton className="h-10 w-24" /></div>
+      <div className="grid gap-4 sm:grid-cols-2">{Array.from({ length: 4 }, (_, index) => <div key={index} className="h-36 border-2 border-ink bg-surface p-5 shadow-[4px_4px_0_var(--color-ink)]"><Skeleton className="h-6 w-2/3" /><Skeleton className="mt-8 h-4 w-3/4" /><Skeleton className="mt-2 h-4 w-1/2" /></div>)}</div>
+    </LoadingRegion>
+  );
+}
+
+export function TournamentBoardSkeleton({ admin = false }: { admin?: boolean }) {
+  return (
+    <LoadingRegion className={`mx-auto w-full flex-1 px-4 pb-12 pt-5 sm:px-6 ${admin ? "max-w-6xl" : "max-w-5xl"}`}>
+      {!admin && <HeaderSkeleton />}
+      <Skeleton className="mb-8 h-52 w-full border-2 border-ink" />
+      <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <div><Skeleton className="mb-4 h-9 w-40" /><div className="border-2 border-ink bg-surface p-3"><Skeleton className="h-9 w-full bg-ink" />{Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="mt-2 h-14 w-full" />)}</div></div>
+        <div><Skeleton className="mb-4 h-9 w-36" />{Array.from({ length: 3 }, (_, i) => <Skeleton key={i} className={`mb-4 w-full border-2 border-ink ${admin ? "h-64" : "h-32"}`} />)}</div>
+      </div>
+    </LoadingRegion>
+  );
+}

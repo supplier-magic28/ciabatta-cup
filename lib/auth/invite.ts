@@ -1,4 +1,5 @@
 import type { EmailOtpType } from "@supabase/supabase-js";
+import { safeAuthDestination } from "./recovery";
 
 export type InvitePasswordValidation =
   | { ok: true; password: string }
@@ -22,6 +23,5 @@ export function confirmationDestination(
   requestedPath: string,
 ): string {
   if (type === "invite") return "/accept-invite";
-  if (!requestedPath.startsWith("/") || requestedPath.startsWith("//")) return "/";
-  return requestedPath;
+  return safeAuthDestination(requestedPath);
 }
