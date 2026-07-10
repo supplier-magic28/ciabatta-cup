@@ -14,10 +14,12 @@ changing the fixture model.
 
 Store one optional `cover_image_url` on each tournament. Admins upload, replace,
 or remove the image from the detail hero through a server-authorized action.
-Images are stored in the public `tournament-images` bucket with a 5 MB limit
-and JPEG, PNG, or WebP allowlist. List cards and the detail tile render the
-same image with constrained dimensions and `object-cover` so source aspect ratio
-does not move surrounding content.
+Images are selected from JPEG, PNG, or WebP sources under 5 MB, then cropped
+and resized in the browser to a 1280 x 560 WebP before upload. The crop editor
+uses the same 16:7 aspect ratio as the hero and list card, with bounded zoom and
+drag positioning. Images are stored in the public `tournament-images` bucket.
+List cards and the detail tile render the same image with constrained dimensions
+and `object-cover` so source aspect ratio does not move surrounding content.
 
 ## Consequences
 

@@ -56,7 +56,8 @@ rejects the same operation after play begins.
 
 Tournament cover photos use the public `tournament-images` bucket. Only admins
 may write or delete objects there; players receive read-only public images on
-the tournament list and detail pages.
+the tournament list and detail pages. The browser crops and resizes accepted
+source images to a 1280 x 560 WebP before upload.
 
 The player, match, confirmation, rating-history, reign, tournament, participant,
 and fixture tables exist in migration form. Activity remains a later phase.

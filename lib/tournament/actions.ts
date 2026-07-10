@@ -6,6 +6,7 @@ import { rebuildRatingCache } from "@/lib/scoring/rebuild";
 import { createClient } from "@/lib/supabase/server";
 import { deriveTournamentStandings, generateRoundRobin, planFinalStage, resolveDecider } from "./logic";
 import { validateTournamentScore } from "./score";
+import { MAX_TOURNAMENT_IMAGE_BYTES, TOURNAMENT_IMAGE_TYPES } from "./crop";
 import type { TournamentResult, TournamentRuleset } from "./types";
 
 export type TournamentActionState =
@@ -13,8 +14,6 @@ export type TournamentActionState =
   | { ok: false; error: string };
 
 const FORBIDDEN: TournamentActionState = { ok: false, error: "Only admins can manage tournaments." };
-const TOURNAMENT_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
-const MAX_TOURNAMENT_IMAGE_BYTES = 5 * 1024 * 1024;
 
 async function requireAdmin() {
   const player = await getSessionPlayer();

@@ -34,8 +34,8 @@ This is the short operational handover. Durable intent belongs in
   through a qualification decider, final, and third-place match.
 - Authenticated players can follow tournament details, live standings, fixtures,
   results, progress, cover photos, and the derived champion from `/tournaments`.
-- Admins can add, replace, or remove a tournament cover photo from the event
-  hero; the same image appears on the tournament calendar card.
+- Admins can add, crop, resize, replace, or remove a tournament cover photo from
+  the event hero; the same image appears on the tournament calendar card.
 - Every current navigation surface has a route-shaped loading boundary and a
   shared retryable error state. Mutations acknowledge clicks immediately with
   stable, accessible pending controls while confirmed data waits for the server.

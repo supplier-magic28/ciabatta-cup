@@ -18,7 +18,7 @@ export default async function TournamentPage({ params }: { params: Promise<{ tou
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 pb-12 pt-5 sm:px-6">
       <SiteHeader role={player.role} active="tournaments" />
       <section className="mb-8 border-2 border-ink bg-green p-5 text-cream shadow-[4px_4px_0_var(--color-ink)] sm:p-7">
-        <div className="grid gap-6 sm:grid-cols-[minmax(0,1fr)_280px] sm:items-start">
+        <div className="grid gap-6 sm:grid-cols-[minmax(0,1fr)_minmax(320px,420px)] sm:items-start">
           <div>
             <p className="font-mono text-[10px] uppercase tracking-[2px] text-green-muted">{tournament.status} · Ranked Elo</p>
             <h1 className="mt-1 font-heading text-3xl font-bold">{tournament.name}</h1>
@@ -26,11 +26,9 @@ export default async function TournamentPage({ params }: { params: Promise<{ tou
               {new Intl.DateTimeFormat("en-AU", { dateStyle: "full", timeStyle: "short", timeZone: tournament.timezone }).format(new Date(tournament.starts_at))}<br />
               {tournament.location_name} · {tournament.courts} courts
             </p>
+            {player.role === "admin" && <Link href={`/admin/tournaments/${tournament.id}`} className="mt-5 inline-block border-2 border-cream px-3 py-2 text-center font-mono text-[10px] uppercase tracking-[1px]">Admin view</Link>}
           </div>
-          <div className="grid gap-3">
-            {player.role === "admin" && <Link href={`/admin/tournaments/${tournament.id}`} className="border-2 border-cream px-3 py-2 text-center font-mono text-[10px] uppercase tracking-[1px]">Director view</Link>}
-            <TournamentPhotoControl tournamentId={tournament.id} photoUrl={tournament.cover_image_url} canEdit={player.role === "admin"} />
-          </div>
+          <TournamentPhotoControl tournamentId={tournament.id} photoUrl={tournament.cover_image_url} canEdit={player.role === "admin"} />
         </div>
         {championId && <p className="mt-5 border-t border-green-muted pt-4 font-heading text-xl font-bold text-chartreuse">Champion: {playerById.get(championId)?.name ?? "Winner"}</p>}
       </section>
