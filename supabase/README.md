@@ -97,7 +97,7 @@ In the **Password recovery** email template, replace the default link with the
 server-side callback link:
 
 ```html
-<a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=recovery">
+<a href="https://ciabatta-cup.app/auth/confirm?next=%2Fupdate-password&token_hash={{ .TokenHash }}&type=recovery">
   Set a new Ciabatta Cup password
 </a>
 ```
