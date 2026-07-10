@@ -28,8 +28,9 @@ This is the short operational handover. Durable intent belongs in
 
 ## Current blockers
 
-- The Vercel deployment is connected, but `ciabatta-cup.app` still needs to be
-  attached to the project and selected as the canonical production domain.
+- The Vercel deployment and custom domains are live, but the current redirect
+  runs from `ciabatta-cup.app` to `www.ciabatta-cup.app`; reverse it so the apex
+  domain is the canonical production origin.
 - Resend has verified `ciabatta-cup.app`; Supabase custom SMTP, the Auth Site
   URL/redirect allow-list, and the invite template still need final setup.
 - `SUPABASE_SECRET_KEY` and `NEXT_PUBLIC_SITE_URL=https://ciabatta-cup.app` must
