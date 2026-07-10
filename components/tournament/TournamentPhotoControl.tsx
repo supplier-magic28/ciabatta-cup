@@ -4,6 +4,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import Cropper, { type Area } from "react-easy-crop";
 import { Button } from "@/components/ui/Button";
+import { CropZoomControl } from "@/components/ui/CropZoomControl";
 import { updateTournamentPhoto } from "@/lib/tournament/actions";
 import { createTournamentCoverFile, isAllowedTournamentPhoto, type CropAreaPixels } from "@/lib/tournament/crop";
 
@@ -140,10 +141,7 @@ export function TournamentPhotoControl({
                 onZoomChange={setZoom}
               />
             </div>
-            <label className="mt-4 grid gap-2 font-mono text-[10px] uppercase tracking-[1.5px] text-muted">
-              Zoom
-              <input type="range" min={1} max={3} step={0.01} value={zoom} onChange={(event) => setZoom(Number(event.target.value))} />
-            </label>
+            <CropZoomControl zoom={zoom} onChange={setZoom} />
             <div className="mt-4 flex flex-wrap justify-end gap-3">
               <Button type="button" onClick={cancelCrop} className="!w-auto bg-surface text-ink">Cancel</Button>
               <Button type="button" onClick={confirmCrop} className="!w-auto">Use cropped photo</Button>

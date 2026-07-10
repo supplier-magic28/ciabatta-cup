@@ -22,6 +22,8 @@ of Done (`CLAUDE.md`).
   animation stops when reduced motion is requested.
 - `ui/Skeleton` — fixed-geometry solid-opacity loading block with
   reduced-motion support.
+- `ui/CropZoomControl` — accessible bounded zoom slider with explicit zoom in
+  and zoom out controls for image crop editors.
 
 **Loading**
 - `loading/PageSkeletons` — route-shaped compositions for leaderboard, auth,

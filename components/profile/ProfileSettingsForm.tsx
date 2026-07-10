@@ -4,6 +4,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import Cropper, { type Area } from "react-easy-crop";
 import { Button } from "@/components/ui/Button";
+import { CropZoomControl } from "@/components/ui/CropZoomControl";
 import { createCircularAvatarFile, isAllowedAvatar, type CropAreaPixels } from "@/lib/profile/crop";
 import { updateProfileSettings } from "@/lib/profile/actions";
 
@@ -172,10 +173,7 @@ export function ProfileSettingsForm({ profile }: { profile: Profile }) {
                 onZoomChange={setZoom}
               />
             </div>
-            <label className="mt-4 grid gap-2 font-mono text-[10px] uppercase tracking-[1.5px] text-muted">
-              Zoom
-              <input type="range" min={1} max={3} step={0.01} value={zoom} onChange={(event) => setZoom(Number(event.target.value))} />
-            </label>
+            <CropZoomControl zoom={zoom} onChange={setZoom} />
             <div className="mt-4 flex justify-end gap-3">
               <Button type="button" onClick={cancelCrop} className="bg-surface text-ink">Cancel</Button>
               <Button type="button" onClick={confirmCrop}>Use picture</Button>
