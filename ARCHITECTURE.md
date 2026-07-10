@@ -64,7 +64,7 @@ boundaries stream route-shaped skeletons while the server completes. **Images**
 (avatars/photos) go through Supabase Storage + Next `<Image>` — the only heavy
 asset, so worth doing right from the start.
 
-**UI is built from a small component vocabulary** (`components/`) driven by design tokens. Screens are assembled from shared primitives (Button, Card, `RankBadge`, Ciabatta badge, StatBlock, …). This is both what makes the UX feel consistent and what makes visual change cheap (edit a token, everything updates). The component inventory is kept current per the definition of done.
+**UI is built from a small component vocabulary** (`components/`) driven by design tokens. Screens are assembled from shared primitives (Button, Card, `RankBadge`, Ciabatta badge, StatBlock, …). This is both what makes the UX feel consistent and what makes visual change cheap (edit a token, everything updates). Player-owned presentation settings are persisted on the profile row, while public labels are derived through the shared display-name helper. The component inventory is kept current per the definition of done.
 
 **Security:** Supabase Row Level Security is on by default; every table is locked until an explicit policy grants access. The publishable key is browser-safe; the secret key never touches client code or the repo.
 

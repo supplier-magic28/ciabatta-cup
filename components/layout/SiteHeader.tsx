@@ -2,7 +2,7 @@ import Link from "next/link";
 import { signOut } from "@/lib/auth/actions";
 import { Wordmark } from "@/components/brand/Wordmark";
 
-export function SiteHeader({ role, active }: { role: "player" | "admin"; active?: "leaderboard" | "tournaments" }) {
+export function SiteHeader({ role, active }: { role: "player" | "admin"; active?: "leaderboard" | "tournaments" | "profile" }) {
   const linkClass = "font-mono text-[10px] uppercase tracking-[1.5px]";
   return (
     <header className="mb-7 flex flex-wrap items-start justify-between gap-4 border-b-2 border-ink pb-4">
@@ -24,6 +24,7 @@ export function SiteHeader({ role, active }: { role: "player" | "admin"; active?
             <Link href="/admin/players" className={`${linkClass} text-crust`}>Players</Link>
           </>
         )}
+        <Link href="/profile" className={`${linkClass} ${active === "profile" ? "text-ink underline decoration-green decoration-2 underline-offset-4" : "text-green"}`}>Profile</Link>
         <form action={signOut}>
           <button type="submit" className={`${linkClass} text-muted underline underline-offset-4`}>Log out</button>
         </form>

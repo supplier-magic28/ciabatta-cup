@@ -25,6 +25,9 @@ This is the short operational handover. Durable intent belongs in
   is published only after their first approved ranked result.
 - Player profiles provide rank, current holder state, separate ranked and
   exhibition records, points history, head-to-head summaries, and match logs.
+- Players can update their own avatar, nickname, and nickname display preference
+  from `/profile`; circular avatar crops and effective nicknames flow through
+  the leaderboard, matches, tournaments, and public profiles.
 - Admins can create a four-player round-robin tournament, seed its participants,
   replace a pre-play participant while preserving their seed, regenerate the
   deterministic court schedule, record immutable results directly, and advance
@@ -47,6 +50,7 @@ after that password update succeeds.
 | Migration | State |
 | --- | --- |
 | `20260709000000` through `20260710070000` | Applied to production (operator reported) |
+| `20260710090000_profile_settings_and_avatars.sql` | Ready to apply before profile deployment |
 
 ## Current blockers
 

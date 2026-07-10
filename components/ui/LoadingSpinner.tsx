@@ -1,3 +1,5 @@
+/** @jsxImportSource react */
+
 export function LoadingSpinner({ size = 16, className = "" }: { size?: number; className?: string }) {
   return (
     <span

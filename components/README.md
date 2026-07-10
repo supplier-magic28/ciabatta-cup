@@ -69,6 +69,10 @@ of Done (`CLAUDE.md`).
 - `tournament/TournamentResultForm` — two-step admin score review and atomic
   approval for a scheduled fixture.
 
+**Profile**
+- `profile/ProfileSettingsForm` — self-owned nickname preference and circular
+  avatar crop/upload settings with stable pending feedback.
+
 - `auth/PasswordResetRequestForm` - email recovery request with generic
   delivery feedback and stable pending state.
 - `auth/UpdatePasswordForm` - recovery-link password replacement; invited

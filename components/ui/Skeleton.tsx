@@ -1,3 +1,5 @@
+/** @jsxImportSource react */
+
 import type { HTMLAttributes } from "react";
 
 export function Skeleton({ className = "", ...props }: HTMLAttributes<HTMLDivElement>) {

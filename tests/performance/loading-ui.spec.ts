@@ -10,6 +10,7 @@ import {
   FormPageSkeleton,
   LeaderboardSkeleton,
   ProfileSkeleton,
+  ProfileSettingsSkeleton,
   TournamentBoardSkeleton,
   TournamentListSkeleton,
 } from "../../components/loading/PageSkeletons";
@@ -48,6 +49,7 @@ const skeletons = [
   ["list", createElement(CompactListSkeleton)],
   ["form", createElement(FormPageSkeleton)],
   ["profile", createElement(ProfileSkeleton)],
+  ["profile-settings", createElement(ProfileSettingsSkeleton)],
   ["tournaments", createElement(TournamentListSkeleton)],
   ["tournament-board", createElement(TournamentBoardSkeleton)],
 ] as const;

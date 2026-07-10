@@ -1,3 +1,5 @@
+/** @jsxImportSource react */
+
 import { Skeleton } from "@/components/ui/Skeleton";
 
 function LoadingRegion({ children, className = "" }: { children: React.ReactNode; className?: string }) {
@@ -91,6 +93,21 @@ export function ProfileSkeleton() {
         <div className="flex gap-5"><Skeleton className="h-20 w-20 rounded-full bg-muted-dark" /><div className="flex-1"><Skeleton className="h-8 w-52 bg-muted-dark" /><Skeleton className="mt-3 h-4 w-32 bg-muted-dark" /><Skeleton className="mt-7 h-10 w-full max-w-sm bg-muted-dark" /></div></div>
       </section>
       <div className="mt-7 grid gap-7 lg:grid-cols-2"><ListCards count={3} /><ListCards count={3} /></div>
+    </LoadingRegion>
+  );
+}
+
+export function ProfileSettingsSkeleton() {
+  return (
+    <LoadingRegion className="mx-auto w-full max-w-3xl flex-1 px-4 pb-12 pt-5 sm:px-6">
+      <HeaderSkeleton />
+      <Skeleton className="mb-3 h-4 w-28" />
+      <Skeleton className="mb-7 h-10 w-56" />
+      <div className="grid gap-7">
+        <section className="h-44 border-2 border-ink bg-surface p-5"><Skeleton className="h-28 w-28 rounded-full" /></section>
+        <section className="h-64 border-2 border-ink bg-surface p-5"><Skeleton className="h-12 w-full" /><Skeleton className="mt-6 h-5 w-48" /><Skeleton className="mt-4 h-5 w-40" /></section>
+        <Skeleton className="h-14 w-full border-2 border-ink" />
+      </div>
     </LoadingRegion>
   );
 }

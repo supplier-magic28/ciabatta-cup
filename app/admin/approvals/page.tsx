@@ -29,14 +29,14 @@ export default async function ApprovalsPage() {
       .select("id, format, format_note, player1_id, player2_id, winner_id, played_at, match_sets(set_number, p1_games, p2_games, tiebreak_p1, tiebreak_p2)")
       .eq("status", "pending_approval")
       .order("played_at", { ascending: true }),
-    supabase.from("players").select("id, first_name, last_name, email"),
+    supabase.from("players").select("id, first_name, last_name, email, nickname, use_nickname"),
   ]);
   const rows = matches ?? [];
 
   const nameOf = new Map(
     (players ?? []).map((p) => [
       p.id,
-      displayName({ firstName: p.first_name, lastName: p.last_name, email: p.email }),
+      displayName({ firstName: p.first_name, lastName: p.last_name, email: p.email, nickname: p.nickname, useNickname: p.use_nickname }),
     ]),
   );
 

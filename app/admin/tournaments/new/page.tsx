@@ -10,8 +10,8 @@ export default async function NewTournamentPage() {
   if (!admin) redirect("/sign-in");
   if (admin.role !== "admin") redirect("/");
   const supabase = await createClient();
-  const { data } = await supabase.from("players").select("id, first_name, last_name, email").eq("status", "active").order("first_name");
-  const players = (data ?? []).map((player) => ({ id: player.id, name: displayName({ firstName: player.first_name, lastName: player.last_name, email: player.email }) }));
+  const { data } = await supabase.from("players").select("id, first_name, last_name, email, nickname, use_nickname").eq("status", "active").order("first_name");
+  const players = (data ?? []).map((player) => ({ id: player.id, name: displayName({ firstName: player.first_name, lastName: player.last_name, email: player.email, nickname: player.nickname, useNickname: player.use_nickname }) }));
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-5 py-10 sm:px-6">

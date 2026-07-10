@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, IBM_Plex_Mono, Work_Sans } from "next/font/google";
+import "react-easy-crop/react-easy-crop.css";
 import "./globals.css";
 
 const bricolage = Bricolage_Grotesque({

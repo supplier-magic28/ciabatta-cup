@@ -27,7 +27,7 @@ export default async function Home() {
   const [{ data: playerRows }, { data: matchRows }] = await Promise.all([
     supabase
       .from("players")
-      .select("id, first_name, last_name, email, avatar_url, status")
+      .select("id, first_name, last_name, email, nickname, use_nickname, avatar_url, status")
       .order("first_name", { ascending: true }),
     supabase
       .from("matches")
@@ -40,6 +40,8 @@ export default async function Home() {
       firstName: player.first_name,
       lastName: player.last_name,
       email: player.email,
+      nickname: player.nickname,
+      useNickname: player.use_nickname,
     }),
   }));
   const playerById = new Map(players.map((player) => [player.id, player]));

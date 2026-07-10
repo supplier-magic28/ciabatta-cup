@@ -42,7 +42,7 @@ export default async function ManagePlayersPage() {
   const supabase = await createClient();
   const { data } = await supabase
     .from("players")
-    .select("id, first_name, last_name, email, role, status, invited_at, joined_at")
+    .select("id, first_name, last_name, email, nickname, use_nickname, role, status, invited_at, joined_at")
     .order("status", { ascending: true })
     .order("first_name", { ascending: true });
 
@@ -65,7 +65,7 @@ export default async function ManagePlayersPage() {
           >
             <div className="flex items-center justify-between gap-3">
               <span className="font-heading text-base font-bold text-ink">
-                {displayName({ firstName: p.first_name, lastName: p.last_name, email: p.email })}
+                {displayName({ firstName: p.first_name, lastName: p.last_name, email: p.email, nickname: p.nickname, useNickname: p.use_nickname })}
                 {p.role === "admin" && (
                   <span className="ml-2 font-mono text-[9px] uppercase tracking-[1.5px] text-crust">
                     Admin
@@ -90,6 +90,8 @@ export default async function ManagePlayersPage() {
                   firstName: p.first_name,
                   lastName: p.last_name,
                   email: p.email,
+                  nickname: p.nickname,
+                  useNickname: p.use_nickname,
                 })}
               />
             )}

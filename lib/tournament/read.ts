@@ -13,7 +13,7 @@ export async function loadTournamentBoard(tournamentId: string) {
     supabase.from("tournament_participants").select("player_id, seed").eq("tournament_id", tournamentId).order("seed"),
     supabase.from("fixtures").select("id, stage, round_number, slot_number, court_number, ruleset, player1_id, player2_id").eq("tournament_id", tournamentId).order("round_number").order("court_number"),
     supabase.from("matches").select("id, fixture_id, player1_id, player2_id, winner_id, status, match_sets(set_number, p1_games, p2_games, tiebreak_p1, tiebreak_p2)").eq("tournament_id", tournamentId),
-    supabase.from("players").select("id, first_name, last_name, email, avatar_url"),
+    supabase.from("players").select("id, first_name, last_name, email, nickname, use_nickname, avatar_url"),
   ]);
 
   if (!tournament) return null;
@@ -39,7 +39,7 @@ export async function loadTournamentBoard(tournamentId: string) {
   );
   const playerById = new Map((players ?? []).map((player) => [player.id, {
     ...player,
-    name: displayName({ firstName: player.first_name, lastName: player.last_name, email: player.email }),
+    name: displayName({ firstName: player.first_name, lastName: player.last_name, email: player.email, nickname: player.nickname, useNickname: player.use_nickname }),
   }]));
   const finalFixture = (fixtures ?? []).find((fixture) => fixture.stage === "final");
   const championId = finalFixture ? matchByFixture.get(finalFixture.id)?.winner_id ?? null : null;
@@ -61,13 +61,13 @@ export async function loadActiveTournamentPlayers() {
   const supabase = await createClient();
   const { data } = await supabase
     .from("players")
-    .select("id, first_name, last_name, email")
+    .select("id, first_name, last_name, email, nickname, use_nickname")
     .eq("status", "active")
     .order("first_name")
     .order("last_name");
 
   return (data ?? []).map((player) => ({
     id: player.id,
-    name: displayName({ firstName: player.first_name, lastName: player.last_name, email: player.email }),
+    name: displayName({ firstName: player.first_name, lastName: player.last_name, email: player.email, nickname: player.nickname, useNickname: player.use_nickname }),
   }));
 }

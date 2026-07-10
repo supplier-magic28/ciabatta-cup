@@ -42,6 +42,9 @@ Database migrations for Ciabatta Cup. The authoritative data model is
 - `20260710070000_tournament_day_release.sql` adds tournaments, ordered
   participants, fixtures, authenticated-read/admin-write RLS, the deferred match
   foreign keys, and the admin-only atomic tournament-result RPC (ADR-0016).
+- `20260710090000_profile_settings_and_avatars.sql` adds the self-owned
+  `use_nickname` preference, the public `avatars` bucket, and owner-only Storage
+  write/delete policies (ADR-0020).
 
 The tournament participant table is editable only before the first tournament
 result. The admin console's replacement action preserves the selected seed and

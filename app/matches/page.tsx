@@ -42,7 +42,7 @@ export default async function MatchesPage() {
       .select("id, type, format, format_note, status, played_at, player1_id, player2_id, winner_id, match_sets(set_number, p1_games, p2_games, tiebreak_p1, tiebreak_p2)")
       .or(`player1_id.eq.${player.id},player2_id.eq.${player.id}`)
       .order("played_at", { ascending: false }),
-    supabase.from("players").select("id, first_name, last_name, email"),
+    supabase.from("players").select("id, first_name, last_name, email, nickname, use_nickname"),
     supabase.from("match_confirmations").select("match_id").eq("player_id", player.id),
   ]);
   const rows = matches ?? [];
@@ -50,7 +50,7 @@ export default async function MatchesPage() {
   const nameOf = new Map(
     (players ?? []).map((p) => [
       p.id,
-      displayName({ firstName: p.first_name, lastName: p.last_name, email: p.email }),
+      displayName({ firstName: p.first_name, lastName: p.last_name, email: p.email, nickname: p.nickname, useNickname: p.use_nickname }),
     ]),
   );
 

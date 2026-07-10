@@ -16,21 +16,24 @@ export default async function NewMatchPage() {
   const supabase = await createClient();
   const { data } = await supabase
     .from("players")
-    .select("id, first_name, last_name, email, status")
-    .neq("id", player.id)
+    .select("id, first_name, last_name, email, nickname, use_nickname, status")
     .order("first_name", { ascending: true });
 
-  const opponents: OpponentOption[] = (data ?? [])
-    .filter((p) => p.status !== "inactive")
+  const rows = data ?? [];
+  const opponents: OpponentOption[] = rows
+    .filter((p) => p.id !== player.id && p.status !== "inactive")
     .map((p) => ({
       id: p.id,
-      name: displayName({ firstName: p.first_name, lastName: p.last_name, email: p.email }),
+      name: displayName({ firstName: p.first_name, lastName: p.last_name, email: p.email, nickname: p.nickname, useNickname: p.use_nickname }),
     }));
 
+  const self = rows.find((p) => p.id === player.id);
   const selfName = displayName({
-    firstName: player.firstName,
-    lastName: player.lastName,
-    email: player.email,
+    firstName: self?.first_name ?? player.firstName,
+    lastName: self?.last_name ?? player.lastName,
+    email: self?.email ?? player.email,
+    nickname: self?.nickname,
+    useNickname: self?.use_nickname,
   });
 
   return (

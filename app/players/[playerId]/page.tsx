@@ -40,12 +40,12 @@ export default async function PlayerProfilePage({
   const [{ data: target }, { data: playerRows }, { data: matchRows }] = await Promise.all([
     supabase
       .from("players")
-      .select("id, first_name, last_name, email, nickname, avatar_url, height_cm, weight_kg, plays, backhand, game_style, status")
+      .select("id, first_name, last_name, email, nickname, use_nickname, avatar_url, height_cm, weight_kg, plays, backhand, game_style, status")
       .eq("id", playerId)
       .single(),
     supabase
       .from("players")
-      .select("id, first_name, last_name, email, avatar_url, status")
+      .select("id, first_name, last_name, email, nickname, use_nickname, avatar_url, status")
       .order("first_name", { ascending: true }),
     supabase
       .from("matches")
@@ -58,7 +58,7 @@ export default async function PlayerProfilePage({
 
   const players = (playerRows ?? []).map((player) => ({
     ...player,
-    name: displayName({ firstName: player.first_name, lastName: player.last_name, email: player.email }),
+    name: displayName({ firstName: player.first_name, lastName: player.last_name, email: player.email, nickname: player.nickname, useNickname: player.use_nickname }),
   }));
   const playerById = new Map(players.map((player) => [player.id, player]));
   const matches: ProfileMatch[] = (matchRows ?? []).map((match) => ({
@@ -75,6 +75,8 @@ export default async function PlayerProfilePage({
     firstName: target.first_name,
     lastName: target.last_name,
     email: target.email,
+    nickname: target.nickname,
+    useNickname: target.use_nickname,
   });
   const profile = derivePlayerProfile(playerId, matches);
   const cache = buildRatingCache(

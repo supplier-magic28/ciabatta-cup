@@ -20,7 +20,7 @@ pattern changes, update this guide and the component inventory in the same task.
 | Handoff screen | Production route | State | Current gap |
 | --- | --- | --- | --- |
 | 01 Leaderboard | `/` | Partial | Holder history, reign duration, profile links, earned ratings, zero-point unranked states, records, movement, and a layout-matched loading state are live; filters, last-five form, and side rail are pending. |
-| 02 Player profile | `/players/[playerId]` | Partial | Hero, records, points history, head-to-head, match log, and a profile-shaped loading state are live; avatar upload/editing and richer trend interaction are pending. |
+| 02 Player profile | `/players/[playerId]` | Partial | Hero, records, points history, head-to-head, match log, effective nickname display, avatar rendering, and profile-shaped loading are live; richer trend interaction is pending. |
 | 03 Log match | `/matches`, `/matches/new` | Partial | Submission, confirmation, history, score validation, stable pending actions, and route-shaped loading are live; the flow is not yet a full visual recreation of every handoff state. |
 | 04 Tournaments | `/tournaments`, `/tournaments/[tournamentId]` | Implemented | Event cards, live standings, qualification state, round/court schedule, results, final rules, champion, and responsive loading boards are live. Self-entry and multi-structure filtering remain deferred. |
 | 05 Sign in | `/sign-in`, `/sign-up`, `/accept-invite` | Implemented | Sign-in, signup, and invite password setup use the token-driven auth shell with stable pending controls and a matching form skeleton. |
@@ -28,6 +28,7 @@ pattern changes, update this guide and the component inventory in the same task.
 | 07 Manage tournament | `/admin/tournaments/new`, `/admin/tournaments/[tournamentId]` | Partial | Four-player round-robin setup, pre-play participant replacement with seed preservation, deterministic fixture generation, reviewed admin result entry, decider planning, finals, completion, and stable pending/loading states are live. Knockout preview and mid-event roster changes are deferred. |
 | 08 Manage players | `/admin/players` | Partial | Invite, roster status, safe deletion of unused players, and stable pending/loading states are live; edit, deactivate, resend, and revoke flows are pending. |
 | Password recovery | `/forgot-password`, `/update-password` | Implemented | Recovery email request, PKCE callback, replacement password form, invited-profile activation, and stable pending feedback are live. |
+| Profile settings | `/profile` | Implemented | Self-owned nickname preference, circular avatar crop/upload/remove, stable pending feedback, and responsive loading are live. |
 
 ## Implementation rules
 

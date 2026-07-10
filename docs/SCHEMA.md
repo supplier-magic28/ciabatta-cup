@@ -55,7 +55,8 @@ with their Auth identity.
 | email | text unique | login identifier; mirrors the auth email |
 | first_name | text | e.g. "Ben" |
 | last_name | text | e.g. "Cossar" |
-| nickname | text nullable | e.g. "Winners Only" — shown in quotes on profile |
+| nickname | text nullable | e.g. "Winners Only" — optional public display label |
+| use_nickname | boolean not null, default false | when true, nickname replaces the real name on player-facing surfaces |
 | avatar_url | text nullable | |
 | height_cm | int nullable | profile vitals |
 | weight_kg | int nullable | profile vitals |
@@ -68,6 +69,11 @@ with their Auth identity.
 | rating_points | int, default 0 | **denormalised cache**; zero until the first approved ranked match, then current Elo rebuilt from facts (ADR-0003, ADR-0014) |
 
 _(`password_hash` from the original handoff is intentionally removed — see ADR-0002.)_
+
+Players may edit only their own nickname, nickname preference, and avatar URL.
+Nicknames are display labels and are intentionally not unique. The avatar URL
+points to a public object in the `avatars` Storage bucket; upload, replacement,
+and deletion are restricted to the owning player's `<player_id>/` folder.
 
 ### matches _(Phase 3a — implemented)_
 Immutable match facts (ADR-0001). Once `status = approved` a row is frozen by a

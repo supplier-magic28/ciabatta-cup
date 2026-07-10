@@ -27,4 +27,19 @@ describe("displayName", () => {
     expect(displayName({})).toBe("player");
     expect(displayName({ firstName: "  ", email: "  " })).toBe("player");
   });
+
+  it("uses an enabled nickname as the public display name", () => {
+    expect(displayName({ firstName: "Ben", lastName: "Cossar", nickname: "Winners Only", useNickname: true })).toBe("Winners Only");
+  });
+
+  it("keeps the real name when nickname display is disabled or empty", () => {
+    expect(displayName({ firstName: "Ben", lastName: "Cossar", nickname: "Winners Only", useNickname: false })).toBe("Ben Cossar");
+    expect(displayName({ firstName: "Ben", lastName: "Cossar", nickname: " ", useNickname: true })).toBe("Ben Cossar");
+  });
+
+  it("allows duplicate nicknames because display labels are not identities", () => {
+    const nickname = "The Breadwinner";
+    expect(displayName({ firstName: "Ben", nickname, useNickname: true })).toBe(nickname);
+    expect(displayName({ firstName: "String", nickname, useNickname: true })).toBe(nickname);
+  });
 });

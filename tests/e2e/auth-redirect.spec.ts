@@ -14,7 +14,7 @@ test("anonymous visitors can open the password recovery screen", async ({ page }
   await expect(page.getByRole("heading", { name: "Reset password" })).toBeVisible();
 });
 
-for (const route of ["/tournaments", "/admin/tournaments/new"]) {
+for (const route of ["/tournaments", "/admin/tournaments/new", "/profile"]) {
   test(`anonymous visitors cannot open ${route}`, async ({ page }) => {
     await page.goto(route);
     await expect(page).toHaveURL(/\/sign-in$/);
