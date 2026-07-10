@@ -14,11 +14,6 @@ export default function SignInPage() {
         </Link>
       </p>
       <p className="text-center font-mono text-[11px] text-muted">
-        <Link href="/forgot-password" className="font-bold text-green">
-          Forgot password?
-        </Link>
-      </p>
-      <p className="text-center font-mono text-[11px] text-muted">
         New player?{" "}
         <Link href="/sign-up" className="font-bold text-green">
           Create account
