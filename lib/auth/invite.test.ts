@@ -26,6 +26,12 @@ describe("confirmationDestination", () => {
     expect(confirmationDestination("invite", "/")).toBe("/accept-invite");
   });
 
+  it("routes recovery tokens to the replacement-password form", () => {
+    expect(confirmationDestination("recovery", "/update-password")).toBe(
+      "/update-password",
+    );
+  });
+
   it("preserves safe paths for other email token types", () => {
     expect(confirmationDestination("email", "/matches")).toBe("/matches");
   });

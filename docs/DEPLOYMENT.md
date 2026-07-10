@@ -46,7 +46,9 @@ In **Authentication -> URL Configuration**, set:
 ```text
 Site URL: https://ciabatta-cup.app
 Redirect URL: https://ciabatta-cup.app/auth/confirm?next=%2F
+Recovery redirect: https://ciabatta-cup.app/auth/confirm?next=%2Fupdate-password
 Local redirect: http://localhost:3000/auth/confirm?next=%2F
+Local recovery redirect: http://localhost:3000/auth/confirm?next=%2Fupdate-password
 ```
 
 Configure custom SMTP with the verified `ciabatta-cup.app` sender domain. In
@@ -62,6 +64,15 @@ link passes the OTP directly to the server-side confirmation route:
 Disable click tracking for authentication email links so the provider does not
 rewrite them. Send a real invite only after the SMTP sender, template, Site URL,
 and redirect allow-list are saved.
+
+In **Authentication -> Email Templates -> Reset password**, use the server-side
+callback link:
+
+```html
+<a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=recovery">
+  Set a new Ciabatta Cup password
+</a>
+```
 
 ## 4. Backfill and smoke-test
 
@@ -102,6 +113,5 @@ migration state, then run the admin rebuild again.
 ## Password recovery verification
 
 Request a reset from `/forgot-password` and confirm the email redirects through
-`/auth/confirm?next=%2Fupdate-password`. The Password recovery template should
-retain Supabase's `{{ .ConfirmationURL }}` so the callback receives its PKCE
-code. Set the new password at `/update-password`, then sign in again.
+`/auth/confirm?next=%2Fupdate-password`, then shows the two-field password form.
+Set and confirm the new password at `/update-password`, then sign in again.

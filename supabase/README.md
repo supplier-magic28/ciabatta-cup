@@ -93,9 +93,19 @@ https://ciabatta-cup.app/auth/confirm?next=%2Fupdate-password
 http://localhost:3000/auth/confirm?next=%2Fupdate-password
 ```
 
-Keep Supabase's `{{ .ConfirmationURL }}` in the **Password recovery** email
-template. The callback exchanges its PKCE code for a session, and the app then
-updates the password without exposing the service key.
+In the **Password recovery** email template, replace the default link with the
+server-side callback link:
+
+```html
+<a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=recovery">
+  Set a new Ciabatta Cup password
+</a>
+```
+
+The callback verifies the recovery token on the server, then shows the
+two-field password form. The form updates the Supabase Auth password and
+activates an invited profile only after the update succeeds. Do not use the
+default `{{ .ConfirmationURL }}` fragment link with this SSR callback.
 
 ## Email confirmation setting
 

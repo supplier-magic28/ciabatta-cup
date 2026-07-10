@@ -5,9 +5,9 @@ import { safeAuthDestination } from "@/lib/auth/recovery";
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * Email-confirmation handler. Supabase sends the user here (token_hash + type)
- * after signup when email confirmation is enabled; we verify the OTP to
- * establish the session, then land them on the protected home.
+ * Server-side Auth callback. Invite and recovery templates send token_hash +
+ * type here; we verify the OTP to establish the session before landing on the
+ * relevant password form. PKCE code callbacks are supported as well.
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
