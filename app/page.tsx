@@ -122,7 +122,8 @@ export default async function Home() {
             const name = player?.name ?? "Unknown player";
             const history = latestHistory.get(standing.playerId);
             const movement = movementLabel(history ? history.rankBefore - history.rankAfter : 0);
-            const isHolder = standing.rank === 1;
+            const isHolder = currentReign?.playerId === standing.playerId;
+            const displayRank = standing.played > 0 ? standing.rank : "--";
 
             return (
               <li
@@ -135,7 +136,7 @@ export default async function Home() {
               >
                 <div className="grid grid-cols-[2.25rem_1fr_auto] items-center gap-3 sm:grid-cols-[3rem_1fr_auto_auto] sm:gap-5">
                   <span className={`font-heading text-2xl font-bold ${isHolder ? "text-chartreuse" : "text-ink"}`}>
-                    {standing.rank}
+                    {displayRank}
                   </span>
                   <Link href={`/players/${standing.playerId}`} className="flex min-w-0 items-center gap-3">
                     <PlayerAvatar

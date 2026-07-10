@@ -1,4 +1,4 @@
-import { START_RATING } from "./constants";
+import { UNRANKED_POINTS } from "./constants";
 import { computeRankings } from "./computeRankings";
 import type {
   CiabattaReign,
@@ -44,7 +44,7 @@ export function toScoringMatches(rows: ScoringMatchRow[]): Match[] {
  * Compute the complete, rebuildable cache for a known player roster.
  *
  * The scoring engine derives its roster from match facts. The database also has
- * players who have never logged a match, so seed those known ids at 1000 here.
+ * players who have never logged a match, so seed those known ids at zero here.
  * This function remains pure so both the database writer and read surfaces use
  * exactly the same interpretation of the facts.
  */
@@ -57,7 +57,7 @@ export function buildRatingCache(playerIds: string[], rows: ScoringMatchRow[]): 
     .map((playerId) =>
       computedByPlayer.get(playerId) ?? {
         playerId,
-        rating: START_RATING,
+        rating: UNRANKED_POINTS,
         rank: 0,
         played: 0,
         won: 0,

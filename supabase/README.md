@@ -36,6 +36,9 @@ Database migrations for Ciabatta Cup. The authoritative data model is
 - `20260710050000_fix_invited_profile_status_cast.sql` fixes Auth invite
   creation by explicitly casting the `handle_new_user()` status branch to the
   `player_status` enum.
+- `20260710060000_unranked_players_zero_points.sql` changes the public/cache
+  default to zero until a player's first approved ranked match and backfills
+  existing unranked players (ADR-0014).
 
 The players, match, confirmation, rating-history, and reign tables exist in
 migration form. Tournaments, fixtures, and activity arrive in later phases.

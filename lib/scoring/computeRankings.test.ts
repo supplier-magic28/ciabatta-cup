@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { computeRankings } from "./computeRankings";
-import { K_FACTOR, RATING_FLOOR, START_RATING } from "./constants";
+import { K_FACTOR, RATING_FLOOR, START_RATING, UNRANKED_POINTS } from "./constants";
 import type { Match } from "./types";
 
 /**
@@ -70,7 +70,7 @@ describe("computeRankings — Elo engine", () => {
     expect(aliceRow).toMatchObject({ pointsBefore: 1016, pointsAfter: 999, rankBefore: 1, rankAfter: 2 });
   });
 
-  it("ignores exhibition and non-approved matches, but still lists those players at 1000", () => {
+  it("keeps exhibition-only and pending-only players at zero points", () => {
     const { rankings, ratingHistory } = computeRankings([
       ranked("m1", "alice", "bob", "2026-07-01T10:00:00Z"),
       exhibition("m2", "carol", "dave", "2026-07-02T10:00:00Z"),
@@ -84,18 +84,19 @@ describe("computeRankings — Elo engine", () => {
     const rated = Object.fromEntries(rankings.map((r) => [r.playerId, r]));
     expect(rated.alice).toMatchObject({ rating: 1016, played: 1, won: 1, lost: 0 });
     expect(rated.bob).toMatchObject({ rating: 984, played: 1, won: 0, lost: 1 });
-    // Exhibition- and pending-only participants: present, at 1000, zero ranked record.
+    // Exhibition- and pending-only participants remain unranked at zero points.
     for (const id of ["carol", "dave", "eve", "frank"]) {
-      expect(rated[id]).toMatchObject({ rating: 1000, played: 0, won: 0, lost: 0 });
+      expect(rated[id]).toMatchObject({ rating: 0, played: 0, won: 0, lost: 0 });
     }
   });
 
-  it("keeps a player with no ranked matches at 1000", () => {
+  it("keeps a player with no approved ranked matches at zero", () => {
     const { rankings } = computeRankings([exhibition("m1", "dave", "erin", "2026-07-01T10:00:00Z")]);
 
+    expect(UNRANKED_POINTS).toBe(0);
     expect(rankings).toEqual([
-      { playerId: "dave", rating: 1000, rank: 1, played: 0, won: 0, lost: 0 },
-      { playerId: "erin", rating: 1000, rank: 2, played: 0, won: 0, lost: 0 },
+      { playerId: "dave", rating: 0, rank: 1, played: 0, won: 0, lost: 0 },
+      { playerId: "erin", rating: 0, rank: 2, played: 0, won: 0, lost: 0 },
     ]);
   });
 

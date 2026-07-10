@@ -64,7 +64,7 @@ with their Auth identity.
 | role | enum: player, admin | admin = tournament director |
 | status | enum: invited, active, inactive | invited = signup link sent, not yet registered |
 | invited_at / joined_at | timestamptz | |
-| rating_points | int, default 1000 | **denormalised cache** of current Elo points; rebuilt from `rating_history` (ADR-0003) |
+| rating_points | int, default 0 | **denormalised cache**; zero until the first approved ranked match, then current Elo rebuilt from facts (ADR-0003, ADR-0014) |
 
 _(`password_hash` from the original handoff is intentionally removed — see ADR-0002.)_
 
@@ -177,7 +177,12 @@ holder. A new holder closes the old reign at the deciding match time.
 - **Tournament standings** (round robin): W–L then game difference ("+9") from fixtures→matches.
 
 ## Points system (recommendation)
-Elo with K=32, floor 100, everyone starts at 1000. Only `ranked` + `approved` matches move points. Keep it a pure function of match facts (materialised into `rating_history`) so it can be re-run/rebalanced later — the group will want to argue about the algorithm. This is `lib/scoring/computeRankings`.
+Elo with K=32 and floor 100 uses 1000 as the internal entry baseline. Players
+display zero points and no rank until their first approved ranked match; that
+result publishes their Elo. Only `ranked` + `approved` matches move points. Keep
+it a pure function of match facts (materialised into `rating_history`) so it can
+be re-run/rebalanced later — the group will want to argue about the algorithm.
+This is `lib/scoring/computeRankings` (ADR-0014).
 
 ## Auth & permissions
 - **Supabase Auth** (email + password managed by Supabase; **no `password_hash` in our schema**). `players.id` = `auth.users.id`. Invited players are created via Supabase Auth invite (tokenised link); `players.status`: invited → active on registration. See ADR-0002.

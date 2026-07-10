@@ -28,18 +28,18 @@ describe("rating cache materialization", () => {
     ]);
   });
 
-  it("seeds players with no matches and materializes the engine's history", () => {
+  it("keeps players with no ranked results at zero and materializes history", () => {
     const cache = buildRatingCache(["alice", "bob", "carol"], rows);
 
     expect(cache.rankings).toEqual([
       { playerId: "alice", rating: 1016, rank: 1, played: 1, won: 1, lost: 0 },
-      { playerId: "carol", rating: 1000, rank: 2, played: 0, won: 0, lost: 0 },
-      { playerId: "bob", rating: 984, rank: 3, played: 1, won: 0, lost: 1 },
+      { playerId: "bob", rating: 984, rank: 2, played: 1, won: 0, lost: 1 },
+      { playerId: "carol", rating: 0, rank: 3, played: 0, won: 0, lost: 0 },
     ]);
     expect(cache.ratingPoints).toEqual([
       { playerId: "alice", rating: 1016 },
-      { playerId: "carol", rating: 1000 },
       { playerId: "bob", rating: 984 },
+      { playerId: "carol", rating: 0 },
     ]);
     expect(cache.ratingHistory).toHaveLength(2);
     expect(cache.reigns).toEqual([

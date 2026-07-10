@@ -1,4 +1,10 @@
-import { ELO_DIVISOR, K_FACTOR, RATING_FLOOR, START_RATING } from "./constants";
+import {
+  ELO_DIVISOR,
+  K_FACTOR,
+  RATING_FLOOR,
+  START_RATING,
+  UNRANKED_POINTS,
+} from "./constants";
 import type { CiabattaReign, Match, PlayerRating, RatingHistoryEntry, ScoringResult } from "./types";
 
 /**
@@ -15,7 +21,8 @@ import type { CiabattaReign, Match, PlayerRating, RatingHistoryEntry, ScoringRes
  * Scoring model (ADR-0007):
  *   - Only `type === "ranked"` && `status === "approved"` matches move ratings.
  *   - The roster is every participant of *any* input match; a player with no
- *     ranked+approved match sits at the starting rating.
+ *     ranked+approved match displays zero while retaining the internal Elo
+ *     baseline for their first ranked result.
  *   - Matches are applied in chronological order (`playedAt`, then `id`), so the
  *     result is independent of input array order and a late-approved old match
  *     slots into its correct place on the next run ("recompute forward").
@@ -25,9 +32,11 @@ import type { CiabattaReign, Match, PlayerRating, RatingHistoryEntry, ScoringRes
  */
 export function computeRankings(matches: Match[]): ScoringResult {
   const ratings = new Map<string, number>();
+  const ratedPlayers = new Set<string>();
   const record = new Map<string, { played: number; won: number; lost: number }>();
 
-  // Roster: every participant of every match, seeded at the starting rating.
+  // Internal roster: every participant is ready at the Elo baseline, but that
+  // value is not public until their first approved ranked result.
   for (const match of matches) {
     for (const playerId of [match.player1Id, match.player2Id]) {
       if (!ratings.has(playerId)) {
@@ -56,10 +65,15 @@ export function computeRankings(matches: Match[]): ScoringResult {
     }
     const loserId = winnerId === match.player1Id ? match.player2Id : match.player1Id;
 
+    // Both participants earn a public Elo rating by completing their first
+    // approved ranked match. Until then their public points remain zero.
+    ratedPlayers.add(winnerId);
+    ratedPlayers.add(loserId);
+
     const winnerBefore = ratings.get(winnerId)!;
     const loserBefore = ratings.get(loserId)!;
-    const winnerRankBefore = rankOf(ratings, winnerId);
-    const loserRankBefore = rankOf(ratings, loserId);
+    const winnerRankBefore = rankOf(ratings, ratedPlayers, winnerId);
+    const loserRankBefore = rankOf(ratings, ratedPlayers, loserId);
 
     const expectedWinner = expectedScore(winnerBefore, loserBefore);
     const winnerAfter = nextRating(winnerBefore, 1, expectedWinner);
@@ -81,7 +95,7 @@ export function computeRankings(matches: Match[]): ScoringResult {
       pointsBefore: winnerBefore,
       pointsAfter: winnerAfter,
       rankBefore: winnerRankBefore,
-      rankAfter: rankOf(ratings, winnerId),
+      rankAfter: rankOf(ratings, ratedPlayers, winnerId),
       playedAt: match.playedAt,
     });
     ratingHistory.push({
@@ -90,11 +104,11 @@ export function computeRankings(matches: Match[]): ScoringResult {
       pointsBefore: loserBefore,
       pointsAfter: loserAfter,
       rankBefore: loserRankBefore,
-      rankAfter: rankOf(ratings, loserId),
+      rankAfter: rankOf(ratings, ratedPlayers, loserId),
       playedAt: match.playedAt,
     });
 
-    const holderId = orderByRating(ratings)[0];
+    const holderId = orderByRating(ratings, ratedPlayers)[0];
     const currentReign = reigns.at(-1);
     if (holderId && currentReign?.playerId !== holderId) {
       if (currentReign) currentReign.endedAt = match.playedAt;
@@ -102,11 +116,11 @@ export function computeRankings(matches: Match[]): ScoringResult {
     }
   }
 
-  const rankings: PlayerRating[] = orderByRating(ratings).map((playerId, index) => {
+  const rankings: PlayerRating[] = orderByRating(ratings, ratedPlayers).map((playerId, index) => {
     const wl = record.get(playerId)!;
     return {
       playerId,
-      rating: ratings.get(playerId)!,
+      rating: ratedPlayers.has(playerId) ? ratings.get(playerId)! : UNRANKED_POINTS,
       rank: index + 1,
       played: wl.played,
       won: wl.won,
@@ -128,11 +142,19 @@ function nextRating(current: number, actual: number, expected: number): number {
 }
 
 /** Player ids ordered by rating desc, then playerId asc (deterministic ties). */
-function orderByRating(ratings: Map<string, number>): string[] {
-  return [...ratings.keys()].sort((a, b) => ratings.get(b)! - ratings.get(a)! || a.localeCompare(b));
+function orderByRating(ratings: Map<string, number>, ratedPlayers: Set<string>): string[] {
+  return [...ratings.keys()].sort((a, b) => {
+    const ratingA = ratedPlayers.has(a) ? ratings.get(a)! : UNRANKED_POINTS;
+    const ratingB = ratedPlayers.has(b) ? ratings.get(b)! : UNRANKED_POINTS;
+    return ratingB - ratingA || a.localeCompare(b);
+  });
 }
 
 /** 1-based rank of a player within the full roster. */
-function rankOf(ratings: Map<string, number>, playerId: string): number {
-  return orderByRating(ratings).indexOf(playerId) + 1;
+function rankOf(
+  ratings: Map<string, number>,
+  ratedPlayers: Set<string>,
+  playerId: string,
+): number {
+  return orderByRating(ratings, ratedPlayers).indexOf(playerId) + 1;
 }

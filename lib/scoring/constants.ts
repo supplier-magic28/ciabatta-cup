@@ -7,8 +7,11 @@
  * takes — no data migration.
  */
 
-/** Every player starts here. */
+/** Internal Elo baseline when a player enters their first approved ranked match. */
 export const START_RATING = 1000;
+
+/** Public points before a player has completed an approved ranked match. */
+export const UNRANKED_POINTS = 0;
 
 /** Elo K-factor — the maximum swing from a single evenly-matched result. */
 export const K_FACTOR = 32;

@@ -104,8 +104,8 @@ export default async function PlayerProfilePage({
   const reigns = cache.reigns.filter((reign) => reign.playerId === playerId);
   const currentReign = reigns.find((reign) => reign.endedAt === null);
   const points = profile.pointsTrend.map((entry) => entry.points);
-  const minPoints = Math.min(...points, standing?.rating ?? 1000);
-  const maxPoints = Math.max(...points, standing?.rating ?? 1000);
+  const minPoints = Math.min(...points, standing?.rating ?? 0);
+  const maxPoints = Math.max(...points, standing?.rating ?? 0);
   const pointRange = Math.max(1, maxPoints - minPoints);
   const vitals = [
     profileVital("Height", target.height_cm ? `${target.height_cm} cm` : null),
@@ -139,11 +139,13 @@ export default async function PlayerProfilePage({
           <div className="grid grid-cols-2 gap-x-6 gap-y-3 sm:text-right">
             <div>
               <p className={`${eyebrow} text-green-muted`}>Rank</p>
-              <p className="font-mono text-2xl font-semibold text-chartreuse">#{standing?.rank ?? "-"}</p>
+              <p className="font-mono text-2xl font-semibold text-chartreuse">
+                {standing && standing.played > 0 ? `#${standing.rank}` : "--"}
+              </p>
             </div>
             <div>
               <p className={`${eyebrow} text-green-muted`}>Points</p>
-              <p className="font-mono text-2xl font-semibold text-chartreuse">{standing?.rating ?? 1000}</p>
+              <p className="font-mono text-2xl font-semibold text-chartreuse">{standing?.rating ?? 0}</p>
             </div>
             {currentReign && (
               <ReignSummary startedAt={currentReign.startedAt} reignNumber={reigns.length} />
@@ -170,7 +172,7 @@ export default async function PlayerProfilePage({
       <section className="mt-8 border-t-2 border-ink pt-5">
         <div className="flex items-baseline justify-between gap-4">
           <h2 className="font-heading text-xl font-bold text-ink">Points history</h2>
-          <p className="font-mono text-[11px] text-muted">{standing?.rating ?? 1000} current</p>
+          <p className="font-mono text-[11px] text-muted">{standing?.rating ?? 0} current</p>
         </div>
         {profile.pointsTrend.length === 0 ? (
           <p className="mt-3 font-body text-sm text-muted">No ranked results yet.</p>

@@ -45,7 +45,7 @@ export interface Match {
 export interface PlayerRating {
   /** Player id this standing is for. */
   playerId: string;
-  /** Current Elo rating (integer points). */
+  /** Current Elo rating, or zero before the first approved ranked result. */
   rating: number;
   /** 1-based rank; 1 = highest rating. Ties break by `playerId` (interim). */
   rank: number;
