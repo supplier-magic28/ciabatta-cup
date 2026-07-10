@@ -45,11 +45,18 @@ Database migrations for Ciabatta Cup. The authoritative data model is
 - `20260710090000_profile_settings_and_avatars.sql` adds the self-owned
   `use_nickname` preference, the public `avatars` bucket, and owner-only Storage
   write/delete policies (ADR-0020).
+- `20260710100000_tournament_cover_photos.sql` adds the optional tournament
+  cover URL and the admin-managed public `tournament-images` Storage bucket
+  (ADR-0021).
 
 The tournament participant table is editable only before the first tournament
 result. The admin console's replacement action preserves the selected seed and
 regenerates the complete pre-play draw; the database participant-lock trigger
 rejects the same operation after play begins.
+
+Tournament cover photos use the public `tournament-images` bucket. Only admins
+may write or delete objects there; players receive read-only public images on
+the tournament list and detail pages.
 
 The player, match, confirmation, rating-history, reign, tournament, participant,
 and fixture tables exist in migration form. Activity remains a later phase.

@@ -13,6 +13,8 @@ export type TournamentActionState =
   | { ok: false; error: string };
 
 const FORBIDDEN: TournamentActionState = { ok: false, error: "Only admins can manage tournaments." };
+const TOURNAMENT_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+const MAX_TOURNAMENT_IMAGE_BYTES = 5 * 1024 * 1024;
 
 async function requireAdmin() {
   const player = await getSessionPlayer();
@@ -36,6 +38,13 @@ function invalidateTournament(tournamentId: string) {
   revalidatePath(`/tournaments/${tournamentId}`);
   revalidatePath(`/admin/tournaments/${tournamentId}`);
   revalidatePath("/");
+}
+
+function tournamentImagePath(url: string | null): string | null {
+  if (!url) return null;
+  const marker = "/storage/v1/object/public/tournament-images/";
+  const path = url.split(marker)[1]?.split("?")[0];
+  return path ? decodeURIComponent(path) : null;
 }
 
 type TournamentSetup = {
@@ -122,6 +131,66 @@ export async function createTournament(
 
   revalidatePath("/tournaments");
   return { ok: true, message: "Tournament created. Review and generate the draw.", tournamentId: tournament.id };
+}
+
+export async function updateTournamentPhoto(
+  _previous: TournamentActionState | undefined,
+  formData: FormData,
+): Promise<TournamentActionState> {
+  if (!(await requireAdmin())) return FORBIDDEN;
+
+  const tournamentId = textValue(formData, "tournamentId");
+  const removePhoto = formData.get("removePhoto") === "true";
+  const photo = formData.get("photo");
+  if (!tournamentId) return { ok: false, error: "Tournament not found." };
+  if (!(photo instanceof File) && !removePhoto) return { ok: false, error: "Choose a photo first." };
+  if (photo instanceof File && photo.size > 0) {
+    if (!TOURNAMENT_IMAGE_TYPES.includes(photo.type as (typeof TOURNAMENT_IMAGE_TYPES)[number])) {
+      return { ok: false, error: "Use a JPEG, PNG, or WebP image." };
+    }
+    if (photo.size > MAX_TOURNAMENT_IMAGE_BYTES) {
+      return { ok: false, error: "That photo is too large. Choose one under 5 MB." };
+    }
+  }
+
+  const supabase = await createClient();
+  const { data: tournament } = await supabase
+    .from("tournaments")
+    .select("id, cover_image_url")
+    .eq("id", tournamentId)
+    .single();
+  if (!tournament) return { ok: false, error: "Tournament not found." };
+
+  const storage = supabase.storage.from("tournament-images");
+  let nextUrl = tournament.cover_image_url as string | null;
+  let uploadedPath: string | null = null;
+  if (photo instanceof File && photo.size > 0) {
+    const extension = photo.type === "image/png" ? "png" : photo.type === "image/webp" ? "webp" : "jpg";
+    uploadedPath = `${tournamentId}/${Date.now()}-cover.${extension}`;
+    const { error: uploadError } = await storage.upload(uploadedPath, photo, {
+      contentType: photo.type,
+      cacheControl: "31536000",
+      upsert: false,
+    });
+    if (uploadError) return { ok: false, error: "Couldn't upload that photo. Please try again." };
+    nextUrl = `${storage.getPublicUrl(uploadedPath).data.publicUrl}?v=${Date.now()}`;
+  } else if (removePhoto) {
+    nextUrl = null;
+  }
+
+  const { error: updateError } = await supabase
+    .from("tournaments")
+    .update({ cover_image_url: nextUrl })
+    .eq("id", tournamentId);
+  if (updateError) {
+    if (uploadedPath) await storage.remove([uploadedPath]);
+    return { ok: false, error: "Couldn't save the tournament photo." };
+  }
+
+  const previousPath = tournamentImagePath(tournament.cover_image_url);
+  if (previousPath && (uploadedPath || removePhoto)) await storage.remove([previousPath]);
+  invalidateTournament(tournamentId);
+  return { ok: true, message: removePhoto ? "Tournament photo removed." : "Tournament photo saved." };
 }
 
 export async function generateTournamentFixtures(

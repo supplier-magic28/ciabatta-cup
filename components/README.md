@@ -68,6 +68,8 @@ of Done (`CLAUDE.md`).
   by the player and director views.
 - `tournament/TournamentResultForm` — two-step admin score review and atomic
   approval for a scheduled fixture.
+- `tournament/TournamentPhotoControl` — admin-only tournament cover upload,
+  replacement, and removal control mounted in the event hero tile.
 
 **Profile**
 - `profile/ProfileSettingsForm` — self-owned nickname preference and circular

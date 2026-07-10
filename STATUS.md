@@ -33,7 +33,9 @@ This is the short operational handover. Durable intent belongs in
   deterministic court schedule, record immutable results directly, and advance
   through a qualification decider, final, and third-place match.
 - Authenticated players can follow tournament details, live standings, fixtures,
-  results, progress, and the derived champion from `/tournaments`.
+  results, progress, cover photos, and the derived champion from `/tournaments`.
+- Admins can add, replace, or remove a tournament cover photo from the event
+  hero; the same image appears on the tournament calendar card.
 - Every current navigation surface has a route-shaped loading boundary and a
   shared retryable error state. Mutations acknowledge clicks immediately with
   stable, accessible pending controls while confirmed data waits for the server.
@@ -50,7 +52,7 @@ after that password update succeeds.
 | Migration | State |
 | --- | --- |
 | `20260709000000` through `20260710070000` | Applied to production (operator reported) |
-| `20260710090000_profile_settings_and_avatars.sql` | Ready to apply before profile deployment |
+| `20260710090000_profile_settings_and_avatars.sql` and `20260710100000_tournament_cover_photos.sql` | Ready to apply/finish in production |
 
 ## Current blockers
 

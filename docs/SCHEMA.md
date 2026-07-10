@@ -134,6 +134,7 @@ Once both rows exist, a database trigger advances a ranked result to
 | rules_note | text nullable | human event summary; not used for scoring |
 | created_by | FK players | admin |
 | created_at / updated_at | timestamptz | |
+| cover_image_url | text nullable | optional public cover photo stored in the `tournament-images` bucket |
 
 Tournament status is operational state. Progress and the champion are derived
 from linked immutable matches rather than stored on this row.
