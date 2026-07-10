@@ -7,14 +7,18 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { buildInviteRedirectTo, validateInvite } from "./invite";
 
 export type InviteState = { error: string } | { sent: string } | undefined;
+export type DeletePlayerState = { error: string } | { deleted: string } | undefined;
+
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 /**
  * Admin-only: invite a player by name + email (ADR-0002, ADR-0009).
  *
  * `inviteUserByEmail` creates the `auth.users` row; the `handle_new_user`
  * trigger then creates their `players` profile at `status = 'invited'` (because
- * the auth user has `invited_at` set). The invitee later completes signup and is
- * flipped to `active` by the existing `ensureActivated` (reused, not duplicated).
+ * the auth user has `invited_at` set). The invitee later chooses a password and
+ * is flipped to `active` by the acceptance action (ADR-0013).
  *
  * Admin-only is enforced two ways: this check on the session player's admin role
  * (Server Actions are POST-reachable, so we re-check), and the players table's
@@ -35,9 +39,8 @@ export async function inviteUser(_prev: InviteState, formData: FormData): Promis
   if (!validated.ok) return { error: validated.error };
   const { firstName, lastName, email } = validated.value;
 
-  // Where Supabase sends the invitee after they accept. The existing
-  // /auth/confirm route + ensureActivated handle the session and invited->active
-  // flip. Must be allow-listed in the Supabase project (see supabase/README.md).
+  // Where Supabase sends the invitee after they accept. /auth/confirm verifies
+  // the token and /accept-invite handles password setup + activation.
   const redirectTo = buildInviteRedirectTo(
     process.env.NEXT_PUBLIC_SITE_URL,
     (await headers()).get("origin"),
@@ -64,4 +67,58 @@ export async function inviteUser(_prev: InviteState, formData: FormData): Promis
 
   revalidatePath("/admin/players");
   return { sent: email };
+}
+
+/** Permanently remove a player only when no immutable match facts reference them. */
+export async function deletePlayer(
+  _previous: DeletePlayerState,
+  formData: FormData,
+): Promise<DeletePlayerState> {
+  const actor = await getSessionPlayer();
+  if (!actor || actor.role !== "admin") {
+    return { error: "Only admins can delete players." };
+  }
+
+  const playerId = String(formData.get("playerId") ?? "").trim();
+  if (!UUID_PATTERN.test(playerId)) return { error: "Invalid player." };
+  if (playerId === actor.id) return { error: "You cannot delete your own account." };
+
+  const admin = createAdminClient();
+  const { data: target, error: targetError } = await admin
+    .from("players")
+    .select("id, first_name, last_name, email")
+    .eq("id", playerId)
+    .maybeSingle();
+  if (targetError) {
+    console.error("Could not load player before deletion", targetError);
+    return { error: "Couldn't check that player. Please try again." };
+  }
+  if (!target) return { error: "That player no longer exists." };
+
+  const { count, error: matchError } = await admin
+    .from("matches")
+    .select("id", { count: "exact", head: true })
+    .or(
+      `player1_id.eq.${playerId},player2_id.eq.${playerId},winner_id.eq.${playerId},submitted_by.eq.${playerId}`,
+    );
+  if (matchError) {
+    console.error("Could not check player match history before deletion", matchError);
+    return { error: "Couldn't check that player's match history." };
+  }
+  if ((count ?? 0) > 0) {
+    return { error: "Players with match history cannot be deleted. Deactivate them instead." };
+  }
+
+  const { error: deleteError } = await admin.auth.admin.deleteUser(playerId);
+  if (deleteError) {
+    console.error("Supabase deleteUser failed", deleteError);
+    return { error: "Couldn't delete that player. Please try again." };
+  }
+
+  revalidatePath("/admin/players");
+  revalidatePath("/");
+  return {
+    deleted:
+      [target.first_name, target.last_name].filter(Boolean).join(" ") || target.email,
+  };
 }

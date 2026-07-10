@@ -188,3 +188,6 @@ This is `lib/scoring/computeRankings` (ADR-0014).
 - **Supabase Auth** (email + password managed by Supabase; **no `password_hash` in our schema**). `players.id` = `auth.users.id`. Invited players are created via Supabase Auth invite (tokenised link); `players.status`: invited → active on registration. See ADR-0002.
 - `player`: submit/confirm matches, enter open tournaments, edit **own profile only** (not role/status/rating_points).
 - `admin`: everything + approve/query results, create/manage tournaments, invite/deactivate players. Admin approval UI expects both-confirmed ranked matches surfaced oldest-first.
+- Admins may hard-delete only unused player identities with no match references;
+  historical players must be deactivated so immutable facts retain their
+  participant identity (ADR-0015).

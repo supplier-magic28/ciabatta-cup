@@ -26,7 +26,7 @@ pattern changes, update this guide and the component inventory in the same task.
 | 05 Sign in | `/sign-in`, `/sign-up`, `/accept-invite` | Implemented | Sign-in, signup, and invite password setup use the token-driven auth shell. |
 | 06 Admin dashboard | `/admin/approvals`, `/admin/players` | Partial | Approval queue and roster exist as focused routes; dashboard stats and activity feed are pending. |
 | 07 Manage tournament | None | Planned | Depends on the tournament spine. |
-| 08 Manage players | `/admin/players` | Partial | Invite and roster status are live; edit, deactivate, resend, and revoke flows are pending. |
+| 08 Manage players | `/admin/players` | Partial | Invite, roster status, and safe deletion of unused players are live; edit, deactivate, resend, and revoke flows are pending. |
 
 ## Implementation rules
 

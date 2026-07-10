@@ -37,6 +37,8 @@ of Done (`CLAUDE.md`).
 **Players (admin)**
 - `players/InvitePlayerForm` — admin invite form (design screen 08): name + email
   → `inviteUser` server action (`useActionState`).
+- `players/DeletePlayerButton` — confirmed admin hard-delete for unused players;
+  the server refuses self-deletion and any player referenced by a match.
 - `players/PlayerAvatar` — Supabase Storage avatar with deterministic initials
   fallback; used by leaderboard and profiles.
 - `players/ReignSummary` — hydrated current-holder duration and reign count.

@@ -48,8 +48,9 @@ migration form. Tournaments, fixtures, and activity arrive in later phases.
 - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` — browser-safe
   client config.
 - `SUPABASE_SECRET_KEY` — **server-only** service-role key. Required for player
-  invites and for rebuilding derived ratings after ranked approval. Never expose
-  it to the browser or commit it; `.env*` is git-ignored.
+  invites, safe deletion of unused identities, and rebuilding derived ratings
+  after ranked approval. Never expose it to the browser or commit it; `.env*`
+  is git-ignored.
 - `NEXT_PUBLIC_SITE_URL` — canonical invite origin. Set it to
   `https://ciabatta-cup.app` in production.
 

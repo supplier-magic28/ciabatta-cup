@@ -4,6 +4,7 @@ import { getSessionPlayer } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { displayName } from "@/lib/auth/displayName";
 import { InvitePlayerForm } from "@/components/players/InvitePlayerForm";
+import { DeletePlayerButton } from "@/components/players/DeletePlayerButton";
 
 const eyebrow = "font-mono text-[10px] uppercase tracking-[2px] text-muted";
 
@@ -29,9 +30,9 @@ function metaLine(status: string, invitedAt: string | null, joinedAt: string | n
 
 /**
  * Manage players (design screen 08). Admin-only: the roster with each player's
- * status, plus the invite form. Minimal by design — edit/deactivate/resend are a
+ * status, safe deletion, and the invite form. Edit/deactivate/resend remain a
  * later admin phase. Admin gating: the route guard here plus the players table's
- * is_admin() RLS (ADR-0009).
+ * is_admin() RLS and server-action authorization (ADR-0009, ADR-0015).
  */
 export default async function ManagePlayersPage() {
   const player = await getSessionPlayer();
@@ -82,6 +83,16 @@ export default async function ManagePlayersPage() {
             </div>
             <p className="mt-1 font-body text-[13px] text-muted">{p.email}</p>
             <p className={`${eyebrow} mt-1`}>{metaLine(p.status, p.invited_at, p.joined_at)}</p>
+            {p.id !== player.id && (
+              <DeletePlayerButton
+                playerId={p.id}
+                playerName={displayName({
+                  firstName: p.first_name,
+                  lastName: p.last_name,
+                  email: p.email,
+                })}
+              />
+            )}
           </li>
         ))}
       </ul>

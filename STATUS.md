@@ -11,6 +11,8 @@ This is the short operational handover. Durable intent belongs in
   leaderboard.
 - Admins can invite players, review both-confirmed ranked results, and manage
   the current roster.
+- Admins can permanently delete accidental or test players with no match
+  history; self-deletion and deletion of historical participants are blocked.
 - Invitees accept a server-verified email token, choose a durable password, and
   become active before entering the league.
 - Players can submit a singles match with validated set scores; the opponent
