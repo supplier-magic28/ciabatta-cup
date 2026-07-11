@@ -10,6 +10,7 @@ const rows: ScoringMatchRow[] = [
     type: "ranked",
     status: "approved",
     played_at: "2026-07-01T10:00:00Z",
+    tournament_id: null,
   },
 ];
 
@@ -24,8 +25,22 @@ describe("rating cache materialization", () => {
         type: "ranked",
         status: "approved",
         playedAt: "2026-07-01T10:00:00Z",
+        tournamentId: null,
       },
     ]);
+  });
+
+  it("excludes cup matches from Elo and adds cumulative placement awards", () => {
+    const tournamentRows = [{ ...rows[0], tournament_id: "cup-1" }];
+    const cache = buildRatingCache(["alice", "bob"], tournamentRows, [
+      { player_id: "alice", points: 100, awarded_at: "2026-07-11T04:00:00Z" },
+      { player_id: "bob", points: 50, awarded_at: "2026-07-11T04:00:00Z" },
+    ]);
+    expect(cache.rankings).toEqual([
+      { playerId: "alice", rating: 1100, rank: 1, played: 0, won: 0, lost: 0 },
+      { playerId: "bob", rating: 1050, rank: 2, played: 0, won: 0, lost: 0 },
+    ]);
+    expect(cache.ratingHistory).toEqual([]);
   });
 
   it("keeps players with no ranked results at zero and materializes history", () => {

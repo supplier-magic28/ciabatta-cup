@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { lockTournamentDraw, sendGameDayEmail, sendLockedInEmail } from "@/lib/tournament/actions";
+import { lockTournamentDraw, sendGameDayEmail, sendLockedInEmail, sendTournamentResultEmails } from "@/lib/tournament/actions";
 import { Button } from "@/components/ui/Button";
 
 function LifecycleForm({
@@ -30,7 +30,7 @@ function LifecycleForm({
   );
 }
 
-export function TournamentLifecycleActions({ tournamentId, drawLocked }: { tournamentId: string; drawLocked: boolean }) {
+export function TournamentLifecycleActions({ tournamentId, drawLocked, tournamentCompleted }: { tournamentId: string; drawLocked: boolean; tournamentCompleted: boolean }) {
   return (
     <section className="mb-7 border-2 border-ink bg-surface p-4">
       <p className="font-mono text-[10px] uppercase tracking-[2px] text-crust">Tournament messages</p>
@@ -47,6 +47,7 @@ export function TournamentLifecycleActions({ tournamentId, drawLocked }: { tourn
           <LifecycleForm tournamentId={tournamentId} action={lockTournamentDraw} label="Lock draw & send emails" loadingLabel="Locking and sending..." className="bg-crust" />
         )}
         <LifecycleForm tournamentId={tournamentId} action={sendGameDayEmail} label="Send game-day email" loadingLabel="Sending game-day emails..." disabled={!drawLocked} />
+        <LifecycleForm tournamentId={tournamentId} action={sendTournamentResultEmails} label="Send result emails" loadingLabel="Preparing placements and sending..." disabled={!tournamentCompleted} className="sm:col-span-2" />
       </div>
     </section>
   );

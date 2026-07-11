@@ -19,7 +19,7 @@ import type { CiabattaReign, Match, PlayerRating, RatingHistoryEntry, ScoringRes
  *     to the database (materialising it is a later phase, ADR-0003/0007).
  *
  * Scoring model (ADR-0007):
- *   - Only `type === "ranked"` && `status === "approved"` matches move ratings.
+ *   - Only non-tournament `ranked` + `approved` matches move Elo.
  *   - The roster is every participant of *any* input match; a player with no
  *     ranked+approved match displays zero while retaining the internal Elo
  *     baseline for their first ranked result.
@@ -49,7 +49,7 @@ export function computeRankings(matches: Match[]): ScoringResult {
   // Scoring set: ranked + approved only, applied chronologically. `slice()` so
   // the caller's array is never reordered.
   const scoringMatches = matches
-    .filter((match) => match.type === "ranked" && match.status === "approved")
+    .filter((match) => match.type === "ranked" && match.status === "approved" && match.tournamentId == null)
     .slice()
     .sort((a, b) => a.playedAt.localeCompare(b.playedAt) || a.id.localeCompare(b.id));
 

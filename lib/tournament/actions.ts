@@ -2,13 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 import { getSessionPlayer } from "@/lib/auth/session";
+import { displayName } from "@/lib/auth/displayName";
 import { rebuildRatingCache } from "@/lib/scoring/rebuild";
-import { renderTournamentEmail, sendTournamentEmail, type TournamentEmailKind } from "./email";
+import { renderResultEmail } from "./email-templates";
+import { renderTournamentEmail, sendTournamentEmail, type LifecycleEmailKind, type TournamentEmailKind } from "./email";
 import { createClient } from "@/lib/supabase/server";
 import { deriveTournamentStandings, generateRoundRobin, planFinalStage, resolveDecider } from "./logic";
 import { validateTournamentScore } from "./score";
 import { MAX_TOURNAMENT_IMAGE_BYTES, TOURNAMENT_IMAGE_TYPES } from "./crop";
 import type { TournamentResult, TournamentRuleset } from "./types";
+import { deriveOfficialPlacements } from "./placements";
+import { loadTournamentBoard } from "./read";
 
 export type TournamentActionState =
   | { ok: true; message: string; tournamentId?: string }
@@ -40,7 +44,7 @@ function invalidateTournament(tournamentId: string) {
   revalidatePath("/");
 }
 
-async function sendTournamentEmails(tournamentId: string, kind: TournamentEmailKind) {
+async function sendTournamentEmails(tournamentId: string, kind: LifecycleEmailKind) {
   const supabase = await createClient();
   const [{ data: tournament }, { data: participants }] = await Promise.all([
     supabase.from("tournaments").select("id, name, starts_at, timezone, location_name, draw_locked_at").eq("id", tournamentId).single(),
@@ -96,6 +100,115 @@ async function sendTournamentEmails(tournamentId: string, kind: TournamentEmailK
   }
   if (failed > 0) return { ok: false as const, error: `Sent ${sent}; ${failed} failed. Click again to retry unsent emails.` };
   return { ok: true as const, message: sent > 0 ? `Sent ${sent} ${kind === "locked_in" ? "locked-in" : "game-day"} emails.` : `Everyone has already received this email.`, skipped };
+}
+
+async function prepareTournamentPlacements(tournamentId: string) {
+  const board = await loadTournamentBoard(tournamentId);
+  if (!board || board.tournament.status !== "completed" || !board.tournament.completion_path) {
+    throw new Error("Tournament placements are not final.");
+  }
+  const supabase = await createClient();
+  const { data: matches, error } = await supabase
+    .from("matches")
+    .select("id, fixture_id, player1_id, player2_id, winner_id, status, played_at, match_sets(match_id, p1_games, p2_games, tiebreak_p1, tiebreak_p2)")
+    .eq("tournament_id", tournamentId);
+  if (error) throw new Error("Couldn't load tournament results.");
+  const rows = matches ?? [];
+  const placements = deriveOfficialPlacements({
+    completionPath: board.tournament.completion_path,
+    standings: board.standings,
+    fixtures: board.fixtures,
+    matches: rows,
+    sets: rows.flatMap((match) => match.match_sets ?? []),
+  });
+  const awardedAt = new Date().toISOString();
+  const { error: placementError } = await supabase.from("tournament_placements").upsert(
+    placements.map((placement) => ({
+      tournament_id: tournamentId,
+      player_id: placement.playerId,
+      placement: placement.placement,
+      points: placement.points,
+      awarded_at: awardedAt,
+    })),
+    { onConflict: "tournament_id,player_id", ignoreDuplicates: true },
+  );
+  if (placementError) throw new Error("Couldn't save tournament placements.");
+  return { board, placements, supabase };
+}
+
+export async function sendTournamentResultEmails(
+  _previous: TournamentActionState | undefined,
+  formData: FormData,
+): Promise<TournamentActionState> {
+  if (!(await requireAdmin())) return FORBIDDEN;
+  const tournamentId = textValue(formData, "tournamentId");
+  if (!tournamentId) return { ok: false, error: "Tournament not found." };
+  let prepared: Awaited<ReturnType<typeof prepareTournamentPlacements>>;
+  try {
+    prepared = await prepareTournamentPlacements(tournamentId);
+    await rebuildRatingCache();
+  } catch (error) {
+    console.error("Tournament placement preparation failed", { tournamentId, error });
+    return { ok: false, error: "Final placements are not ready to send." };
+  }
+  const { board, placements, supabase } = prepared;
+  const playerIds = placements.map((placement) => placement.playerId);
+  const { data: players } = await supabase
+    .from("players")
+    .select("id, first_name, last_name, email, nickname, use_nickname, status")
+    .in("id", playerIds);
+  const playerById = new Map((players ?? []).map((player) => [player.id, player]));
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
+  if (!siteUrl) return { ok: false, error: "Tournament email is not configured." };
+  let sent = 0;
+  let failed = 0;
+  for (const placement of placements) {
+    const player = playerById.get(placement.playerId);
+    if (!player?.email || player.status !== "active") continue;
+    const kind = `result_${["1st", "2nd", "3rd", "4th"][placement.placement - 1]}` as TournamentEmailKind;
+    const { data: claimed, error: claimError } = await supabase.rpc("claim_tournament_email_delivery", {
+      p_tournament_id: tournamentId, p_player_id: player.id, p_kind: kind,
+    });
+    if (claimError || !claimed) {
+      if (claimError) failed++;
+      continue;
+    }
+    try {
+      const email = renderResultEmail({
+        firstName: player.first_name ?? "player",
+        tournamentName: board.tournament.name,
+        startsAt: board.tournament.starts_at,
+        timezone: board.tournament.timezone,
+        locationName: board.tournament.location_name,
+        playerCount: placements.length,
+        tournamentUrl: `${siteUrl}/tournaments/${tournamentId}`,
+        assetBaseUrl: `${siteUrl}/emails`,
+        placement: placement.placement,
+        points: placement.points,
+        matches: placement.matches.map((match) => {
+          const opponent = playerById.get(match.opponentId);
+          return {
+            opponentName: opponent ? displayName({ firstName: opponent.first_name, lastName: opponent.last_name, email: opponent.email, nickname: opponent.nickname, useNickname: opponent.use_nickname }) : "Opponent",
+            score: match.score,
+            won: match.won,
+          };
+        }),
+      });
+      const messageId = await sendTournamentEmail(player.email, email, `tournament/${tournamentId}/${kind}/${player.id}`);
+      await supabase.from("tournament_email_deliveries").update({ status: "sent", provider_message_id: messageId, sent_at: new Date().toISOString() })
+        .eq("tournament_id", tournamentId).eq("player_id", player.id).eq("kind", kind);
+      sent++;
+    } catch (error) {
+      console.error("Tournament result email failed", { tournamentId, playerId: player.id, error });
+      await supabase.from("tournament_email_deliveries").delete()
+        .eq("tournament_id", tournamentId).eq("player_id", player.id).eq("kind", kind);
+      failed++;
+    }
+  }
+  invalidateTournament(tournamentId);
+  return failed > 0
+    ? { ok: false, error: `Sent ${sent}; ${failed} failed. Click again to retry unsent emails.` }
+    : { ok: true, message: sent > 0 ? `Sent ${sent} tournament result emails.` : "Everyone has already received their result email." };
 }
 
 export async function lockTournamentDraw(
@@ -512,6 +625,13 @@ export async function advanceTournament(
         .update({ status: "completed", completion_path: "final_stage" })
         .eq("id", tournamentId);
       if (error) return { ok: false, error: "Couldn't complete the tournament." };
+      try {
+        await prepareTournamentPlacements(tournamentId);
+        await rebuildRatingCache();
+      } catch {
+        invalidateTournament(tournamentId);
+        return { ok: false, error: "Tournament completed, but placement points need rebuilding before result emails can send." };
+      }
       invalidateTournament(tournamentId);
       return { ok: true, message: "Tournament complete. The champion is official." };
     }
@@ -576,6 +696,13 @@ export async function completeTournamentFromStandings(
     if (message.includes("qualification decider")) return { ok: false, error: "Complete the qualification decider first." };
     if (message.includes("final stage")) return { ok: false, error: "The final stage has started, so standings can no longer end the tournament." };
     return { ok: false, error: "Couldn't complete the tournament from standings." };
+  }
+  try {
+    await prepareTournamentPlacements(tournamentId);
+    await rebuildRatingCache();
+  } catch {
+    invalidateTournament(tournamentId);
+    return { ok: false, error: "Tournament completed, but placement points need rebuilding before result emails can send." };
   }
   invalidateTournament(tournamentId);
   return { ok: true, message: "Tournament complete. The round-robin standings are final." };

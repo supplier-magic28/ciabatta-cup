@@ -39,6 +39,9 @@ This is the short operational handover. Durable intent belongs in
 - Admins can permanently lock a reviewed draw, automatically send retry-safe
   locked-in emails, and explicitly send game-day email without duplicating
   successful deliveries.
+- Completed tournaments award 100/50/20/10 placement points without applying
+  per-match Elo. Admins can send each player an idempotent placement email with
+  their complete personal match recap.
 - Every current navigation surface has a route-shaped loading boundary and a
   shared retryable error state. Mutations acknowledge clicks immediately with
   stable, accessible pending controls while confirmed data waits for the server.
@@ -55,6 +58,7 @@ after that password update succeeds.
 | Migration | State |
 | --- | --- |
 | `20260709000000` through `20260710120000` | Applied to production (operator reported) |
+| `20260710130000_tournament_placement_awards.sql` | Ready to apply in production |
 
 ## Current blockers
 
@@ -65,11 +69,10 @@ after that password update succeeds.
 
 ## Next product slice
 
-Apply the pending migrations and use the explicit standings-completion path for
-the current qualifier if its unplayed final stage is no longer needed. Next,
-derive stable 1st–4th result-email inputs across both completion paths before
-wiring post-tournament delivery. Append-only corrections, generalised setup,
-and mid-event withdrawals remain deferred.
+Apply the placement-awards migration, then use the result-email action on the
+completed qualifier to materialise its official 100/50/20/10 awards, rebuild the
+ladder, and send the four personal recaps. Append-only corrections, generalised
+setup, and mid-event withdrawals remain deferred.
 
 ## Documentation rule
 

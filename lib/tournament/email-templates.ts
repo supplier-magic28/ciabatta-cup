@@ -38,10 +38,7 @@ export interface BaseEmailParams {
 
 export interface ResultEmailParams extends BaseEmailParams {
   placement: 1 | 2 | 3 | 4;
-  /** Final opponent for 1st/2nd; third-place-match opponent for 3rd/4th. */
-  opponentName: string;
-  /** Derived from the recorded match score, human readable, e.g. "3 games to 1". */
-  margin: string;
+  matches: Array<{ opponentName: string; score: string; won: boolean }>;
   /** Only pass once placement points are actually awarded by the app. */
   points?: number;
 }
@@ -351,8 +348,6 @@ View today's schedule: ${p.tournamentUrl}${textFooter}`;
 
 export function renderResultEmail(p: ResultEmailParams): RenderedEmail {
   const name = esc(p.firstName);
-  const opp = esc(p.opponentName);
-  const margin = esc(p.margin);
   const hasPts = typeof p.points === 'number';
   const pts = hasPts ? String(p.points) : '';
 
@@ -390,14 +385,14 @@ export function renderResultEmail(p: ResultEmailParams): RenderedEmail {
       pillHtml: pill('OWNER OF THE COURT', { bg: C.crust, text: C.pale, border: C.caramel }),
       trophy: true,
       subject: `1st. The court is yours, ${p.firstName}.`,
-      preheader: `You closed it out against ${p.opponentName} by ${p.margin}. Zeus has crowned you.`,
+      preheader: `You finished first. Zeus has crowned you.`,
       h1: `${name}, the court is yours.`,
-      body: `You closed it out against ${opp} by ${margin} to take the whole thing. Top seed for Ciabatta Cup 2026, and bragging rights until somebody takes them off you.`,
-      bodyText: `You closed it out against ${p.opponentName} by ${p.margin} to take the whole thing. Top seed for Ciabatta Cup 2026, and bragging rights until somebody takes them off you.`,
+      body: `You finished top of the field and took the whole thing. Top seed for Ciabatta Cup 2026, and bragging rights until somebody takes them off you.`,
+      bodyText: `You finished top of the field and took the whole thing. Top seed for Ciabatta Cup 2026, and bragging rights until somebody takes them off you.`,
       seedChip: `TOP SEED · ${SEASON_LABEL}`,
       zeus: `I watched ${countWord(p.playerCount)} players chase one loaf. Only you, ${name}, came home smelling of victory. I hereby crown you. Screenshot this. It will not happen twice for free. Even Red is impressed, and Red has seen things.`,
       zeusShadow: C.green,
-      record: `Recorded: 1st place${hasPts ? ` &middot; +${pts} pts` : ''} &middot; d. ${opp} by ${margin}`,
+      record: `Recorded: 1st place${hasPts ? ` &middot; +${pts} pts` : ''}`,
       buttonLabel: 'See the final standings',
     },
     2: {
@@ -410,14 +405,14 @@ export function renderResultEmail(p: ResultEmailParams): RenderedEmail {
       pillHtml: pill('SO. CLOSE.', { text: C.cream, border: C.paleGreen }),
       trophy: false,
       subject: `2nd. So close, ${p.firstName}.`,
-      preheader: `${p.margin}. That's all that stood between you and ${p.opponentName}.`,
+      preheader: `Second place and a serious tournament banked.`,
       h1: `Silver, ${name}. Warm silver.`,
-      body: `${margin}. That's all that stood between you and ${opp}. A serious final${hasPts ? `, ${pts} points banked,` : ','} and second seed heading into Ciabatta Cup 2026.`,
-      bodyText: `${p.margin}. That's all that stood between you and ${p.opponentName}. A serious final${hasPts ? `, ${pts} points banked,` : ','} and second seed heading into Ciabatta Cup 2026.`,
+      body: `A serious tournament${hasPts ? `, ${pts} points banked,` : ','} and second seed heading into Ciabatta Cup 2026.`,
+      bodyText: `A serious tournament${hasPts ? `, ${pts} points banked,` : ','} and second seed heading into Ciabatta Cup 2026.`,
       seedChip: `2ND SEED · ${SEASON_LABEL}`,
-      zeus: `A noble final, ${name}. Truly. And yet: ${margin} against ${opp}. I have replayed it four times. So have you. Second is just first with homework.`,
+      zeus: `A noble campaign, ${name}. Truly. Second is just first with homework.`,
       zeusShadow: C.green,
-      record: `Recorded: 2nd place${hasPts ? ` &middot; +${pts} pts` : ''} &middot; lost to ${opp} by ${margin}`,
+      record: `Recorded: 2nd place${hasPts ? ` &middot; +${pts} pts` : ''}`,
       buttonLabel: 'Relive the standings',
     },
     3: {
@@ -430,14 +425,14 @@ export function renderResultEmail(p: ResultEmailParams): RenderedEmail {
       pillHtml: pill('PODIUM. EARNED.', { text: C.pale, border: C.caramel }),
       trophy: false,
       subject: `3rd. A podium's a podium, ${p.firstName}.`,
-      preheader: `You made ${p.opponentName} sweat for every game of it.`,
+      preheader: `A podium earned across the whole tournament.`,
       h1: `A podium's a podium, ${name}.`,
-      body: `Third place${hasPts ? ` and ${pts} points` : ''}, and you made ${opp} sweat for every game of it, ${margin} in the decider. Nobody's roasting anyone here. You showed up and you played.`,
-      bodyText: `Third place${hasPts ? ` and ${pts} points` : ''}, and you made ${p.opponentName} sweat for every game of it, ${p.margin} in the decider. Nobody's roasting anyone here. You showed up and you played.`,
+      body: `Third place${hasPts ? ` and ${pts} points` : ''}. Nobody's roasting anyone here. You showed up and you played.`,
+      bodyText: `Third place${hasPts ? ` and ${pts} points` : ''}. Nobody's roasting anyone here. You showed up and you played.`,
       seedChip: `3RD SEED · ${SEASON_LABEL}`,
       zeus: `Bronze is still bread, ${name}. You played honest tennis and the loaf noticed. Next season, the crust.`,
       zeusShadow: C.crust,
-      record: `Recorded: 3rd place${hasPts ? ` &middot; +${pts} pts` : ''} &middot; vs ${opp}, ${margin}`,
+      record: `Recorded: 3rd place${hasPts ? ` &middot; +${pts} pts` : ''}`,
       buttonLabel: 'See the standings',
     },
     4: {
@@ -450,20 +445,28 @@ export function renderResultEmail(p: ResultEmailParams): RenderedEmail {
       pillHtml: pill('OFFICIAL BADGER RECIPIENT', { bg: C.ink, text: C.cream }),
       trophy: false,
       subject: `4th. The badger is yours, ${p.firstName}.`,
-      preheader: `${p.opponentName} edged you by ${p.margin}. Zeus laughed, then wept, then laughed again.`,
+      preheader: `The badger has chosen. Zeus laughed, then wept, then laughed again.`,
       h1: `The badger is yours, ${name}.`,
-      body: `Fourth place${hasPts ? `, ${pts} points,` : ','} one (1) badger. ${opp} edged you by ${margin}, which is honestly closer than the leaderboard will ever remember it.`,
-      bodyText: `Fourth place${hasPts ? `, ${pts} points,` : ','} one (1) badger. ${p.opponentName} edged you by ${p.margin}, which is honestly closer than the leaderboard will ever remember it.`,
+      body: `Fourth place${hasPts ? `, ${pts} points,` : ','} one (1) badger. The leaderboard will remember. Zeus will remember longer.`,
+      bodyText: `Fourth place${hasPts ? `, ${pts} points,` : ','} one (1) badger. The leaderboard will remember. Zeus will remember longer.`,
       seedChip: `REVENGE ARC LOADING`,
       zeus: `${name}. My sweet ${name}. I laughed, then I wept, then I laughed again. Carry your badger with dignity, and remember: revenge is a dish best served topspin. Red couldn't watch.`,
       zeusShadow: C.rust,
-      record: `Recorded: 4th place${hasPts ? ` &middot; +${pts} pts` : ''} &middot; lost to ${opp} by ${margin}`,
+      record: `Recorded: 4th place${hasPts ? ` &middot; +${pts} pts` : ''}`,
       buttonLabel: 'Plot your comeback',
       certificate: true,
     },
   };
 
   const cfg = cfgs[p.placement];
+  const matchRecapHtml = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:18px;border:2px solid ${C.ink};background-color:${C.card};">
+    <tr><td colspan="2" style="padding:12px 14px;border-bottom:1px solid ${C.divider};font-family:${F.mono};font-size:10px;letter-spacing:2px;color:${C.crust};">YOUR TOURNAMENT</td></tr>
+    ${p.matches.map((match, index) => `<tr>
+      <td style="padding:11px 14px;${index < p.matches.length - 1 ? `border-bottom:1px solid ${C.divider};` : ''}font-family:${F.body};font-size:13px;color:${C.ink};">${match.won ? 'W' : 'L'} vs ${esc(match.opponentName)}</td>
+      <td align="right" style="padding:11px 14px;${index < p.matches.length - 1 ? `border-bottom:1px solid ${C.divider};` : ''}font-family:${F.mono};font-size:12px;color:${match.won ? C.green : C.rust};">${esc(match.score)}</td>
+    </tr>`).join('')}
+  </table>`;
+  const matchRecapText = p.matches.map((match) => `${match.won ? 'W' : 'L'} vs ${match.opponentName}: ${match.score}`).join('\n');
 
   const trophyHtml = cfg.trophy
     ? `<table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:0 auto 16px auto;"><tr>
@@ -501,6 +504,7 @@ export function renderResultEmail(p: ResultEmailParams): RenderedEmail {
     para(cfg.body) +
     certificateHtml +
     chips(chipItems) +
+    matchRecapHtml +
     zeusCard({
       eyebrow: 'ZEUS DELIVERS THE VERDICT',
       quoteHtml: cfg.zeus,
@@ -516,6 +520,7 @@ export function renderResultEmail(p: ResultEmailParams): RenderedEmail {
 ${cfg.h1.replace(/<[^>]+>/g, '')}
 
 ${cfg.bodyText}
+\nYOUR TOURNAMENT\n${matchRecapText}
 ${cfg.certificate ? `\nREWARD CERTIFICATE\nRedeem: ONE (1) BADGER · ${p.locationName}\nNon-transferable. Deeply prestigious. Sort of.\n` : ''}
 ZEUS DELIVERS THE VERDICT: "${cfg.zeus.replace(/<[^>]+>/g, '')}"
 

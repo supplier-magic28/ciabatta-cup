@@ -147,10 +147,22 @@ Idempotency ledger for director-triggered lifecycle messages (ADR-0022).
 
 | Column | Type | Notes |
 |---|---|---|
-| tournament_id / player_id / kind | composite PK | one `locked_in` or `game_day` delivery per participant |
+| tournament_id / player_id / kind | composite PK | one lifecycle or placement-result delivery per participant |
 | status | text | `pending` provider claim or `sent` |
 | provider_message_id | text nullable | Resend message identifier |
 | claimed_at / sent_at | timestamptz | send attempt and confirmed delivery timestamps |
+
+### `tournament_placements`
+
+Rebuildable official placement awards derived after tournament completion
+(ADR-0024).
+
+| Column | Type | Notes |
+|---|---|---|
+| tournament_id / player_id | composite PK | one placement per tournament player |
+| placement | int 1–4 | unique within the tournament |
+| points | int | fixed mapping: 100 / 50 / 20 / 10 |
+| awarded_at | timestamptz | rating/reign event timestamp |
 
 ### tournament_participants _(Phase 4 — implemented)_
 | tournament_id FK, player_id FK, seed int, entered_at | composite identity; seed is unique within a tournament and drives deterministic generation |
@@ -218,6 +230,9 @@ holder. A new holder closes the old reign at the deciding match time.
   creates an on-court decider. The director may make that table final or continue
   to a final and third-place match; `completion_path` records which facts derive
   the official placements.
+- **Ladder ratings**: ordinary approved ranked matches use Elo. Tournament-linked
+  matches do not move Elo; completed tournament placements add fixed cumulative
+  awards to the player's existing ladder rating.
 
 ## Points system (recommendation)
 Elo with K=32 and floor 100 uses 1000 as the internal entry baseline. Players

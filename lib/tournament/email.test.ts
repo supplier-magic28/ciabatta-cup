@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderTournamentEmail, sendTournamentEmail } from "./email";
+import { renderResultEmail } from "./email-templates";
 
 const base = {
   firstName: "Ringo <Zeus>", tournamentName: "Ciabatta Qualifier",
@@ -59,5 +60,24 @@ describe("sendTournamentEmail", () => {
       html: "<p>Hello</p>",
       text: "Hello",
     });
+  });
+});
+
+describe("renderResultEmail", () => {
+  it("renders placement points and the player's complete match recap", () => {
+    const email = renderResultEmail({
+      ...base,
+      assetBaseUrl: "https://cup.example/emails",
+      placement: 1,
+      points: 100,
+      matches: [
+        { opponentName: "Ben", score: "3-0", won: true },
+        { opponentName: "Michaels", score: "3-2", won: true },
+      ],
+    });
+    expect(email.html).toContain("+100 PTS");
+    expect(email.html).toContain("W vs Ben");
+    expect(email.html).toContain("W vs Michaels");
+    expect(email.text).toContain("W vs Ben: 3-0");
   });
 });

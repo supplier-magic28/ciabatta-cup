@@ -5,12 +5,16 @@ const mocks = vi.hoisted(() => ({
   createClient: vi.fn(),
   rebuildRatingCache: vi.fn(),
   revalidatePath: vi.fn(),
+  loadTournamentBoard: vi.fn(),
+  deriveOfficialPlacements: vi.fn(),
 }));
 
 vi.mock("@/lib/auth/session", () => ({ getSessionPlayer: mocks.getSessionPlayer }));
 vi.mock("@/lib/supabase/server", () => ({ createClient: mocks.createClient }));
 vi.mock("@/lib/scoring/rebuild", () => ({ rebuildRatingCache: mocks.rebuildRatingCache }));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
+vi.mock("./read", () => ({ loadTournamentBoard: mocks.loadTournamentBoard }));
+vi.mock("./placements", () => ({ deriveOfficialPlacements: mocks.deriveOfficialPlacements }));
 
 import { completeTournamentFromStandings, lockTournamentDraw, recordTournamentResult, replaceTournamentParticipant } from "./actions";
 
@@ -249,7 +253,15 @@ describe("completeTournamentFromStandings", () => {
   it("completes atomically through the standings RPC", async () => {
     mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin" });
     const client = { rpc: vi.fn().mockResolvedValue({ error: null }) };
-    mocks.createClient.mockResolvedValue(client);
+    const matchesQuery = { select: vi.fn(), eq: vi.fn() };
+    matchesQuery.select.mockReturnValue(matchesQuery);
+    matchesQuery.eq.mockResolvedValue({ data: [], error: null });
+    const placementUpsert = vi.fn().mockResolvedValue({ error: null });
+    const placementClient = { from: vi.fn((table: string) => table === "matches" ? matchesQuery : { upsert: placementUpsert }) };
+    mocks.createClient.mockResolvedValueOnce(client).mockResolvedValueOnce(placementClient);
+    mocks.loadTournamentBoard.mockResolvedValue({ tournament: { status: "completed", completion_path: "round_robin" }, standings: [], fixtures: [] });
+    mocks.deriveOfficialPlacements.mockReturnValue([]);
+    mocks.rebuildRatingCache.mockResolvedValue(undefined);
     await expect(completeTournamentFromStandings(undefined, replacementForm())).resolves.toEqual({
       ok: true, message: "Tournament complete. The round-robin standings are final.",
     });

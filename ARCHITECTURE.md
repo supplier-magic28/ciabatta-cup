@@ -55,7 +55,11 @@ materialisations; they are never authoritative. This lets the scoring formula ev
 migrating history and keeps ranked and exhibition records available as filtered
 views of the same facts.
 
-**Scoring is an isolated pure function** in `lib/scoring/` — `computeRankings(matches) → standings`. It is the one piece of logic guaranteed to change repeatedly, so it is kept pure, isolated, and well-tested. The current cache materialisation is rebuilt from the function after approval; read surfaces still derive standings through the same seam.
+**Scoring is isolated and pure** in `lib/scoring/`. `computeRankings(matches)`
+derives ordinary-match Elo; `buildRatingCache` combines that result with
+rebuildable tournament placement awards. These seams are kept pure and heavily
+tested. Cache materialisation is rebuilt after approval or tournament
+completion; read surfaces derive the ladder through the same adapter.
 
 **Data fetching** defaults to Server Components (App Router default). Independent
 reads begin together, and relational data needed by one read model is embedded

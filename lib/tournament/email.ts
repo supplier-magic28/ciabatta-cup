@@ -2,10 +2,11 @@ import "server-only";
 
 import { renderGameDayEmail, renderLockedInEmail, type RenderedEmail } from "./email-templates";
 
-export type TournamentEmailKind = "locked_in" | "game_day";
+export type TournamentEmailKind = "locked_in" | "game_day" | "result_1st" | "result_2nd" | "result_3rd" | "result_4th";
+export type LifecycleEmailKind = Extract<TournamentEmailKind, "locked_in" | "game_day">;
 
 type TournamentEmail = {
-  kind: TournamentEmailKind;
+  kind: LifecycleEmailKind;
   firstName: string;
   tournamentName: string;
   startsAt: string;

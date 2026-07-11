@@ -39,6 +39,7 @@ function recordFor(matches: ProfileMatch[], playerId: string, type: MatchType): 
   const record = emptyRecord();
   for (const match of matches) {
     if (match.status !== "approved" || match.type !== type) continue;
+    if (type === "ranked" && match.tournamentId != null) continue;
     if (match.player1Id !== playerId && match.player2Id !== playerId) continue;
 
     record.played += 1;

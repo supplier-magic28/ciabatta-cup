@@ -7,7 +7,7 @@ import { getSessionPlayer } from "@/lib/auth/session";
 import { formatScore } from "@/lib/match/score";
 import { indexEmbeddedScoreSets } from "@/lib/match/embeddedSets";
 import { derivePlayerProfile, type ProfileMatch } from "@/lib/players/profile";
-import { buildRatingCache, type ScoringMatchRow } from "@/lib/scoring";
+import { buildRatingCache, type ScoringMatchRow, type TournamentPlacementRow } from "@/lib/scoring";
 import { createClient } from "@/lib/supabase/server";
 
 const eyebrow = "font-mono text-[10px] uppercase tracking-[1.5px]";
@@ -37,7 +37,7 @@ export default async function PlayerProfilePage({
   const { playerId } = await params;
   const supabase = await createClient();
 
-  const [{ data: target }, { data: playerRows }, { data: matchRows }] = await Promise.all([
+  const [{ data: target }, { data: playerRows }, { data: matchRows }, { data: placementRows }] = await Promise.all([
     supabase
       .from("players")
       .select("id, first_name, last_name, email, nickname, use_nickname, avatar_url, height_cm, weight_kg, plays, backhand, game_style, status")
@@ -49,8 +49,9 @@ export default async function PlayerProfilePage({
       .order("first_name", { ascending: true }),
     supabase
       .from("matches")
-      .select("id, player1_id, player2_id, winner_id, type, status, played_at, match_sets(set_number, p1_games, p2_games, tiebreak_p1, tiebreak_p2)")
+      .select("id, player1_id, player2_id, winner_id, type, status, played_at, tournament_id, match_sets(set_number, p1_games, p2_games, tiebreak_p1, tiebreak_p2)")
       .eq("status", "approved"),
+    supabase.from("tournament_placements").select("player_id, points, awarded_at"),
   ]);
 
   if (!target) notFound();
@@ -69,6 +70,7 @@ export default async function PlayerProfilePage({
     type: match.type,
     status: match.status,
     playedAt: match.played_at,
+    tournamentId: match.tournament_id,
     sets: setsByMatch.get(match.id) ?? [],
   }));
   const name = displayName({
@@ -82,6 +84,7 @@ export default async function PlayerProfilePage({
   const cache = buildRatingCache(
     players.map((player) => player.id),
     (matchRows ?? []) as ScoringMatchRow[],
+    (placementRows ?? []) as TournamentPlacementRow[],
   );
   const standing = cache.rankings.find((ranking) => ranking.playerId === playerId);
   const reigns = cache.reigns.filter((reign) => reign.playerId === playerId);

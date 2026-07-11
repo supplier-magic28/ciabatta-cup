@@ -16,4 +16,4 @@ export type {
   RatingHistoryEntry,
   ScoringResult,
 } from "./types";
-export type { RatingCache, ScoringMatchRow } from "./materialization";
+export type { RatingCache, ScoringMatchRow, TournamentPlacementRow } from "./materialization";

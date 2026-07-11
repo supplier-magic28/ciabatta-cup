@@ -39,6 +39,8 @@ export interface Match {
   status: MatchStatus;
   /** ISO-8601 timestamp; defines the chronological scoring order. */
   playedAt: string;
+  /** Tournament-linked matches are records, but placement awards replace their Elo effect. */
+  tournamentId?: string | null;
 }
 
 /** A player's computed standing: current rating, rank, and ranked W–L record. */

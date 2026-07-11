@@ -90,6 +90,16 @@ describe("computeRankings — Elo engine", () => {
     }
   });
 
+  it("keeps tournament-linked ranked matches out of Elo", () => {
+    const cupMatch = { ...ranked("cup", "alice", "bob", "2026-07-11T01:00:00Z"), tournamentId: "cup-1" };
+    const { rankings, ratingHistory } = computeRankings([cupMatch]);
+    expect(rankings).toEqual([
+      { playerId: "alice", rating: 0, rank: 1, played: 0, won: 0, lost: 0 },
+      { playerId: "bob", rating: 0, rank: 2, played: 0, won: 0, lost: 0 },
+    ]);
+    expect(ratingHistory).toEqual([]);
+  });
+
   it("keeps a player with no approved ranked matches at zero", () => {
     const { rankings } = computeRankings([exhibition("m1", "dave", "erin", "2026-07-01T10:00:00Z")]);
 

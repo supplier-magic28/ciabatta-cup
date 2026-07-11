@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionPlayer } from "@/lib/auth/session";
 import { displayName } from "@/lib/auth/displayName";
-import { buildRatingCache, type ScoringMatchRow } from "@/lib/scoring";
+import { buildRatingCache, type ScoringMatchRow, type TournamentPlacementRow } from "@/lib/scoring";
 import { createClient } from "@/lib/supabase/server";
 import { LoafBadge } from "@/components/brand/LoafBadge";
 import { SiteHeader } from "@/components/layout/SiteHeader";
@@ -24,14 +24,15 @@ export default async function Home() {
   if (!sessionPlayer) redirect("/sign-in");
 
   const supabase = await createClient();
-  const [{ data: playerRows }, { data: matchRows }] = await Promise.all([
+  const [{ data: playerRows }, { data: matchRows }, { data: placementRows }] = await Promise.all([
     supabase
       .from("players")
       .select("id, first_name, last_name, email, nickname, use_nickname, avatar_url, status")
       .order("first_name", { ascending: true }),
     supabase
       .from("matches")
-      .select("id, player1_id, player2_id, winner_id, type, status, played_at"),
+      .select("id, player1_id, player2_id, winner_id, type, status, played_at, tournament_id"),
+    supabase.from("tournament_placements").select("player_id, points, awarded_at"),
   ]);
 
   const players = (playerRows ?? []).map((player) => ({
@@ -49,6 +50,7 @@ export default async function Home() {
   const cache = buildRatingCache(
     players.map((player) => player.id),
     (matchRows ?? []) as ScoringMatchRow[],
+    (placementRows ?? []) as TournamentPlacementRow[],
   );
   const standings = cache.rankings
     .filter((ranking) => activePlayerIds.has(ranking.playerId))
@@ -81,7 +83,7 @@ export default async function Home() {
           <p className="font-mono text-[10px] uppercase tracking-[2px] text-muted">All-time ladder</p>
           <h1 className="font-heading text-3xl font-bold text-ink">Leaderboard</h1>
         </div>
-        <p className="font-mono text-[11px] text-muted">Ranked Elo</p>
+        <p className="font-mono text-[11px] text-muted">Ladder points</p>
       </div>
 
       {standings.length === 0 ? (
@@ -97,7 +99,7 @@ export default async function Home() {
             const history = latestHistory.get(standing.playerId);
             const movement = movementLabel(history ? history.rankBefore - history.rankAfter : 0);
             const isHolder = currentReign?.playerId === standing.playerId;
-            const displayRank = standing.played > 0 ? standing.rank : "--";
+            const displayRank = standing.rating > 0 ? standing.rank : "--";
 
             return (
               <li

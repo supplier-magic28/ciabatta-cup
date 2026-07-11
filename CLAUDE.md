@@ -24,11 +24,11 @@ This version has breaking changes — APIs, conventions, and file structure may 
   over prose. Put the *why* in an ADR, the *what next* in `STATUS.md`.
 - **Data model authority:** `docs/SCHEMA.md` is the authoritative schema (built
   in phases). Reconcile any change against it and the relevant ADR.
-- **Scoring is sacred and pure.** All standings/rankings come from
-  `lib/scoring/computeRankings(matches)`. It is a pure function — no I/O, no
-  mutation of inputs, no stored points. Match facts are immutable (ADR-0001);
-  `rating_history`/`rating_points`/`ciabatta_reigns` are rebuildable caches
-  (ADR-0003, ADR-0012).
+- **Scoring is sacred and pure.** Ordinary-match Elo comes from
+  `lib/scoring/computeRankings(matches)`; `buildRatingCache` overlays derived
+  tournament placement awards. Both are pure—no I/O or input mutation. Match
+  facts are immutable (ADR-0001); placement rows and all rating/reign tables are
+  rebuildable caches (ADR-0003, ADR-0012, ADR-0024).
 - **Right-size the effort.** ~10-user app. Leave seams, skip machinery. No
   speculative caching/optimisation — add it only for a *measured* problem,
   recorded in an ADR.

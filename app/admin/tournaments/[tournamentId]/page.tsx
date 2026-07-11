@@ -86,8 +86,12 @@ export default async function ManageTournamentPage({ params }: { params: Promise
         )}
       </section>
 
-      {!canGenerate && board.tournament.status !== "completed" && (
-        <TournamentLifecycleActions tournamentId={tournamentId} drawLocked={Boolean(board.tournament.draw_locked_at)} />
+      {!canGenerate && (
+        <TournamentLifecycleActions
+          tournamentId={tournamentId}
+          drawLocked={Boolean(board.tournament.draw_locked_at)}
+          tournamentCompleted={board.tournament.status === "completed"}
+        />
       )}
 
       {canEditParticipants && (

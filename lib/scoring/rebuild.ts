@@ -12,20 +12,22 @@ import { buildRatingCache, type ScoringMatchRow } from "./materialization";
  */
 export async function rebuildRatingCache(): Promise<void> {
   const supabase = createAdminClient();
-  const [playersResult, matchesResult] = await Promise.all([
+  const [playersResult, matchesResult, placementsResult] = await Promise.all([
     supabase.from("players").select("id"),
     supabase
       .from("matches")
-      .select("id, player1_id, player2_id, winner_id, type, status, played_at"),
+      .select("id, player1_id, player2_id, winner_id, type, status, played_at, tournament_id"),
+    supabase.from("tournament_placements").select("player_id, points, awarded_at"),
   ]);
 
-  if (playersResult.error || matchesResult.error) {
+  if (playersResult.error || matchesResult.error || placementsResult.error) {
     throw new Error("Couldn't load match facts to rebuild ratings.");
   }
 
   const cache = buildRatingCache(
     (playersResult.data ?? []).map((player) => player.id),
     (matchesResult.data ?? []) as ScoringMatchRow[],
+    placementsResult.data ?? [],
   );
 
   const { error } = await supabase.rpc("replace_rating_cache_with_reigns", {

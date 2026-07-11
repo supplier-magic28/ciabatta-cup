@@ -63,7 +63,7 @@ of Done (`CLAUDE.md`).
 - `tournament/NewTournamentForm` — director setup for event details, courts,
   and four ordered participant seeds.
 - `tournament/TournamentLifecycleActions` — irreversible draw lock plus
-  retry-safe locked-in and game-day email controls.
+  retry-safe locked-in, game-day, and completed-placement email controls.
 - `tournament/TournamentAdminActions` — fixture generation plus confirmed,
   explicit standings-completion and final-stage progression controls.
 - `tournament/TournamentParticipantEditor` — pre-play admin replacement that
