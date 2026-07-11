@@ -1,6 +1,6 @@
 # Ciabatta Cup Status
 
-**Last updated:** 2026-07-10
+**Last updated:** 2026-07-11
 
 This is the short operational handover. Durable intent belongs in
 `ARCHITECTURE.md`, the data model in `docs/SCHEMA.md`, and decisions in ADRs.
@@ -36,6 +36,9 @@ This is the short operational handover. Durable intent belongs in
   results, progress, cover photos, and the derived champion from `/tournaments`.
 - Admins can add, crop, resize, replace, or remove a tournament cover photo from
   the event hero; the same image appears on the tournament calendar card.
+- Admins can permanently lock a reviewed draw, automatically send retry-safe
+  locked-in emails, and explicitly send game-day email without duplicating
+  successful deliveries.
 - Every current navigation surface has a route-shaped loading boundary and a
   shared retryable error state. Mutations acknowledge clicks immediately with
   stable, accessible pending controls while confirmed data waits for the server.
@@ -52,7 +55,7 @@ after that password update succeeds.
 | Migration | State |
 | --- | --- |
 | `20260709000000` through `20260710070000` | Applied to production (operator reported) |
-| `20260710090000_profile_settings_and_avatars.sql` and `20260710100000_tournament_cover_photos.sql` | Ready to apply/finish in production |
+| `20260710090000_profile_settings_and_avatars.sql` through `20260710110000_tournament_draw_lock_and_emails.sql` | Ready to apply/finish in production |
 
 ## Current blockers
 
@@ -64,7 +67,7 @@ after that password update succeeds.
 ## Next product slice
 
 Deploy the responsive tournament release, create the Ciabatta Qualifier, verify
-its exact six-match draw, and rehearse the director workflow without committing
+its exact six-match draw, configure the verified Resend sender, and rehearse the director workflow without committing
 a fake production result. After the event, add an append-only correction
 workflow and generalise setup beyond the first four-player round robin. Mid-event
 withdrawals remain intentionally deferred.

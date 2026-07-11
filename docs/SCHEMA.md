@@ -135,9 +135,21 @@ Once both rows exist, a database trigger advances a ranked result to
 | created_by | FK players | admin |
 | created_at / updated_at | timestamptz | |
 | cover_image_url | text nullable | optional public cover photo stored in the `tournament-images` bucket |
+| draw_locked_at | timestamptz nullable | irreversible director confirmation that freezes participants and the group draw |
 
 Tournament status is operational state. Progress and the champion are derived
 from linked immutable matches rather than stored on this row.
+
+### `tournament_email_deliveries`
+
+Idempotency ledger for director-triggered lifecycle messages (ADR-0022).
+
+| Column | Type | Notes |
+|---|---|---|
+| tournament_id / player_id / kind | composite PK | one `locked_in` or `game_day` delivery per participant |
+| status | text | `pending` provider claim or `sent` |
+| provider_message_id | text nullable | Resend message identifier |
+| claimed_at / sent_at | timestamptz | send attempt and confirmed delivery timestamps |
 
 ### tournament_participants _(Phase 4 — implemented)_
 | tournament_id FK, player_id FK, seed int, entered_at | composite identity; seed is unique within a tournament and drives deterministic generation |

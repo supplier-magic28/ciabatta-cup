@@ -28,10 +28,14 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 SUPABASE_SECRET_KEY=
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+RESEND_API_KEY=
+TOURNAMENT_EMAIL_FROM=Ciabatta Cup <cup@example.com>
 ```
 
 The secret key is server-only. It is required for player invites and for
 rebuilding derived ratings when an admin approves a ranked or tournament match.
+The Resend key and verified sender are server-only and enable the director's
+locked-in and game-day tournament emails.
 `NEXT_PUBLIC_SITE_URL` is the canonical origin used in invitation links; the
 production value is `https://ciabatta-cup.app`.
 

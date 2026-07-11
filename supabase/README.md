@@ -48,6 +48,9 @@ Database migrations for Ciabatta Cup. The authoritative data model is
 - `20260710100000_tournament_cover_photos.sql` adds the optional tournament
   cover URL and the admin-managed public `tournament-images` Storage bucket
   (ADR-0021).
+- `20260710110000_tournament_draw_lock_and_emails.sql` adds the irreversible
+  draw lock, database-enforced field/draw freezing, and the idempotent
+  lifecycle-email delivery ledger (ADR-0022).
 
 The tournament participant table is editable only before the first tournament
 result. The admin console's replacement action preserves the selected seed and
@@ -72,6 +75,9 @@ and fixture tables exist in migration form. Activity remains a later phase.
   it; `.env*` is git-ignored.
 - `NEXT_PUBLIC_SITE_URL` — canonical invite origin. Set it to
   `https://ciabatta-cup.app` in production.
+- `RESEND_API_KEY` — server-only Resend key for tournament lifecycle mail.
+- `TOURNAMENT_EMAIL_FROM` — verified sender identity, for example
+  `Ciabatta Cup <cup@example.com>`.
 
 ## Inviting players (Supabase project config)
 

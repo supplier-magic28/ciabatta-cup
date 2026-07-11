@@ -12,7 +12,7 @@ vi.mock("@/lib/supabase/server", () => ({ createClient: mocks.createClient }));
 vi.mock("@/lib/scoring/rebuild", () => ({ rebuildRatingCache: mocks.rebuildRatingCache }));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 
-import { recordTournamentResult, replaceTournamentParticipant } from "./actions";
+import { lockTournamentDraw, recordTournamentResult, replaceTournamentParticipant } from "./actions";
 
 function resultForm() {
   const form = new FormData();
@@ -197,5 +197,27 @@ describe("replaceTournamentParticipant", () => {
       expect.objectContaining({ player2_id: "player-5" }),
     ]));
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/tournaments/tournament-1");
+  });
+});
+
+describe("lockTournamentDraw", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("rejects non-admins before attempting the lock", async () => {
+    mocks.getSessionPlayer.mockResolvedValue({ role: "player" });
+    await expect(lockTournamentDraw(undefined, replacementForm())).resolves.toEqual({
+      ok: false, error: "Only admins can manage tournaments.",
+    });
+    expect(mocks.createClient).not.toHaveBeenCalled();
+  });
+
+  it("does not send email when the database refuses the lock", async () => {
+    mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin" });
+    const client = { rpc: vi.fn().mockResolvedValue({ error: new Error("no fixtures") }) };
+    mocks.createClient.mockResolvedValue(client);
+    await expect(lockTournamentDraw(undefined, replacementForm())).resolves.toEqual({
+      ok: false, error: "Couldn't lock the draw. Generate and review it first.",
+    });
+    expect(client.rpc).toHaveBeenCalledWith("lock_tournament_draw", { p_tournament_id: "tournament-1" });
   });
 });

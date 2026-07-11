@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getSessionPlayer } from "@/lib/auth/session";
 import { rebuildRatingCache } from "@/lib/scoring/rebuild";
+import { renderTournamentEmail, sendTournamentEmail, type TournamentEmailKind } from "./email";
 import { createClient } from "@/lib/supabase/server";
 import { deriveTournamentStandings, generateRoundRobin, planFinalStage, resolveDecider } from "./logic";
 import { validateTournamentScore } from "./score";
@@ -37,6 +38,96 @@ function invalidateTournament(tournamentId: string) {
   revalidatePath(`/tournaments/${tournamentId}`);
   revalidatePath(`/admin/tournaments/${tournamentId}`);
   revalidatePath("/");
+}
+
+async function sendTournamentEmails(tournamentId: string, kind: TournamentEmailKind) {
+  const supabase = await createClient();
+  const [{ data: tournament }, { data: participants }] = await Promise.all([
+    supabase.from("tournaments").select("id, name, starts_at, timezone, location_name, draw_locked_at").eq("id", tournamentId).single(),
+    supabase.from("tournament_participants").select("player_id").eq("tournament_id", tournamentId),
+  ]);
+  if (!tournament) return { ok: false as const, error: "Tournament not found." };
+  if (!tournament.draw_locked_at) return { ok: false as const, error: "Lock the draw before sending tournament emails." };
+  const playerIds = (participants ?? []).map((participant) => participant.player_id);
+  const { data: players } = playerIds.length
+    ? await supabase.from("players").select("id, first_name, email, status").in("id", playerIds)
+    : { data: [] };
+  const recipients = (players ?? []).filter((player) => player.status === "active" && player.email);
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
+  if (!siteUrl) return { ok: false as const, error: "Tournament email is not configured." };
+
+  let sent = 0;
+  let skipped = 0;
+  let failed = 0;
+  for (const player of recipients) {
+    const { data: claimed, error: claimError } = await supabase.rpc("claim_tournament_email_delivery", {
+      p_tournament_id: tournamentId, p_player_id: player.id, p_kind: kind,
+    });
+    if (claimError) {
+      console.error("Tournament email claim failed", { tournamentId, playerId: player.id, kind, claimError });
+      failed++;
+      continue;
+    }
+    if (!claimed) {
+      skipped++;
+      continue;
+    }
+    try {
+      const messageId = await sendTournamentEmail(player.email, renderTournamentEmail({
+        kind,
+        firstName: player.first_name ?? "player",
+        tournamentName: tournament.name,
+        startsAt: tournament.starts_at,
+        timezone: tournament.timezone,
+        locationName: tournament.location_name,
+        playerCount: recipients.length,
+        tournamentUrl: `${siteUrl}/tournaments/${tournamentId}`,
+      }), `tournament/${tournamentId}/${kind}/${player.id}`);
+      await supabase.from("tournament_email_deliveries").update({
+        status: "sent", provider_message_id: messageId, sent_at: new Date().toISOString(),
+      }).eq("tournament_id", tournamentId).eq("player_id", player.id).eq("kind", kind);
+      sent++;
+    } catch (error) {
+      console.error("Tournament email delivery failed", { tournamentId, playerId: player.id, kind, error });
+      await supabase.from("tournament_email_deliveries").delete()
+        .eq("tournament_id", tournamentId).eq("player_id", player.id).eq("kind", kind);
+      failed++;
+    }
+  }
+  if (failed > 0) return { ok: false as const, error: `Sent ${sent}; ${failed} failed. Click again to retry unsent emails.` };
+  return { ok: true as const, message: sent > 0 ? `Sent ${sent} ${kind === "locked_in" ? "locked-in" : "game-day"} emails.` : `Everyone has already received this email.`, skipped };
+}
+
+export async function lockTournamentDraw(
+  _previous: TournamentActionState | undefined,
+  formData: FormData,
+): Promise<TournamentActionState> {
+  if (!(await requireAdmin())) return FORBIDDEN;
+  const tournamentId = textValue(formData, "tournamentId");
+  if (!tournamentId) return { ok: false, error: "Tournament not found." };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("lock_tournament_draw", { p_tournament_id: tournamentId });
+  if (error) return { ok: false, error: "Couldn't lock the draw. Generate and review it first." };
+  invalidateTournament(tournamentId);
+  const delivery = await sendTournamentEmails(tournamentId, "locked_in");
+  if (!delivery.ok) return { ok: false, error: `Draw locked. ${delivery.error}` };
+  return { ok: true, message: `Draw locked. ${delivery.message}` };
+}
+
+export async function sendLockedInEmail(
+  _previous: TournamentActionState | undefined,
+  formData: FormData,
+): Promise<TournamentActionState> {
+  if (!(await requireAdmin())) return FORBIDDEN;
+  return sendTournamentEmails(textValue(formData, "tournamentId"), "locked_in");
+}
+
+export async function sendGameDayEmail(
+  _previous: TournamentActionState | undefined,
+  formData: FormData,
+): Promise<TournamentActionState> {
+  if (!(await requireAdmin())) return FORBIDDEN;
+  return sendTournamentEmails(textValue(formData, "tournamentId"), "game_day");
 }
 
 function tournamentImagePath(url: string | null): string | null {
@@ -200,12 +291,13 @@ export async function generateTournamentFixtures(
   const tournamentId = textValue(formData, "tournamentId");
   const supabase = await createClient();
   const [{ data: tournament }, { data: participants }, { data: matches }] = await Promise.all([
-    supabase.from("tournaments").select("id, courts, group_ruleset, status").eq("id", tournamentId).single(),
+    supabase.from("tournaments").select("id, courts, group_ruleset, status, draw_locked_at").eq("id", tournamentId).single(),
     supabase.from("tournament_participants").select("player_id, seed").eq("tournament_id", tournamentId).order("seed"),
     supabase.from("matches").select("id").eq("tournament_id", tournamentId).limit(1),
   ]);
 
   if (!tournament) return { ok: false, error: "Tournament not found." };
+  if (tournament.draw_locked_at) return { ok: false, error: "The draw has been locked in." };
   if ((matches ?? []).length > 0 || tournament.status === "live" || tournament.status === "completed") {
     return { ok: false, error: "The draw is locked after the first result." };
   }
@@ -245,7 +337,7 @@ export async function replaceTournamentParticipant(
     { data: fixtures },
     { data: replacement },
   ] = await Promise.all([
-    supabase.from("tournaments").select("id, courts, group_ruleset, status").eq("id", tournamentId).single(),
+    supabase.from("tournaments").select("id, courts, group_ruleset, status, draw_locked_at").eq("id", tournamentId).single(),
     supabase.from("tournament_participants").select("player_id, seed").eq("tournament_id", tournamentId).order("seed"),
     supabase.from("matches").select("id").eq("tournament_id", tournamentId).limit(1),
     supabase.from("fixtures").select("id").eq("tournament_id", tournamentId).limit(1),
@@ -253,6 +345,7 @@ export async function replaceTournamentParticipant(
   ]);
 
   if (!tournament) return { ok: false, error: "Tournament not found." };
+  if (tournament.draw_locked_at) return { ok: false, error: "The draw has been locked in." };
   if (!(tournament.status === "draft" || tournament.status === "scheduled")) {
     return { ok: false, error: "The field is locked once tournament play has started." };
   }
