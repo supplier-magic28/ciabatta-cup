@@ -78,6 +78,7 @@ export function TournamentBoard({ board, admin = false }: { board: Board; admin?
                   const player2 = playerById.get(fixture.player2_id);
                   const match = matchByFixture.get(fixture.id);
                   const sets = match ? setsByMatch.get(match.id) ?? [] : [];
+                  const skipped = Boolean(fixture.skipped_at);
                   return (
                     <div key={fixture.id} className="border-t border-hairline py-3 first:border-0 first:pt-1">
                       <div className="flex items-start justify-between gap-3">
@@ -85,11 +86,13 @@ export function TournamentBoard({ board, admin = false }: { board: Board; admin?
                           <p className="font-heading text-sm font-bold">{player1?.name ?? "Player"} <span className="text-muted">vs</span> {player2?.name ?? "Player"}</p>
                           <p className="mt-1 font-mono text-[9px] uppercase tracking-[1px] text-muted">Court {fixture.court_number}</p>
                         </div>
-                        <span className={`font-mono text-[11px] ${match ? "text-green" : "text-muted"}`}>
-                          {match ? formatScore(sets.map((set) => ({ p1Games: set.p1_games, p2Games: set.p2_games, tiebreakP1: set.tiebreak_p1, tiebreakP2: set.tiebreak_p2 }))) : "Pending"}
+                        <span className={`text-right font-mono text-[11px] ${match ? "text-green" : "text-muted"}`}>
+                          {match
+                            ? formatScore(sets.map((set) => ({ p1Games: set.p1_games, p2Games: set.p2_games, tiebreakP1: set.tiebreak_p1, tiebreakP2: set.tiebreak_p2 })))
+                            : skipped ? "Skipped — completed from standings" : "Pending"}
                         </span>
                       </div>
-                      {admin && !match && (
+                      {admin && !match && !skipped && (
                         <TournamentResultForm
                           fixtureId={fixture.id}
                           player1Name={player1?.name ?? "Player 1"}

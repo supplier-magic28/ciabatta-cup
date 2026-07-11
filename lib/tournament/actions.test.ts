@@ -12,7 +12,7 @@ vi.mock("@/lib/supabase/server", () => ({ createClient: mocks.createClient }));
 vi.mock("@/lib/scoring/rebuild", () => ({ rebuildRatingCache: mocks.rebuildRatingCache }));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 
-import { lockTournamentDraw, recordTournamentResult, replaceTournamentParticipant } from "./actions";
+import { completeTournamentFromStandings, lockTournamentDraw, recordTournamentResult, replaceTournamentParticipant } from "./actions";
 
 function resultForm() {
   const form = new FormData();
@@ -22,7 +22,7 @@ function resultForm() {
   return form;
 }
 
-function adminClient(rpcError: unknown = null) {
+function adminClient(rpcError: unknown = null, fixtureOverrides: Record<string, unknown> = {}) {
   const fixtureQuery = {
     select: vi.fn(), eq: vi.fn(), single: vi.fn(),
   };
@@ -35,6 +35,8 @@ function adminClient(rpcError: unknown = null) {
       player1_id: "player-1",
       player2_id: "player-2",
       ruleset: "short_first_to_3",
+      skipped_at: null,
+      ...fixtureOverrides,
     },
   });
   return {
@@ -122,6 +124,17 @@ describe("recordTournamentResult", () => {
       error: "Couldn't record this result. It may already be complete.",
     });
     expect(mocks.rebuildRatingCache).not.toHaveBeenCalled();
+  });
+
+  it("refuses to record a fixture skipped by standings completion", async () => {
+    mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin" });
+    const client = adminClient(null, { skipped_at: "2026-07-11T04:00:00.000Z" });
+    mocks.createClient.mockResolvedValue(client);
+    await expect(recordTournamentResult(undefined, resultForm())).resolves.toEqual({
+      ok: false,
+      error: "That fixture was skipped when the tournament completed.",
+    });
+    expect(client.rpc).not.toHaveBeenCalled();
   });
 
   it("surfaces cache rebuild failure after preserving the approved fact", async () => {
@@ -219,5 +232,36 @@ describe("lockTournamentDraw", () => {
       ok: false, error: "Couldn't lock the draw. Generate and review it first.",
     });
     expect(client.rpc).toHaveBeenCalledWith("lock_tournament_draw", { p_tournament_id: "tournament-1" });
+  });
+});
+
+describe("completeTournamentFromStandings", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("rejects non-admins before database access", async () => {
+    mocks.getSessionPlayer.mockResolvedValue({ role: "player" });
+    await expect(completeTournamentFromStandings(undefined, replacementForm())).resolves.toEqual({
+      ok: false, error: "Only admins can manage tournaments.",
+    });
+    expect(mocks.createClient).not.toHaveBeenCalled();
+  });
+
+  it("completes atomically through the standings RPC", async () => {
+    mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin" });
+    const client = { rpc: vi.fn().mockResolvedValue({ error: null }) };
+    mocks.createClient.mockResolvedValue(client);
+    await expect(completeTournamentFromStandings(undefined, replacementForm())).resolves.toEqual({
+      ok: true, message: "Tournament complete. The round-robin standings are final.",
+    });
+    expect(client.rpc).toHaveBeenCalledWith("complete_tournament_from_standings", { p_tournament_id: "tournament-1" });
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/tournaments/tournament-1");
+  });
+
+  it("reports a required qualification decider", async () => {
+    mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin" });
+    mocks.createClient.mockResolvedValue({ rpc: vi.fn().mockResolvedValue({ error: { message: "complete the qualification decider first" } }) });
+    await expect(completeTournamentFromStandings(undefined, replacementForm())).resolves.toEqual({
+      ok: false, error: "Complete the qualification decider first.",
+    });
   });
 });

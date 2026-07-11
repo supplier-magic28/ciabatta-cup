@@ -48,7 +48,7 @@ export function NewTournamentForm({ players }: { players: PlayerOption[] }) {
       </fieldset>
 
       <div className="border-2 border-hairline bg-row p-4 font-mono text-[11px] leading-5 text-muted">
-        Round robin: first to 3 games. Top two play a full-set final; bottom two play for third. Every result is ranked Elo.
+        Round robin: first to 3 games. The director can finish from the standings or continue to a full-set final and third-place match. Every played result is ranked Elo.
       </div>
       {state && !state.ok && <p className="font-mono text-[12px] text-rust" aria-live="polite">{state.error}</p>}
       {state?.ok && state.tournamentId ? (

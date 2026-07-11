@@ -5,6 +5,7 @@ import { TournamentBoard } from "@/components/tournament/TournamentBoard";
 import { TournamentParticipantEditor } from "@/components/tournament/TournamentParticipantEditor";
 import { TournamentLifecycleActions } from "@/components/tournament/TournamentLifecycleActions";
 import { getSessionPlayer } from "@/lib/auth/session";
+import { planFinalStage } from "@/lib/tournament/logic";
 import { loadActiveTournamentPlayers, loadTournamentBoard } from "@/lib/tournament/read";
 
 export default async function ManageTournamentPage({ params }: { params: Promise<{ tournamentId: string }> }) {
@@ -18,6 +19,32 @@ export default async function ManageTournamentPage({ params }: { params: Promise
   ]);
   if (!board) notFound();
   const canGenerate = board.fixtures.length === 0;
+  const groupFixtures = board.fixtures.filter((fixture) => fixture.stage === "group");
+  const groupComplete = groupFixtures.length > 0 && groupFixtures.every((fixture) => board.matchByFixture.has(fixture.id));
+  const stagePlan = groupComplete ? planFinalStage(board.standings) : null;
+  const deciderFixture = board.fixtures.find((fixture) => fixture.stage === "tiebreak");
+  const deciderComplete = Boolean(deciderFixture && board.matchByFixture.has(deciderFixture.id));
+  const finalFixtures = board.fixtures.filter((fixture) => fixture.stage === "final" || fixture.stage === "playoff");
+  const finalResultCount = finalFixtures.filter((fixture) => board.matchByFixture.has(fixture.id)).length;
+  const canCompleteFromStandings = groupComplete
+    && (stagePlan?.kind !== "decider" || deciderComplete)
+    && finalResultCount === 0;
+  let advanceLabel = "Complete group matches first";
+  let advanceDisabled = true;
+  if (groupComplete && stagePlan?.kind === "decider" && !deciderFixture) {
+    advanceLabel = "Create qualification decider";
+    advanceDisabled = false;
+  } else if (groupComplete && stagePlan?.kind === "decider" && !deciderComplete) {
+    advanceLabel = "Complete decider first";
+  } else if (groupComplete && finalFixtures.length === 0) {
+    advanceLabel = "Continue to finals";
+    advanceDisabled = false;
+  } else if (finalFixtures.length > 0 && finalResultCount === finalFixtures.length) {
+    advanceLabel = "Complete tournament";
+    advanceDisabled = false;
+  } else if (finalFixtures.length > 0) {
+    advanceLabel = "Complete final stage first";
+  }
   const canEditParticipants = board.completedResults === 0
     && !board.tournament.draw_locked_at
     && (board.tournament.status === "draft" || board.tournament.status === "scheduled");
@@ -48,7 +75,15 @@ export default async function ManageTournamentPage({ params }: { params: Promise
             {board.participants.map((participant) => `${participant.seed}. ${board.playerById.get(participant.player_id)?.name ?? "Player"}`).join(" · ")}
           </p>
         </div>
-        {board.tournament.status !== "completed" && <TournamentAdminActions tournamentId={tournamentId} canGenerate={canGenerate} />}
+        {board.tournament.status !== "completed" && (
+          <TournamentAdminActions
+            tournamentId={tournamentId}
+            canGenerate={canGenerate}
+            canCompleteFromStandings={canCompleteFromStandings}
+            advanceLabel={advanceLabel}
+            advanceDisabled={advanceDisabled}
+          />
+        )}
       </section>
 
       {!canGenerate && board.tournament.status !== "completed" && (

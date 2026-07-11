@@ -147,3 +147,23 @@ export function resolveDecider(
     playoff: [loserId, plan.placementPlayerId],
   };
 }
+
+/** Final placement order when the director completes from group standings. */
+export function resolveRoundRobinPlacements(
+  standings: readonly TournamentStanding[],
+  deciderWinnerId: string | null,
+): TournamentStanding[] {
+  const plan = planFinalStage(standings);
+  if (plan.kind === "finals") return [...standings];
+  if (!deciderWinnerId || !plan.decider.includes(deciderWinnerId)) {
+    throw new Error("A completed qualification decider is required.");
+  }
+  const loserId = plan.decider.find((playerId) => playerId !== deciderWinnerId)!;
+  const byId = new Map(standings.map((standing) => [standing.playerId, standing]));
+  return [
+    plan.securedFinalistId,
+    deciderWinnerId,
+    loserId,
+    plan.placementPlayerId,
+  ].map((playerId) => byId.get(playerId)!);
+}

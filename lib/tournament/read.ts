@@ -3,15 +3,15 @@ import "server-only";
 import { displayName } from "@/lib/auth/displayName";
 import { indexEmbeddedSets } from "@/lib/match/embeddedSets";
 import { createClient } from "@/lib/supabase/server";
-import { deriveTournamentStandings } from "./logic";
+import { deriveTournamentStandings, resolveRoundRobinPlacements } from "./logic";
 import type { TournamentResult } from "./types";
 
 export async function loadTournamentBoard(tournamentId: string) {
   const supabase = await createClient();
   const [{ data: tournament }, { data: participants }, { data: fixtures }, { data: matches }, { data: players }] = await Promise.all([
-    supabase.from("tournaments").select("id, name, status, starts_at, timezone, location_name, courts, cover_image_url, draw_locked_at").eq("id", tournamentId).single(),
+    supabase.from("tournaments").select("id, name, status, starts_at, timezone, location_name, courts, cover_image_url, draw_locked_at, completion_path").eq("id", tournamentId).single(),
     supabase.from("tournament_participants").select("player_id, seed").eq("tournament_id", tournamentId).order("seed"),
-    supabase.from("fixtures").select("id, stage, round_number, slot_number, court_number, ruleset, player1_id, player2_id").eq("tournament_id", tournamentId).order("round_number").order("court_number"),
+    supabase.from("fixtures").select("id, stage, round_number, slot_number, court_number, ruleset, player1_id, player2_id, skipped_at").eq("tournament_id", tournamentId).order("round_number").order("court_number"),
     supabase.from("matches").select("id, fixture_id, player1_id, player2_id, winner_id, status, match_sets(set_number, p1_games, p2_games, tiebreak_p1, tiebreak_p2)").eq("tournament_id", tournamentId),
     supabase.from("players").select("id, first_name, last_name, email, nickname, use_nickname, avatar_url"),
   ]);
@@ -33,7 +33,7 @@ export async function loadTournamentBoard(tournamentId: string) {
       player2Games: score.p2_games,
     }] : [];
   });
-  const standings = deriveTournamentStandings(
+  let standings = deriveTournamentStandings(
     (participants ?? []).map((participant) => ({ playerId: participant.player_id, seed: participant.seed })),
     groupResults,
   );
@@ -42,7 +42,14 @@ export async function loadTournamentBoard(tournamentId: string) {
     name: displayName({ firstName: player.first_name, lastName: player.last_name, email: player.email, nickname: player.nickname, useNickname: player.use_nickname }),
   }]));
   const finalFixture = (fixtures ?? []).find((fixture) => fixture.stage === "final");
-  const championId = finalFixture ? matchByFixture.get(finalFixture.id)?.winner_id ?? null : null;
+  if (tournament.completion_path === "round_robin") {
+    const deciderFixture = (fixtures ?? []).find((fixture) => fixture.stage === "tiebreak");
+    const deciderWinnerId = deciderFixture ? matchByFixture.get(deciderFixture.id)?.winner_id ?? null : null;
+    standings = resolveRoundRobinPlacements(standings, deciderWinnerId);
+  }
+  const championId = tournament.completion_path === "round_robin"
+    ? standings[0]?.playerId ?? null
+    : finalFixture ? matchByFixture.get(finalFixture.id)?.winner_id ?? null : null;
 
   return {
     tournament,

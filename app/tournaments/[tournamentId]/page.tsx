@@ -35,7 +35,7 @@ export default async function TournamentPage({ params }: { params: Promise<{ tou
       <TournamentBoard board={board} />
       <section className="mt-8 border-l-4 border-crust bg-row p-4">
         <p className="font-mono text-[10px] uppercase tracking-[1.5px] text-crust">Format</p>
-        <p className="mt-1 font-body text-sm leading-6">Round robin and qualification deciders are first to 3 games. The top two play a full-set final; the bottom two play a full set for third. Full sets use a tie-break at 6-6.</p>
+        <p className="mt-1 font-body text-sm leading-6">Round robin and qualification deciders are first to 3 games. After group play, the director can make the standings final or continue to a full-set final and third-place match. Full sets use a tie-break at 6-6.</p>
       </section>
     </main>
   );

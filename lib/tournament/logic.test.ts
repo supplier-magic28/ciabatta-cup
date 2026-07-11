@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { deriveTournamentStandings, generateRoundRobin, planFinalStage, resolveDecider } from "./logic";
+import { deriveTournamentStandings, generateRoundRobin, planFinalStage, resolveDecider, resolveRoundRobinPlacements } from "./logic";
 
 describe("generateRoundRobin", () => {
   it("matches the four-player qualifier draw exactly", () => {
@@ -48,6 +48,7 @@ describe("tournament standings and progression", () => {
       { playerId: "A", won: 3 }, { playerId: "B", won: 2 }, { playerId: "C", won: 1 }, { playerId: "D", won: 0 },
     ].map((row, index) => ({ ...row, seed: index + 1, played: 3, lost: 3 - row.won, gamesWon: 0, gamesLost: 0, gameDifference: 0 }));
     expect(planFinalStage(standings)).toEqual({ kind: "finals", final: ["A", "B"], playoff: ["C", "D"] });
+    expect(resolveRoundRobinPlacements(standings, null).map((row) => row.playerId)).toEqual(["A", "B", "C", "D"]);
   });
 
   it("creates and resolves a two-player boundary decider", () => {
@@ -58,6 +59,14 @@ describe("tournament standings and progression", () => {
     expect(plan).toEqual({ kind: "decider", decider: ["B", "C"], securedFinalistId: "A", placementPlayerId: "D" });
     if (plan.kind === "decider") {
       expect(resolveDecider(plan, "C")).toEqual({ kind: "finals", final: ["A", "C"], playoff: ["B", "D"] });
+      expect(resolveRoundRobinPlacements(standings, "C").map((row) => row.playerId)).toEqual(["A", "C", "B", "D"]);
     }
+  });
+
+  it("requires the qualification decider before finalising a tied table", () => {
+    const standings = [
+      { playerId: "A", won: 3 }, { playerId: "B", won: 1 }, { playerId: "C", won: 1 }, { playerId: "D", won: 1 },
+    ].map((row, index) => ({ ...row, seed: index + 1, played: 3, lost: 3 - row.won, gamesWon: 10 - index, gamesLost: index, gameDifference: 10 - index * 2 }));
+    expect(() => resolveRoundRobinPlacements(standings, null)).toThrow("qualification decider");
   });
 });

@@ -64,12 +64,12 @@ of Done (`CLAUDE.md`).
   and four ordered participant seeds.
 - `tournament/TournamentLifecycleActions` — irreversible draw lock plus
   retry-safe locked-in and game-day email controls.
-- `tournament/TournamentAdminActions` — fixture-generation and stage-advance
-  controls with inline operational feedback.
+- `tournament/TournamentAdminActions` — fixture generation plus confirmed,
+  explicit standings-completion and final-stage progression controls.
 - `tournament/TournamentParticipantEditor` — pre-play admin replacement that
   preserves a seed and regenerates the complete round-robin draw.
 - `tournament/TournamentBoard` — shared standings and round/court schedule used
-  by the player and director views.
+  by the player and director views, including preserved skipped fixtures.
 - `tournament/TournamentResultForm` — two-step admin score review and atomic
   approval for a scheduled fixture.
 - `tournament/TournamentPhotoControl` — admin-only tournament cover upload,

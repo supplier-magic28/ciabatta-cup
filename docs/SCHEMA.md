@@ -136,6 +136,7 @@ Once both rows exist, a database trigger advances a ranked result to
 | created_at / updated_at | timestamptz | |
 | cover_image_url | text nullable | optional public cover photo stored in the `tournament-images` bucket |
 | draw_locked_at | timestamptz nullable | irreversible director confirmation that freezes participants and the group draw |
+| completion_path | enum nullable: round_robin, final_stage | explicit source of final placements; null until completion and on legacy rows |
 
 Tournament status is operational state. Progress and the champion are derived
 from linked immutable matches rather than stored on this row.
@@ -169,11 +170,14 @@ any match, protecting the immutable result history.
 | court_number | int | court assignment within the wave |
 | ruleset | tournament_ruleset | controls score validation and match format mapping |
 | player1_id / player2_id | FK players | both must be registered tournament participants |
+| skipped_at | timestamptz nullable | preserves an unplayed final/playoff fixture skipped by round-robin completion |
 
-A fixture does not store status, winner, score, or `match_id`. Its result is the
-single `matches` row whose `fixture_id` points back to it. Odd-field rests are
-derived as the participant absent from that round rather than stored as fake
-fixtures. Future bracket wiring remains deferred.
+A fixture does not store result status, winner, score, or `match_id`. Its
+result is the single `matches` row whose `fixture_id` points back to it.
+`skipped_at` is operational history for an unplayed final-stage slot, never a
+match result. Odd-field rests are derived as the participant absent from that
+round rather than stored as fake fixtures. Future bracket wiring remains
+deferred.
 
 ### rating_history _(Phase 3d — implemented)_
 Persisted materialisation of the pure scoring function. It is a rebuildable
@@ -211,7 +215,9 @@ holder. A new holder closes the old reign at the deciding match time.
 - **Head-to-head**: per player-pair W–L over approved matches (filterable ranked/exhibition).
 - **Tournament standings** (round robin): W–L, game difference, head-to-head,
   then seed from fixtures→approved matches. A tie on wins crossing second/third
-  creates an on-court decider; final placement comes from the final and playoff.
+  creates an on-court decider. The director may make that table final or continue
+  to a final and third-place match; `completion_path` records which facts derive
+  the official placements.
 
 ## Points system (recommendation)
 Elo with K=32 and floor 100 uses 1000 as the internal entry baseline. Players

@@ -30,8 +30,8 @@ This is the short operational handover. Durable intent belongs in
   the leaderboard, matches, tournaments, and public profiles.
 - Admins can create a four-player round-robin tournament, seed its participants,
   replace a pre-play participant while preserving their seed, regenerate the
-  deterministic court schedule, record immutable results directly, and advance
-  through a qualification decider, final, and third-place match.
+  deterministic court schedule, record immutable results directly, and either
+  complete from standings or continue through a decider and full final stage.
 - Authenticated players can follow tournament details, live standings, fixtures,
   results, progress, cover photos, and the derived champion from `/tournaments`.
 - Admins can add, crop, resize, replace, or remove a tournament cover photo from
@@ -54,8 +54,7 @@ after that password update succeeds.
 
 | Migration | State |
 | --- | --- |
-| `20260709000000` through `20260710070000` | Applied to production (operator reported) |
-| `20260710090000_profile_settings_and_avatars.sql` through `20260710110000_tournament_draw_lock_and_emails.sql` | Ready to apply/finish in production |
+| `20260709000000` through `20260710120000` | Applied to production (operator reported) |
 
 ## Current blockers
 
@@ -66,11 +65,11 @@ after that password update succeeds.
 
 ## Next product slice
 
-Deploy the responsive tournament release, create the Ciabatta Qualifier, verify
-its exact six-match draw, configure the verified Resend sender, and rehearse the director workflow without committing
-a fake production result. After the event, add an append-only correction
-workflow and generalise setup beyond the first four-player round robin. Mid-event
-withdrawals remain intentionally deferred.
+Apply the pending migrations and use the explicit standings-completion path for
+the current qualifier if its unplayed final stage is no longer needed. Next,
+derive stable 1st–4th result-email inputs across both completion paths before
+wiring post-tournament delivery. Append-only corrections, generalised setup,
+and mid-event withdrawals remain deferred.
 
 ## Documentation rule
 

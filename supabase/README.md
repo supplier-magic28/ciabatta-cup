@@ -51,6 +51,9 @@ Database migrations for Ciabatta Cup. The authoritative data model is
 - `20260710110000_tournament_draw_lock_and_emails.sql` adds the irreversible
   draw lock, database-enforced field/draw freezing, and the idempotent
   lifecycle-email delivery ledger (ADR-0022).
+- `20260710120000_optional_round_robin_completion.sql` adds the explicit
+  completion path, preserved skipped fixtures, and the atomic admin-only
+  round-robin completion RPC (ADR-0023).
 
 The tournament participant table is editable only before the first tournament
 result. The admin console's replacement action preserves the selected seed and

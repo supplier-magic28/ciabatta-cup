@@ -203,7 +203,7 @@ export async function createTournament(
       counts_as: "ranked",
       group_ruleset: "short_first_to_3",
       playoff_ruleset: "standard_set_tiebreak_6_all",
-      rules_note: "Top two play the final. Bottom two play for third. A tie across second and third uses a first-to-3 decider.",
+      rules_note: "After group play, the director may make the standings final or continue to a final and third-place match. A tie across second and third uses a first-to-3 decider.",
       created_by: admin.id,
     })
     .select("id")
@@ -420,10 +420,11 @@ export async function recordTournamentResult(
   const supabase = await createClient();
   const { data: fixture } = await supabase
     .from("fixtures")
-    .select("id, tournament_id, player1_id, player2_id, ruleset")
+    .select("id, tournament_id, player1_id, player2_id, ruleset, skipped_at")
     .eq("id", fixtureId)
     .single();
   if (!fixture) return { ok: false, error: "Fixture not found." };
+  if (fixture.skipped_at) return { ok: false, error: "That fixture was skipped when the tournament completed." };
 
   const validated = validateTournamentScore(fixture.ruleset as TournamentRuleset, fixture.player1_id, fixture.player2_id, {
     p1Games, p2Games, tiebreakP1, tiebreakP2,
@@ -506,7 +507,11 @@ export async function advanceTournament(
 
   if (finalFixtures.length > 0) {
     if (finalFixtures.every((fixture) => state.resultByFixture.has(fixture.id))) {
-      await state.supabase.from("tournaments").update({ status: "completed" }).eq("id", tournamentId);
+      const { error } = await state.supabase
+        .from("tournaments")
+        .update({ status: "completed", completion_path: "final_stage" })
+        .eq("id", tournamentId);
+      if (error) return { ok: false, error: "Couldn't complete the tournament." };
       invalidateTournament(tournamentId);
       return { ok: true, message: "Tournament complete. The champion is official." };
     }
@@ -552,4 +557,26 @@ export async function advanceTournament(
   if (error) return { ok: false, error: "Couldn't create the final stage." };
   invalidateTournament(tournamentId);
   return { ok: true, message: "The final and third-place match are ready." };
+}
+
+export async function completeTournamentFromStandings(
+  _previous: TournamentActionState | undefined,
+  formData: FormData,
+): Promise<TournamentActionState> {
+  if (!(await requireAdmin())) return FORBIDDEN;
+  const tournamentId = textValue(formData, "tournamentId");
+  if (!tournamentId) return { ok: false, error: "Tournament not found." };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("complete_tournament_from_standings", {
+    p_tournament_id: tournamentId,
+  });
+  if (error) {
+    const message = String(error.message ?? "");
+    if (message.includes("round-robin")) return { ok: false, error: "Complete every round-robin fixture first." };
+    if (message.includes("qualification decider")) return { ok: false, error: "Complete the qualification decider first." };
+    if (message.includes("final stage")) return { ok: false, error: "The final stage has started, so standings can no longer end the tournament." };
+    return { ok: false, error: "Couldn't complete the tournament from standings." };
+  }
+  invalidateTournament(tournamentId);
+  return { ok: true, message: "Tournament complete. The round-robin standings are final." };
 }
