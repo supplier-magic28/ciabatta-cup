@@ -50,5 +50,13 @@ export async function rebuildRatingCache(): Promise<void> {
     })),
   });
 
-  if (error) throw new Error("Couldn't write the rebuilt rating cache.");
+  if (error) {
+    console.error("Rating cache replacement RPC failed", {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
+    throw new Error(`Couldn't write the rebuilt rating cache: ${error.message}`);
+  }
 }

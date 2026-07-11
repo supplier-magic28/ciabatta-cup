@@ -41,6 +41,9 @@ describe("rating cache materialization", () => {
       { playerId: "bob", rating: 1050, rank: 2, played: 0, won: 0, lost: 0 },
     ]);
     expect(cache.ratingHistory).toEqual([]);
+    expect(cache.reigns).toEqual([
+      { playerId: "alice", startedAt: "2026-07-11T04:00:00Z", endedAt: null },
+    ]);
   });
 
   it("keeps players with no ranked results at zero and materializes history", () => {
