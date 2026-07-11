@@ -126,7 +126,7 @@ export default async function PlayerProfilePage({
             <div>
               <p className={`${eyebrow} text-green-muted`}>Rank</p>
               <p className="font-mono text-2xl font-semibold text-chartreuse">
-                {standing && standing.played > 0 ? `#${standing.rank}` : "--"}
+                {standing && standing.rating > 0 ? `#${standing.rank}` : "--"}
               </p>
             </div>
             <div>

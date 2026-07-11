@@ -1,19 +1,19 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionPlayer } from "@/lib/auth/session";
 import { displayName } from "@/lib/auth/displayName";
 import { buildRatingCache, type ScoringMatchRow, type TournamentPlacementRow } from "@/lib/scoring";
+import {
+  deriveLeaderboardHistory,
+  type LeaderboardFixtureRow,
+  type LeaderboardMatchRow,
+  type LeaderboardPlacementRow,
+  type LeaderboardTournamentRow,
+} from "@/lib/leaderboard/history";
 import { createClient } from "@/lib/supabase/server";
 import { LoafBadge } from "@/components/brand/LoafBadge";
+import { ExpandableLeaderboard, type LeaderboardPlayer } from "@/components/leaderboard/ExpandableLeaderboard";
 import { SiteHeader } from "@/components/layout/SiteHeader";
-import { PlayerAvatar } from "@/components/players/PlayerAvatar";
 import { ReignSummary } from "@/components/players/ReignSummary";
-
-function movementLabel(change: number): { label: string; color: string } {
-  if (change > 0) return { label: `UP ${change}`, color: "text-green" };
-  if (change < 0) return { label: `DOWN ${Math.abs(change)}`, color: "text-rust" };
-  return { label: "--", color: "text-muted" };
-}
 
 /**
  * The real board (design screen 01). It reads match facts and derives the
@@ -24,15 +24,23 @@ export default async function Home() {
   if (!sessionPlayer) redirect("/sign-in");
 
   const supabase = await createClient();
-  const [{ data: playerRows }, { data: matchRows }, { data: placementRows }] = await Promise.all([
+  const [
+    { data: playerRows },
+    { data: matchRows },
+    { data: placementRows },
+    { data: tournamentRows },
+    { data: fixtureRows },
+  ] = await Promise.all([
     supabase
       .from("players")
       .select("id, first_name, last_name, email, nickname, use_nickname, avatar_url, status")
       .order("first_name", { ascending: true }),
     supabase
       .from("matches")
-      .select("id, player1_id, player2_id, winner_id, type, status, played_at, tournament_id"),
-    supabase.from("tournament_placements").select("player_id, points, awarded_at"),
+      .select("id, player1_id, player2_id, winner_id, type, status, played_at, tournament_id, fixture_id, match_sets(p1_games, p2_games)"),
+    supabase.from("tournament_placements").select("tournament_id, player_id, placement, points, awarded_at"),
+    supabase.from("tournaments").select("id, counts_as"),
+    supabase.from("fixtures").select("id, ruleset"),
   ]);
 
   const players = (playerRows ?? []).map((player) => ({
@@ -55,13 +63,35 @@ export default async function Home() {
   const standings = cache.rankings
     .filter((ranking) => activePlayerIds.has(ranking.playerId))
     .map((ranking, index) => ({ ...ranking, rank: index + 1 }));
-  const latestHistory = new Map<string, (typeof cache.ratingHistory)[number]>();
-  for (const entry of cache.ratingHistory) latestHistory.set(entry.playerId, entry);
+  const histories = deriveLeaderboardHistory(
+    players.map((player) => player.id),
+    (matchRows ?? []) as LeaderboardMatchRow[],
+    (placementRows ?? []) as LeaderboardPlacementRow[],
+    (tournamentRows ?? []) as LeaderboardTournamentRow[],
+    (fixtureRows ?? []) as LeaderboardFixtureRow[],
+  );
 
   const currentReign = cache.reigns.find((reign) => reign.endedAt === null);
   const holderName = currentReign
     ? playerById.get(currentReign.playerId)?.name ?? "Current holder"
     : "No holder yet";
+  const leaderboardPlayers: LeaderboardPlayer[] = standings.map((standing) => {
+    const player = playerById.get(standing.playerId);
+    return {
+      playerId: standing.playerId,
+      name: player?.name ?? "Unknown player",
+      avatarUrl: player?.avatar_url ?? null,
+      rank: standing.rank,
+      rating: standing.rating,
+      isHolder: currentReign?.playerId === standing.playerId,
+      history: histories.get(standing.playerId) ?? {
+        trophies: 0,
+        rankedMatches: { won: 0, lost: 0 },
+        rankedSets: { won: 0, lost: 0 },
+        tournamentMatches: { won: 0, lost: 0 },
+      },
+    };
+  });
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 pb-10 pt-5 sm:px-6">
@@ -92,63 +122,7 @@ export default async function Home() {
           <p className="mt-1 font-body text-sm text-muted">Invite the players, then log the first ranked result.</p>
         </section>
       ) : (
-        <ol className="flex flex-col gap-3">
-          {standings.map((standing) => {
-            const player = playerById.get(standing.playerId);
-            const name = player?.name ?? "Unknown player";
-            const history = latestHistory.get(standing.playerId);
-            const movement = movementLabel(history ? history.rankBefore - history.rankAfter : 0);
-            const isHolder = currentReign?.playerId === standing.playerId;
-            const displayRank = standing.rating > 0 ? standing.rank : "--";
-
-            return (
-              <li
-                key={standing.playerId}
-                className={
-                  isHolder
-                    ? "border-2 border-ink bg-ink p-4 shadow-[4px_4px_0_var(--color-green)]"
-                    : "border-2 border-ink bg-surface p-4 shadow-[3px_3px_0_var(--color-ink)]"
-                }
-              >
-                <div className="grid grid-cols-[2.25rem_1fr_auto] items-center gap-3 sm:grid-cols-[3rem_1fr_auto_auto] sm:gap-5">
-                  <span className={`font-heading text-2xl font-bold ${isHolder ? "text-chartreuse" : "text-ink"}`}>
-                    {displayRank}
-                  </span>
-                  <Link href={`/players/${standing.playerId}`} className="flex min-w-0 items-center gap-3">
-                    <PlayerAvatar
-                      name={name}
-                      avatarUrl={player?.avatar_url ?? null}
-                      size={40}
-                      className={isHolder ? "bg-crust text-crumb" : undefined}
-                    />
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className={`truncate font-heading text-base font-bold ${isHolder ? "text-cream" : "text-ink"}`}>
-                          {name}
-                        </p>
-                        {isHolder && <LoafBadge size={25} />}
-                      </div>
-                      <p className={`font-mono text-[11px] ${isHolder ? "text-green-muted" : "text-muted"}`}>
-                        {standing.won}-{standing.lost} ranked record
-                      </p>
-                    </div>
-                  </Link>
-                  <span className={`hidden font-mono text-[10px] uppercase tracking-[1px] sm:block ${isHolder ? "text-green-muted" : movement.color}`}>
-                    {movement.label}
-                  </span>
-                  <div className="text-right">
-                    <p className={`font-mono text-xl font-semibold ${isHolder ? "text-chartreuse" : "text-ink"}`}>
-                      {standing.rating}
-                    </p>
-                    <p className={`font-mono text-[9px] uppercase tracking-[1.5px] ${isHolder ? "text-green-muted" : "text-muted"}`}>
-                      points
-                    </p>
-                  </div>
-                </div>
-              </li>
-            );
-          })}
-        </ol>
+        <ExpandableLeaderboard players={leaderboardPlayers} />
       )}
     </main>
   );

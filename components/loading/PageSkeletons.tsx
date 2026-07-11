@@ -43,7 +43,7 @@ export function LeaderboardSkeleton() {
       <HeaderSkeleton />
       <Skeleton className="mb-7 h-24 w-full border-2 border-ink" />
       <Skeleton className="mb-3 h-4 w-32" />
-      <Skeleton className="mb-6 h-10 w-56" />
+      <div className="mb-6 flex items-end justify-between gap-4"><Skeleton className="h-10 w-56" /><Skeleton className="h-4 w-40" /></div>
       <ListCards count={4} />
     </LoadingRegion>
   );

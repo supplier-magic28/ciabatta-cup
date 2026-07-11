@@ -7,8 +7,8 @@
  * takes — no data migration.
  */
 
-/** Internal Elo baseline when a player enters their first approved ranked match. */
-export const START_RATING = 1000;
+/** Every player enters ordinary ranked Elo at zero. */
+export const START_RATING = 0;
 
 /** Public points before a player has completed an approved ranked match. */
 export const UNRANKED_POINTS = 0;
@@ -16,8 +16,8 @@ export const UNRANKED_POINTS = 0;
 /** Elo K-factor — the maximum swing from a single evenly-matched result. */
 export const K_FACTOR = 32;
 
-/** Ratings are clamped to this hard lower bound. */
-export const RATING_FLOOR = 100;
+/** Ratings never display below zero. */
+export const RATING_FLOOR = 0;
 
 /** Elo divisor: a 400-point gap ⇒ the favourite is expected to score ~0.91. */
 export const ELO_DIVISOR = 400;

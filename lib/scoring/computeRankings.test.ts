@@ -30,14 +30,14 @@ describe("computeRankings — Elo engine", () => {
     expect(computeRankings([])).toEqual({ rankings: [], ratingHistory: [], reigns: [] });
   });
 
-  it("everyone starts at 1000 with K=32 — a single win is +16 / -16", () => {
+  it("everyone starts at zero with K=32 and losses clamp at zero", () => {
     const { rankings } = computeRankings([ranked("m1", "alice", "bob", "2026-07-01T10:00:00Z")]);
 
-    expect(START_RATING).toBe(1000);
+    expect(START_RATING).toBe(0);
     expect(K_FACTOR).toBe(32);
     expect(rankings).toEqual([
-      { playerId: "alice", rating: 1016, rank: 1, played: 1, won: 1, lost: 0 },
-      { playerId: "bob", rating: 984, rank: 2, played: 1, won: 0, lost: 1 },
+      { playerId: "alice", rating: 16, rank: 1, played: 1, won: 1, lost: 0 },
+      { playerId: "bob", rating: 0, rank: 2, played: 1, won: 0, lost: 1 },
     ]);
   });
 
@@ -45,13 +45,13 @@ describe("computeRankings — Elo engine", () => {
     const { ratingHistory } = computeRankings([ranked("m1", "alice", "bob", "2026-07-01T10:00:00Z")]);
 
     expect(ratingHistory).toEqual([
-      { matchId: "m1", playerId: "alice", pointsBefore: 1000, pointsAfter: 1016, rankBefore: 1, rankAfter: 1, playedAt: "2026-07-01T10:00:00Z" },
-      { matchId: "m1", playerId: "bob", pointsBefore: 1000, pointsAfter: 984, rankBefore: 2, rankAfter: 2, playedAt: "2026-07-01T10:00:00Z" },
+      { matchId: "m1", playerId: "alice", pointsBefore: 0, pointsAfter: 16, rankBefore: 1, rankAfter: 1, playedAt: "2026-07-01T10:00:00Z" },
+      { matchId: "m1", playerId: "bob", pointsBefore: 0, pointsAfter: 0, rankBefore: 2, rankAfter: 2, playedAt: "2026-07-01T10:00:00Z" },
     ]);
   });
 
   it("weights by rating gap — an underdog win pays more, and can flip the rank", () => {
-    // alice beats carol first (alice 1016), then the 1000-rated bob beats the
+    // alice beats carol first (alice 16), then the zero-rated bob beats the
     // favourite alice: bob gains 17 (>16), alice loses 17, and bob overtakes.
     const { rankings, ratingHistory } = computeRankings([
       ranked("m1", "alice", "carol", "2026-07-01T10:00:00Z"),
@@ -59,15 +59,15 @@ describe("computeRankings — Elo engine", () => {
     ]);
 
     expect(rankings).toEqual([
-      { playerId: "bob", rating: 1017, rank: 1, played: 1, won: 1, lost: 0 },
-      { playerId: "alice", rating: 999, rank: 2, played: 2, won: 1, lost: 1 },
-      { playerId: "carol", rating: 984, rank: 3, played: 1, won: 0, lost: 1 },
+      { playerId: "bob", rating: 17, rank: 1, played: 1, won: 1, lost: 0 },
+      { playerId: "alice", rating: 0, rank: 2, played: 2, won: 1, lost: 1 },
+      { playerId: "carol", rating: 0, rank: 3, played: 1, won: 0, lost: 1 },
     ]);
 
     const bobRow = ratingHistory.find((h) => h.matchId === "m2" && h.playerId === "bob");
     const aliceRow = ratingHistory.find((h) => h.matchId === "m2" && h.playerId === "alice");
-    expect(bobRow).toMatchObject({ pointsBefore: 1000, pointsAfter: 1017, rankBefore: 2, rankAfter: 1 });
-    expect(aliceRow).toMatchObject({ pointsBefore: 1016, pointsAfter: 999, rankBefore: 1, rankAfter: 2 });
+    expect(bobRow).toMatchObject({ pointsBefore: 0, pointsAfter: 17, rankBefore: 2, rankAfter: 1 });
+    expect(aliceRow).toMatchObject({ pointsBefore: 16, pointsAfter: 0, rankBefore: 1, rankAfter: 2 });
   });
 
   it("keeps exhibition-only and pending-only players at zero points", () => {
@@ -82,8 +82,8 @@ describe("computeRankings — Elo engine", () => {
     expect(ratingHistory.every((h) => h.matchId === "m1")).toBe(true);
 
     const rated = Object.fromEntries(rankings.map((r) => [r.playerId, r]));
-    expect(rated.alice).toMatchObject({ rating: 1016, played: 1, won: 1, lost: 0 });
-    expect(rated.bob).toMatchObject({ rating: 984, played: 1, won: 0, lost: 1 });
+    expect(rated.alice).toMatchObject({ rating: 16, played: 1, won: 1, lost: 0 });
+    expect(rated.bob).toMatchObject({ rating: 0, played: 1, won: 0, lost: 1 });
     // Exhibition- and pending-only participants remain unranked at zero points.
     for (const id of ["carol", "dave", "eve", "frank"]) {
       expect(rated[id]).toMatchObject({ rating: 0, played: 0, won: 0, lost: 0 });
@@ -135,11 +135,11 @@ describe("computeRankings — Elo engine", () => {
     ]);
 
     expect(second).not.toEqual(first);
-    expect(first.rankings.find((r) => r.playerId === "A")!.rating).toBe(1016);
-    expect(second.rankings.find((r) => r.playerId === "A")!.rating).toBe(1017);
+    expect(first.rankings.find((r) => r.playerId === "A")!.rating).toBe(16);
+    expect(second.rankings.find((r) => r.playerId === "A")!.rating).toBe(17);
   });
 
-  it("never lets a rating fall below the 100 floor (defensive clamp)", () => {
+  it("never lets a rating fall below the zero floor", () => {
     // With K=32 the floor is rarely reached organically, so this asserts the
     // invariant over a lopsided run: one victim loses to a fresh opponent each time.
     const matches: Match[] = [];
@@ -149,10 +149,10 @@ describe("computeRankings — Elo engine", () => {
     }
     const { rankings, ratingHistory } = computeRankings(matches);
 
-    expect(RATING_FLOOR).toBe(100);
+    expect(RATING_FLOOR).toBe(0);
     for (const h of ratingHistory) expect(h.pointsAfter).toBeGreaterThanOrEqual(RATING_FLOOR);
     for (const r of rankings) expect(r.rating).toBeGreaterThanOrEqual(RATING_FLOOR);
-    expect(rankings.find((r) => r.playerId === "victim")!.rating).toBeLessThan(START_RATING);
+    expect(rankings.find((r) => r.playerId === "victim")!.rating).toBe(0);
   });
 
   it("produces integer ratings and a deterministic, repeatable result", () => {

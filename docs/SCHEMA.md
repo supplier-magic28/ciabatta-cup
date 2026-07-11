@@ -66,7 +66,7 @@ with their Auth identity.
 | role | enum: player, admin | admin = tournament director |
 | status | enum: invited, active, inactive | invited = signup link sent, not yet registered |
 | invited_at / joined_at | timestamptz | |
-| rating_points | int, default 0 | **denormalised cache**; zero until the first approved ranked match, then current Elo rebuilt from facts (ADR-0003, ADR-0014) |
+| rating_points | int, default 0 | **denormalised cache**; zero-based ordinary Elo plus cumulative ranked tournament awards (ADR-0003, ADR-0025) |
 
 _(`password_hash` from the original handoff is intentionally removed — see ADR-0002.)_
 
@@ -236,13 +236,12 @@ holder. A new holder closes the old reign at the deciding match time.
   matches do not move Elo; completed tournament placements add fixed cumulative
   awards to the player's existing ladder rating.
 
-## Points system (recommendation)
-Elo with K=32 and floor 100 uses 1000 as the internal entry baseline. Players
-display zero points and no rank until their first approved ranked match; that
-result publishes their Elo. Only `ranked` + `approved` matches move points. Keep
-it a pure function of match facts (materialised into `rating_history`) so it can
-be re-run/rebalanced later — the group will want to argue about the algorithm.
-This is `lib/scoring/computeRankings` (ADR-0014).
+## Points system
+Ordinary Elo uses K=32 with a zero entry baseline and zero floor. An equal first
+match gives the winner 16 and leaves the loser at zero. Only non-tournament
+`ranked` + `approved` matches move Elo; ranked tournament placements add fixed
+100/50/20/10 awards directly. The calculation stays pure and rebuildable from
+facts in `lib/scoring/computeRankings` and `buildRatingCache` (ADR-0025).
 
 ## Auth & permissions
 - **Supabase Auth** (email + password managed by Supabase; **no `password_hash` in our schema**). `players.id` = `auth.users.id`. Invited players are created via Supabase Auth invite (tokenised link); `players.status`: invited → active on registration. See ADR-0002.

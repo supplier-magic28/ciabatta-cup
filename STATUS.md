@@ -39,8 +39,11 @@ This is the short operational handover. Durable intent belongs in
 - Admins can permanently lock a reviewed draw, automatically send retry-safe
   locked-in emails, and explicitly send game-day email without duplicating
   successful deliveries.
-- Completed tournaments award 100/50/20/10 placement points without applying
-  per-match Elo. Admins can send each player an idempotent placement email with
+- The ladder starts at zero: ordinary ranked matches use zero-floor Elo and
+  completed tournaments award 100/50/20/10 without applying per-match Elo.
+  Compact rows show trophies, holder status, and points; expandable history
+  separates ordinary matches, full sets, and ranked tournament matches.
+- Admins can send each tournament player an idempotent placement email with
   their complete personal match recap.
 - Every current navigation surface has a route-shaped loading boundary and a
   shared retryable error state. Mutations acknowledge clicks immediately with
@@ -67,15 +70,13 @@ after that password update succeeds.
   display have been exercised successfully.
 - The credentialed ranked submission, opponent confirmation, admin approval,
   cache rebuild, leaderboard, and profile production loop remains unverified.
-- The completed qualifier has four saved placement awards, but production's
-  safe-update guard rejected the rating RPC's intentional whole-table delete.
-  Migration `20260710140000` is now applied with explicit predicates; no
-  result-email claims were made by the failed attempts.
+- Migration `20260710140000` resolved production's safe-update rejection for
+  intentional rating-cache replacement.
 
 ## Next product slice
 
-Retry the completed qualifier's result-email action, then verify the
-1100/1050/1020/1010 ladder and four personal recaps.
+Deploy the zero-based ladder, run the existing admin rating rebuild once, then
+verify the qualifier at 100/50/20/10 and its expandable player histories.
 Append-only corrections, generalised setup, and mid-event withdrawals remain
 deferred.
 

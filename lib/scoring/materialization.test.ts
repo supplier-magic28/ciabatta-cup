@@ -37,8 +37,8 @@ describe("rating cache materialization", () => {
       { player_id: "bob", points: 50, awarded_at: "2026-07-11T04:00:00Z" },
     ]);
     expect(cache.rankings).toEqual([
-      { playerId: "alice", rating: 1100, rank: 1, played: 0, won: 0, lost: 0 },
-      { playerId: "bob", rating: 1050, rank: 2, played: 0, won: 0, lost: 0 },
+      { playerId: "alice", rating: 100, rank: 1, played: 0, won: 0, lost: 0 },
+      { playerId: "bob", rating: 50, rank: 2, played: 0, won: 0, lost: 0 },
     ]);
     expect(cache.ratingHistory).toEqual([]);
     expect(cache.reigns).toEqual([
@@ -50,18 +50,30 @@ describe("rating cache materialization", () => {
     const cache = buildRatingCache(["alice", "bob", "carol"], rows);
 
     expect(cache.rankings).toEqual([
-      { playerId: "alice", rating: 1016, rank: 1, played: 1, won: 1, lost: 0 },
-      { playerId: "bob", rating: 984, rank: 2, played: 1, won: 0, lost: 1 },
+      { playerId: "alice", rating: 16, rank: 1, played: 1, won: 1, lost: 0 },
+      { playerId: "bob", rating: 0, rank: 2, played: 1, won: 0, lost: 1 },
       { playerId: "carol", rating: 0, rank: 3, played: 0, won: 0, lost: 0 },
     ]);
     expect(cache.ratingPoints).toEqual([
-      { playerId: "alice", rating: 1016 },
-      { playerId: "bob", rating: 984 },
+      { playerId: "alice", rating: 16 },
+      { playerId: "bob", rating: 0 },
       { playerId: "carol", rating: 0 },
     ]);
     expect(cache.ratingHistory).toHaveLength(2);
     expect(cache.reigns).toEqual([
       { playerId: "alice", startedAt: "2026-07-01T10:00:00Z", endedAt: null },
+    ]);
+  });
+
+  it("adds tournament awards cumulatively to zero-based ordinary Elo", () => {
+    const cache = buildRatingCache(["alice", "bob"], rows, [
+      { player_id: "alice", points: 100, awarded_at: "2026-07-11T04:00:00Z" },
+      { player_id: "alice", points: 100, awarded_at: "2026-08-11T04:00:00Z" },
+      { player_id: "bob", points: 50, awarded_at: "2026-08-11T04:00:00Z" },
+    ]);
+    expect(cache.ratingPoints).toEqual([
+      { playerId: "alice", rating: 216 },
+      { playerId: "bob", rating: 50 },
     ]);
   });
 

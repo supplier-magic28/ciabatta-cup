@@ -1,5 +1,4 @@
 import { UNRANKED_POINTS } from "./constants";
-import { START_RATING } from "./constants";
 import { computeRankings } from "./computeRankings";
 import type {
   CiabattaReign,
@@ -78,9 +77,7 @@ export function buildRatingCache(playerIds: string[], rows: ScoringMatchRow[], a
     )
     .map((ranking) => {
       const award = awardByPlayer.get(ranking.playerId) ?? 0;
-      return award > 0
-        ? { ...ranking, rating: (ranking.rating || START_RATING) + award }
-        : ranking;
+      return award > 0 ? { ...ranking, rating: ranking.rating + award } : ranking;
     })
     .sort((a, b) => b.rating - a.rating || a.playerId.localeCompare(b.playerId))
     .map((ranking, index) => ({ ...ranking, rank: index + 1 }));

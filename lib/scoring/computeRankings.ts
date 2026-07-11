@@ -21,13 +21,13 @@ import type { CiabattaReign, Match, PlayerRating, RatingHistoryEntry, ScoringRes
  * Scoring model (ADR-0007):
  *   - Only non-tournament `ranked` + `approved` matches move Elo.
  *   - The roster is every participant of *any* input match; a player with no
- *     ranked+approved match displays zero while retaining the internal Elo
- *     baseline for their first ranked result.
+ *     ranked+approved match displays zero and begins their first ranked result
+ *     from that same zero baseline.
  *   - Matches are applied in chronological order (`playedAt`, then `id`), so the
  *     result is independent of input array order and a late-approved old match
  *     slots into its correct place on the next run ("recompute forward").
- *   - Standard Elo (K=32, start 1000), each updated rating rounded to an integer
- *     and clamped to the 100 floor. Per-match rounding keeps the history an exact
+ *   - Zero-based Elo (K=32), each updated rating rounded to an integer and
+ *     clamped at zero. Per-match rounding keeps the history an exact
  *     integer chain (each `pointsBefore` equals the prior `pointsAfter`).
  */
 export function computeRankings(matches: Match[]): ScoringResult {
@@ -35,8 +35,7 @@ export function computeRankings(matches: Match[]): ScoringResult {
   const ratedPlayers = new Set<string>();
   const record = new Map<string, { played: number; won: number; lost: number }>();
 
-  // Internal roster: every participant is ready at the Elo baseline, but that
-  // value is not public until their first approved ranked result.
+  // Internal roster: every participant begins at the zero Elo baseline.
   for (const match of matches) {
     for (const playerId of [match.player1Id, match.player2Id]) {
       if (!ratings.has(playerId)) {

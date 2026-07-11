@@ -19,7 +19,7 @@ pattern changes, update this guide and the component inventory in the same task.
 
 | Handoff screen | Production route | State | Current gap |
 | --- | --- | --- | --- |
-| 01 Leaderboard | `/` | Partial | Holder history, reign duration, profile links, earned ratings, zero-point unranked states, records, movement, and a layout-matched loading state are live; filters, last-five form, and side rail are pending. |
+| 01 Leaderboard | `/` | Partial | Holder history, zero-based points, repeated trophy markers, profile links, expandable ordinary match/full-set/tournament records, global history expansion, and a layout-matched loading state are live; filters, last-five form, and side rail are pending. |
 | 02 Player profile | `/players/[playerId]` | Partial | Hero, records, points history, head-to-head, match log, effective nickname display, avatar rendering, and profile-shaped loading are live; richer trend interaction is pending. |
 | 03 Log match | `/matches`, `/matches/new` | Partial | Submission, confirmation, history, score validation, stable pending actions, and route-shaped loading are live; the flow is not yet a full visual recreation of every handoff state. |
 | 04 Tournaments | `/tournaments`, `/tournaments/[tournamentId]` | Implemented | Event cards, optional cropped cover photos, live standings, qualification state, round/court schedule, results, final rules, champion, and responsive loading boards are live. Self-entry and multi-structure filtering remain deferred. |

@@ -9,6 +9,7 @@ of Done (`CLAUDE.md`).
 
 **Brand**
 - `brand/LoafBadge` — the Ciabatta loaf (SVG), the current-holder trophy motif.
+- `brand/TrophyBadge` — compact earned-tournament trophy icon used in ladder rows.
 - `brand/Wordmark` — "CIABATTA CUP" wordmark, `tone` light/dark.
 
 **UI primitives**
@@ -32,6 +33,10 @@ of Done (`CLAUDE.md`).
 **Layout**
 - `layout/SiteHeader` — shared wordmark and primary navigation for the ladder,
   tournaments, matches, admin tools, and sign-out.
+
+**Leaderboard**
+- `leaderboard/ExpandableLeaderboard` — compact trophy/holder/points rows with
+  accessible per-player history toggles and one expand/collapse-all control.
 
 **Auth**
 - `auth/SignInForm` — email + password sign-in (client, `useActionState`).
