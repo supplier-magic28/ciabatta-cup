@@ -59,6 +59,7 @@ after that password update succeeds.
 | --- | --- |
 | `20260709000000` through `20260710120000` | Applied to production (operator reported) |
 | `20260710130000_tournament_placement_awards.sql` | Applied to production (operator verified four qualifier placements) |
+| `20260710140000_safe_rating_cache_rebuild.sql` | Ready to apply in production |
 
 ## Current blockers
 
@@ -66,17 +67,17 @@ after that password update succeeds.
   display have been exercised successfully.
 - The credentialed ranked submission, opponent confirmation, admin approval,
   cache rebuild, leaderboard, and profile production loop remains unverified.
-- The completed qualifier has four saved placement awards, but its first
-  production rating-cache rebuild failed inside the replacement RPC. Detailed
-  database error logging is being deployed before result-email delivery is
-  retried; no result-email claims were made by the failed attempt.
+- The completed qualifier has four saved placement awards, but production's
+  safe-update guard rejected the rating RPC's intentional whole-table delete.
+  Migration `20260710140000` adds explicit predicates; no result-email claims
+  were made by the failed attempts.
 
 ## Next product slice
 
-Retry the completed qualifier's result-email action after inspecting the
-now-detailed rating replacement error, then verify the 1100/1050/1020/1010
-ladder and four personal recaps. Append-only corrections, generalised setup,
-and mid-event withdrawals remain deferred.
+Apply migration `20260710140000`, retry the completed qualifier's result-email
+action, then verify the 1100/1050/1020/1010 ladder and four personal recaps.
+Append-only corrections, generalised setup, and mid-event withdrawals remain
+deferred.
 
 ## Documentation rule
 

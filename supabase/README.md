@@ -56,6 +56,9 @@ Database migrations for Ciabatta Cup. The authoritative data model is
   round-robin completion RPC (ADR-0023).
 - `20260710130000_tournament_placement_awards.sql` adds derived placement
   awards and the four idempotent result-email delivery kinds (ADR-0024).
+- `20260710140000_safe_rating_cache_rebuild.sql` makes the intentional
+  full-table rating-history and reign-cache replacements explicit with
+  `where true`, satisfying production safe-update enforcement.
 
 The tournament participant table is editable only before the first tournament
 result. The admin console's replacement action preserves the selected seed and

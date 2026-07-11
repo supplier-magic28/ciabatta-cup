@@ -205,7 +205,9 @@ cache, not a source of truth; match facts remain authoritative.
 
 Rebuilt from every approved ranked match whenever one is approved. This keeps
 the history correct even if an old result is approved late; the database write
-is a single cache-replacement transaction (ADR-0011).
+is a single cache-replacement transaction (ADR-0011). Its intentional
+whole-table replacement uses an explicit `where true` predicate so hosted
+safe-update enforcement accepts the operation without weakening that guard.
 
 ### ciabatta_reigns _(Phase 3e — implemented)_
 Rebuildable materialisation of #1 holder periods. The first row is created by
