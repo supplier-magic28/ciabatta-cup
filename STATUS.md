@@ -59,6 +59,9 @@ This is the short operational handover. Durable intent belongs in
 - Every current navigation surface has a route-shaped loading boundary and a
   shared retryable error state. Mutations acknowledge clicks immediately with
   stable, accessible pending controls while confirmed data waits for the server.
+- Nested match, player, cup, and admin routes expose consistent deterministic
+  parent links so users can return to Ladder, Matches, or Cups without relying
+  on browser history.
 - Match history, approvals, profiles, and tournament boards embed score sets in
   one Supabase read wave; browser performance budgets protect loading geometry,
   mobile overflow, reduced motion, and duplicate-submission prevention.

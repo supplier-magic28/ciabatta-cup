@@ -5,6 +5,8 @@ import { TournamentBoard } from "@/components/tournament/TournamentBoard";
 import { TournamentPhotoControl } from "@/components/tournament/TournamentPhotoControl";
 import { getSessionPlayer } from "@/lib/auth/session";
 import { loadTournamentBoard } from "@/lib/tournament/read";
+import { BackLink } from "@/components/ui/BackLink";
+import { PARENT_ROUTES } from "@/lib/navigation/parents";
 
 export default async function TournamentPage({ params }: { params: Promise<{ tournamentId: string }> }) {
   const player = await getSessionPlayer();
@@ -17,6 +19,7 @@ export default async function TournamentPage({ params }: { params: Promise<{ tou
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 pb-12 pt-5 sm:px-6">
       <SiteHeader role={player.role} active="tournaments" />
+      <BackLink href={PARENT_ROUTES.cups} className="mb-5">All cups</BackLink>
       <section className="mb-8 border-2 border-ink bg-green p-5 text-cream shadow-[4px_4px_0_var(--color-ink)] sm:p-7">
         <div className="grid gap-6 sm:grid-cols-[minmax(0,1fr)_minmax(320px,420px)] sm:items-start">
           <div>

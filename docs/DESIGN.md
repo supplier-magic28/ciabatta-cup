@@ -46,6 +46,9 @@ inside the existing auth shell; the callback route is `/auth/confirm`.
 - Keep the handoff's mobile-first information hierarchy, hard borders, solid
   offset shadows, and typography roles intact.
 - Dashed borders identify people and actions outside the Ciabatta ladder.
+- Nested workflows use the shared arrowed parent link: match history returns to
+  Ladder, result entry returns to Matches, and cup/player/admin details return
+  to their stable collection or Ladder route.
 - A new shared component requires an entry in `components/README.md`.
 - A changed route or screen state requires an update to the table above and to
   `STATUS.md` when it changes the current product capability.

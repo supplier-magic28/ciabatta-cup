@@ -380,7 +380,7 @@ export function LogMatchForm({
           </button>
         ) : (
           <Link
-            href="/"
+            href="/matches"
             className="font-mono text-[12px] uppercase tracking-[1.5px] text-muted"
           >
             Cancel

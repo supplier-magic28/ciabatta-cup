@@ -13,6 +13,8 @@ of Done (`CLAUDE.md`).
 - `brand/Wordmark` — "CIABATTA CUP" wordmark, `tone` light/dark.
 
 **UI primitives**
+- `ui/BackLink` — consistent arrowed link to a deterministic parent route,
+  with keyboard focus treatment for nested pages and workflows.
 - `ui/Button` — primary action button (green, 2px ink border, offset shadow);
   `loading` preserves its dimensions, disables repeat submission, and exposes
   an accessible pending label.

@@ -1,10 +1,11 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionPlayer } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { displayName } from "@/lib/auth/displayName";
 import { InvitePlayerForm } from "@/components/players/InvitePlayerForm";
 import { DeletePlayerButton } from "@/components/players/DeletePlayerButton";
+import { BackLink } from "@/components/ui/BackLink";
+import { PARENT_ROUTES } from "@/lib/navigation/parents";
 
 const eyebrow = "font-mono text-[10px] uppercase tracking-[2px] text-muted";
 
@@ -52,9 +53,7 @@ export default async function ManagePlayersPage() {
     <main className="mx-auto w-full max-w-lg flex-1 px-6 py-10">
       <header className="mb-6 flex items-center justify-between">
         <h1 className="font-heading text-2xl font-bold text-ink">Players</h1>
-        <Link href="/" className="font-mono text-[12px] uppercase tracking-[1.5px] text-muted">
-          ← Home
-        </Link>
+        <BackLink href={PARENT_ROUTES.ladder}>Ladder</BackLink>
       </header>
 
       <ul className="mb-8 flex flex-col gap-3">

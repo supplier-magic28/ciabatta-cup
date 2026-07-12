@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionPlayer } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
@@ -7,6 +6,8 @@ import { formatScore } from "@/lib/match/score";
 import { indexEmbeddedScoreSets } from "@/lib/match/embeddedSets";
 import { ApprovalActions } from "@/components/match/ApprovalActions";
 import { RebuildRatingsButton } from "@/components/match/RebuildRatingsButton";
+import { BackLink } from "@/components/ui/BackLink";
+import { PARENT_ROUTES } from "@/lib/navigation/parents";
 
 const eyebrow = "font-mono text-[10px] uppercase tracking-[2px] text-muted";
 
@@ -49,9 +50,7 @@ export default async function ApprovalsPage() {
           <h1 className="font-heading text-2xl font-bold text-ink">Approvals</h1>
           <RebuildRatingsButton />
         </div>
-        <Link href="/" className="font-mono text-[12px] uppercase tracking-[1.5px] text-muted">
-          ← Home
-        </Link>
+        <BackLink href={PARENT_ROUTES.ladder}>Ladder</BackLink>
       </header>
 
       {rows.length === 0 ? (

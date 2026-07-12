@@ -7,6 +7,8 @@ import { TournamentLifecycleActions } from "@/components/tournament/TournamentLi
 import { getSessionPlayer } from "@/lib/auth/session";
 import { planFinalStage } from "@/lib/tournament/logic";
 import { loadActiveTournamentPlayers, loadTournamentBoard } from "@/lib/tournament/read";
+import { BackLink } from "@/components/ui/BackLink";
+import { PARENT_ROUTES } from "@/lib/navigation/parents";
 
 export default async function ManageTournamentPage({ params }: { params: Promise<{ tournamentId: string }> }) {
   const admin = await getSessionPlayer();
@@ -64,7 +66,7 @@ export default async function ManageTournamentPage({ params }: { params: Promise
         </div>
         <div className="flex gap-4 font-mono text-[10px] uppercase text-muted">
           <Link href={`/tournaments/${tournamentId}`}>Player view</Link>
-          <Link href="/tournaments">All cups</Link>
+          <BackLink href={PARENT_ROUTES.cups}>All cups</BackLink>
         </div>
       </header>
 
