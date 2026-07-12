@@ -91,7 +91,6 @@ export default async function Home() {
         tournamentMatches: { won: 0, lost: 0 },
         externalMatches: { won: 0, lost: 0 },
       },
-      showExternalHistory: standing.playerId === sessionPlayer.id,
     };
   });
   const recentMatches = (matchRows ?? []).filter((match) => match.status === "approved").slice().sort((a, b) => b.played_at.localeCompare(a.played_at)).slice(0, 8);
