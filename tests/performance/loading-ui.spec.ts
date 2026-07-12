@@ -11,6 +11,7 @@ import {
   LeaderboardSkeleton,
   ProfileSkeleton,
   ProfileSettingsSkeleton,
+  ProfileTabSkeleton,
   TournamentBoardSkeleton,
   TournamentListSkeleton,
 } from "../../components/loading/PageSkeletons";
@@ -50,6 +51,7 @@ const skeletons = [
   ["form", createElement(FormPageSkeleton)],
   ["profile", createElement(ProfileSkeleton)],
   ["profile-settings", createElement(ProfileSettingsSkeleton)],
+  ["profile-tab", createElement(ProfileTabSkeleton)],
   ["tournaments", createElement(TournamentListSkeleton)],
   ["tournament-board", createElement(TournamentBoardSkeleton)],
 ] as const;

@@ -87,6 +87,9 @@ of Done (`CLAUDE.md`).
   tile.
 
 **Profile**
+- `profile/ProfileTabs` — routed Settings, Streak, and History segmented tabs.
+- `profile/StreakTracker` — 7/30-day tennis-ball tracker, streak statistics,
+  and same-day manual mark control.
 - `profile/ProfileSettingsForm` — self-owned nickname preference and circular
   avatar crop/upload settings with stable pending feedback.
 

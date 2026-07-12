@@ -35,6 +35,10 @@ This is the short operational handover. Durable intent belongs in
 - Players can update their own avatar, nickname, and nickname display preference
   from `/profile`; circular avatar crops and effective nicknames flow through
   the leaderboard, matches, tournaments, and public profiles.
+- The private profile now has routed Settings, Streak, and History tabs. Streaks
+  combine all non-rejected match days with owner-only manual Melbourne-day
+  marks; History provides gated H2H detail, a complete result ledger, and
+  entered-tournament cards.
 - Admins can create a four-player round-robin tournament, seed its participants,
   replace a pre-play participant while preserving their seed, regenerate the
   deterministic court schedule, record immutable results directly, and either
@@ -70,7 +74,8 @@ after that password update succeeds.
 | `20260709000000` through `20260710120000` | Applied to production (operator reported) |
 | `20260710130000_tournament_placement_awards.sql` | Applied to production (operator verified four qualifier placements) |
 | `20260710140000_safe_rating_cache_rebuild.sql` | Applied to production (operator reported) |
-| `20260712100000_non_ciabatta_opponents.sql` | Ready to apply |
+| `20260712090000_external_match_type.sql` through `20260712110000_delete_own_external_matches.sql` | Applied to production (operator verified logging, email, history, and deletion) |
+| `20260712120000_profile_play_days.sql` | Ready to apply |
 
 ## Current blockers
 

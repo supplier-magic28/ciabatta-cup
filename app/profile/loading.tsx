@@ -1,5 +1,5 @@
-import { ProfileSettingsSkeleton } from "@/components/loading/PageSkeletons";
+import { ProfileTabSkeleton } from "@/components/loading/PageSkeletons";
 
 export default function Loading() {
-  return <ProfileSettingsSkeleton />;
+  return <ProfileTabSkeleton cards={3} />;
 }

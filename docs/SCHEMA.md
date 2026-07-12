@@ -276,3 +276,17 @@ All player-logged matches store a compulsory `played_at` date selected by the
 submitter. `matches.location` is optional trimmed text (maximum 160 characters)
 for a court or venue. Tournament-created facts continue to derive `played_at`
 from their event workflow and may leave `location` null.
+
+## play_days _(Phase 7 — implemented)_
+
+Manual streak marks only; match-derived days are never copied here.
+
+| field | type | notes |
+|---|---|---|
+| player_id | FK players | composite primary key; owner-only RLS |
+| played_on | date | insert/delete restricted to Melbourne today |
+| created_at | timestamptz | audit timestamp |
+
+The streak projection unions these marks with every participating match except
+rejected submissions. H2H and history projections continue to use approved
+facts only. No current streak, best streak, or H2H aggregate is stored.

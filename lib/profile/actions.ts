@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getSessionPlayer } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { AVATAR_MIME_TYPES, MAX_AVATAR_UPLOAD_BYTES } from "./crop";
+import { dateKeyInZone } from "./streak";
 
 export type ProfileActionState =
   | { ok: true; message: string }
@@ -98,4 +99,22 @@ export async function updateProfileSettings(
 
   invalidateProfile(player.id);
   return { ok: true, message: "Profile settings saved." };
+}
+
+export async function setPlayedToday(
+  _previous: ProfileActionState | undefined,
+  formData: FormData,
+): Promise<ProfileActionState> {
+  const player = await getSessionPlayer();
+  if (!player) return { ok: false, error: "You need to be signed in." };
+  const today = dateKeyInZone(new Date());
+  const remove = formData.get("mode") === "remove";
+  const supabase = await createClient();
+  const query = supabase.from("play_days");
+  const { error } = remove
+    ? await query.delete().eq("player_id", player.id).eq("played_on", today)
+    : await query.upsert({ player_id: player.id, played_on: today }, { onConflict: "player_id,played_on", ignoreDuplicates: true });
+  if (error) return { ok: false, error: "Couldn't update today's tennis mark." };
+  revalidatePath("/profile/streak");
+  return { ok: true, message: remove ? "Today's manual mark removed." : "Today counts as played." };
 }

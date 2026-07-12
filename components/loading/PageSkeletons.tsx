@@ -112,6 +112,10 @@ export function ProfileSettingsSkeleton() {
   );
 }
 
+export function ProfileTabSkeleton({ cards = 3 }: { cards?: number }) {
+  return <section role="status" aria-live="polite" aria-busy="true"><span className="sr-only">Loading profile</span><Skeleton className="mb-5 h-12 w-full border-2 border-ink" /><div className="grid gap-4">{Array.from({ length: cards }, (_, index) => <Skeleton key={index} className="h-32 w-full border-2 border-ink" />)}</div></section>;
+}
+
 export function TournamentListSkeleton() {
   return (
     <LoadingRegion className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 pb-12 pt-5 sm:px-6">

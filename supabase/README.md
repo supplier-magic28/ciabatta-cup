@@ -69,6 +69,9 @@ Database migrations for Ciabatta Cup. The authoritative data model is
 - `20260712110000_delete_own_external_matches.sql` permits authenticated owners
   to delete only their own Non-Ciabatta facts; all league and tournament facts
   remain immutable, and the app rebuilds derived ratings afterward.
+- `20260712120000_profile_play_days.sql` adds owner-only, Melbourne-today-only
+  manual tennis-day marks. Match-derived play days and all streak statistics
+  remain computed rather than stored.
 
 The tournament participant table is editable only before the first tournament
 result. The admin console's replacement action preserves the selected seed and
