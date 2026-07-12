@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { validateSubmission } from "./submission";
+import { validateExternalSubmission, validateSubmission } from "./submission";
 import type { MatchSubmission, SetScore } from "./types";
 
 const SELF = "me";
@@ -20,6 +20,8 @@ function submission(overrides: Partial<MatchSubmission> = {}): MatchSubmission {
     type: "ranked",
     format: "best_of_3",
     formatNote: "",
+    playedDate: "2026-07-12",
+    location: "Northcote Tennis Club",
     sets: [set(6, 4), set(6, 3)],
     ...overrides,
   };
@@ -113,5 +115,29 @@ describe("validateSubmission", () => {
     const snapshot = structuredClone(input);
     validateSubmission(input, SELF);
     expect(input).toEqual(snapshot);
+  });
+});
+
+describe("validateExternalSubmission", () => {
+  const details = { playedDate: "2026-07-12", location: "" };
+  it("trims the private name and derives either result", () => {
+    const won = validateExternalSubmission({ ...details, opponentName: " Dave ", saveOpponent: true, format: "one_set", formatNote: "", sets: [set(6, 4)] }, SELF);
+    expect(won.ok && won.value).toMatchObject({ opponentName: "Dave", externalWon: false, saveOpponent: true });
+    const lost = validateExternalSubmission({ ...details, opponentName: "Dave", saveOpponent: false, format: "one_set", formatNote: "", sets: [set(2, 6)] }, SELF);
+    expect(lost.ok && lost.value.externalWon).toBe(true);
+  });
+
+  it("rejects blank and overlong names", () => {
+    expect(validateExternalSubmission({ ...details, opponentName: " ", saveOpponent: true, format: "one_set", formatNote: "", sets: [set(6, 4)] }, SELF).ok).toBe(false);
+    expect(validateExternalSubmission({ ...details, opponentName: "x".repeat(101), saveOpponent: true, format: "one_set", formatNote: "", sets: [set(6, 4)] }, SELF).ok).toBe(false);
+  });
+});
+
+describe("match details", () => {
+  it("requires a real calendar date and trims optional location", () => {
+    expect(validateSubmission(submission({ playedDate: "" }), SELF).ok).toBe(false);
+    expect(validateSubmission(submission({ playedDate: "2026-02-30" }), SELF).ok).toBe(false);
+    const valid = validateSubmission(submission({ location: "  Northcote  " }), SELF);
+    expect(valid.ok && valid.value).toMatchObject({ playedAt: "2026-07-12T12:00:00.000Z", location: "Northcote" });
   });
 });

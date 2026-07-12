@@ -254,3 +254,25 @@ facts in `lib/scoring/computeRankings` and `buildRatingCache` (ADR-0025).
 - Admins may hard-delete only unused player identities with no match references;
   historical players must be deactivated so immutable facts retain their
   participant identity (ADR-0015).
+
+## Non-Ciabatta opponents _(Phase 6 — implemented)_
+
+`match_type` includes `unranked_external`. These facts have `player2_id = null`,
+an `external_won` boolean, and are transactionally finalized as `approved`
+without confirmation or admin review. Each approved fact contributes a
+rebuildable flat +10 to its submitter, but never enters Elo, ranked/exhibition
+records, streaks, last-five form, or rank-movement arrows.
+
+`external_opponents` holds an owner's case-insensitively deduplicated saved-name
+list. `external_match_details` holds the immutable private name used by one
+match. Both use owner-only RLS; the public match row contains no opponent name,
+so other authenticated players receive only “Non-Ciabatta opponent”. External
+awards are also materialized as one `rating_history` row with unchanged rank.
+The submitting owner may delete an external fact through the dedicated RPC;
+its derived history is removed transactionally and the app rebuilds all rating
+caches. Approved league and tournament facts remain immutable.
+
+All player-logged matches store a compulsory `played_at` date selected by the
+submitter. `matches.location` is optional trimmed text (maximum 160 characters)
+for a court or venue. Tournament-created facts continue to derive `played_at`
+from their event workflow and may leave `location` null.

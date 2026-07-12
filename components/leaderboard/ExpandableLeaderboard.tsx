@@ -16,6 +16,7 @@ export type LeaderboardPlayer = {
   rating: number;
   isHolder: boolean;
   history: LeaderboardHistory;
+  showExternalHistory: boolean;
 };
 
 function record(record: { won: number; lost: number }) {
@@ -104,6 +105,7 @@ export function ExpandableLeaderboard({ players }: { players: LeaderboardPlayer[
                       {label}
                     </p>
                   ))}
+                  {player.showExternalHistory && <p className={`border-2 border-dashed border-green p-2 font-mono text-[10px] uppercase tracking-[1px] ${player.isHolder ? "text-green-muted" : "text-green"}`}>{record(player.history.externalMatches)} non-Ciabatta match history · unranked · +10 pts each</p>}
                 </div>
               )}
             </li>

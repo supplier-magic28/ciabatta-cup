@@ -5,11 +5,12 @@ export type LeaderboardHistory = {
   rankedMatches: WinLossRecord;
   rankedSets: WinLossRecord;
   tournamentMatches: WinLossRecord;
+  externalMatches: WinLossRecord;
 };
 
 export type LeaderboardMatchRow = {
   player1_id: string;
-  player2_id: string;
+  player2_id: string | null;
   winner_id: string | null;
   type: string;
   status: string;
@@ -48,6 +49,7 @@ export function deriveLeaderboardHistory(
       rankedMatches: emptyRecord(),
       rankedSets: emptyRecord(),
       tournamentMatches: emptyRecord(),
+      externalMatches: emptyRecord(),
     }]),
   );
   const rankedTournamentIds = new Set(
@@ -65,6 +67,11 @@ export function deriveLeaderboardHistory(
   }
 
   for (const match of matches) {
+    if (match.status === "approved" && match.type === "unranked_external") {
+      const history = result.get(match.player1_id);
+      if (history) recordResult(history.externalMatches, match.winner_id === match.player1_id);
+      continue;
+    }
     if (
       match.status !== "approved" ||
       match.type !== "ranked" ||
@@ -77,6 +84,7 @@ export function deriveLeaderboardHistory(
     if (!ordinaryRanked && !tournamentRanked) continue;
 
     for (const playerId of [match.player1_id, match.player2_id]) {
+      if (playerId === null) continue;
       const history = result.get(playerId);
       if (!history) continue;
       if (ordinaryRanked) recordResult(history.rankedMatches, match.winner_id === playerId);

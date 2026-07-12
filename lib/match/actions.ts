@@ -4,10 +4,13 @@ import { revalidatePath } from "next/cache";
 import { getSessionPlayer } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { rebuildRatingCache } from "@/lib/scoring/rebuild";
-import { validateSubmission } from "./submission";
-import type { MatchSubmission } from "./types";
+import { validateExternalSubmission, validateSubmission } from "./submission";
+import type { ExternalMatchSubmission, MatchSubmission } from "./types";
+import { formatScore } from "./score";
+import { renderExternalMatchEmail } from "./external-email";
+import { sendTournamentEmail } from "@/lib/tournament/email";
 
-export type SubmitResult = { ok: true; matchId: string } | { ok: false; error: string };
+export type SubmitResult = { ok: true; matchId: string; warning?: string } | { ok: false; error: string };
 
 export type MatchActionResult = { ok: true } | { ok: false; error: string };
 
@@ -44,7 +47,8 @@ export async function submitMatch(input: MatchSubmission): Promise<SubmitResult>
       winner_id: match.winnerId,
       status: "pending_confirmation",
       submitted_by: player.id,
-      played_at: new Date().toISOString(),
+      played_at: match.playedAt,
+      location: match.location,
     })
     .select("id")
     .single();
@@ -83,6 +87,78 @@ export async function submitMatch(input: MatchSubmission): Promise<SubmitResult>
 
   revalidatePath("/matches");
   return { ok: true, matchId: created.id };
+}
+
+export async function submitExternalMatch(input: ExternalMatchSubmission): Promise<SubmitResult> {
+  const player = await getSessionPlayer();
+  if (!player || player.status !== "active") return { ok: false, error: "You need to be signed in to log a match." };
+  const validated = validateExternalSubmission(input, player.id);
+  if (!validated.ok) return { ok: false, error: validated.error };
+  const match = validated.value;
+  const supabase = await createClient();
+  const { data: matchId, error } = await supabase.rpc("log_external_match", {
+    p_opponent_name: match.opponentName,
+    p_save_opponent: match.saveOpponent,
+    p_format: match.format,
+    p_format_note: match.formatNote,
+    p_external_won: match.externalWon,
+    p_played_at: match.playedAt,
+    p_location: match.location,
+    p_sets: match.sets.map((set) => ({
+      set_number: set.setNumber, p1_games: set.selfGames, p2_games: set.opponentGames,
+      tiebreak_p1: set.selfTiebreak, tiebreak_p2: set.opponentTiebreak,
+    })),
+  });
+  if (error || typeof matchId !== "string") return { ok: false, error: SAVE_FAILED };
+
+  try {
+    await rebuildRatingCache();
+  } catch {
+    revalidatePath("/matches");
+    revalidateRatingSurfaces();
+    return { ok: false, error: "Match was logged, but ratings could not be rebuilt. Ask an admin to rebuild ratings." };
+  }
+
+  let warning: string | undefined;
+  try {
+    const score = formatScore(match.sets.map((set) => ({
+      p1Games: set.selfGames, p2Games: set.opponentGames,
+      tiebreakP1: set.selfTiebreak, tiebreakP2: set.opponentTiebreak,
+    })));
+    await sendTournamentEmail(player.email, renderExternalMatchEmail({
+      firstName: player.firstName ?? "Player", opponentName: match.opponentName,
+      score, won: !match.externalWon,
+    }), `external-match/${matchId}/${player.id}`);
+  } catch {
+    warning = "Match logged and +10 points applied, but the result email could not be sent.";
+  }
+
+  revalidatePath("/matches");
+  revalidateRatingSurfaces();
+  return { ok: true, matchId, warning };
+}
+
+export async function deleteExternalMatch(
+  _previous: { error?: string } | undefined,
+  formData: FormData,
+): Promise<{ error?: string } | undefined> {
+  const player = await getSessionPlayer();
+  if (!player) return { error: "You need to be signed in." };
+  const matchId = String(formData.get("matchId") ?? "");
+  if (!matchId) return { error: "Match not found." };
+  const supabase = await createClient();
+  const { data: deleted, error } = await supabase.rpc("delete_own_external_match", { p_match_id: matchId });
+  if (error || deleted !== true) return { error: "Couldn't delete this match. It may not belong to you." };
+  try {
+    await rebuildRatingCache();
+  } catch {
+    revalidatePath("/matches");
+    revalidateRatingSurfaces();
+    return { error: "Match deleted, but ratings need an admin rebuild." };
+  }
+  revalidatePath("/matches");
+  revalidateRatingSurfaces();
+  return undefined;
 }
 
 /**

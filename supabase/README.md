@@ -60,6 +60,16 @@ Database migrations for Ciabatta Cup. The authoritative data model is
   full-table rating-history and reign-cache replacements explicit with
   `where true`, satisfying production safe-update enforcement.
 
+- `20260712090000_external_match_type.sql` adds the external match enum value in
+  its own transaction so subsequent schema changes can use it safely.
+- `20260712100000_non_ciabatta_opponents.sql` adds owner-private saved names
+  and match details, external match facts, and the atomic authenticated logging
+  RPC used for immediate approval. It also adds optional match location storage;
+  played date remains compulsory through the existing non-null `played_at` fact.
+- `20260712110000_delete_own_external_matches.sql` permits authenticated owners
+  to delete only their own Non-Ciabatta facts; all league and tournament facts
+  remain immutable, and the app rebuilds derived ratings afterward.
+
 The tournament participant table is editable only before the first tournament
 result. The admin console's replacement action preserves the selected seed and
 regenerates the complete pre-play draw; the database participant-lock trigger

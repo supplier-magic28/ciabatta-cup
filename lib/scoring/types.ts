@@ -16,7 +16,7 @@ export type MatchStatus =
   | "rejected";
 
 /** Whether a match counts toward ranked points or is exhibition-only. */
-export type MatchType = "ranked" | "exhibition";
+export type MatchType = "ranked" | "exhibition" | "unranked_external";
 
 /**
  * An immutable record of a single match, shaped to mirror the `matches` table

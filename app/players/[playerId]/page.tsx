@@ -37,7 +37,7 @@ export default async function PlayerProfilePage({
   const { playerId } = await params;
   const supabase = await createClient();
 
-  const [{ data: target }, { data: playerRows }, { data: matchRows }, { data: placementRows }] = await Promise.all([
+  const [{ data: target }, { data: playerRows }, { data: matchRows }, { data: placementRows }, { data: externalDetails }] = await Promise.all([
     supabase
       .from("players")
       .select("id, first_name, last_name, email, nickname, use_nickname, avatar_url, height_cm, weight_kg, plays, backhand, game_style, status")
@@ -52,6 +52,7 @@ export default async function PlayerProfilePage({
       .select("id, player1_id, player2_id, winner_id, type, status, played_at, tournament_id, match_sets(set_number, p1_games, p2_games, tiebreak_p1, tiebreak_p2)")
       .eq("status", "approved"),
     supabase.from("tournament_placements").select("player_id, points, awarded_at"),
+    supabase.from("external_match_details").select("match_id, opponent_name"),
   ]);
 
   if (!target) notFound();
@@ -62,10 +63,10 @@ export default async function PlayerProfilePage({
     name: displayName({ firstName: player.first_name, lastName: player.last_name, email: player.email, nickname: player.nickname, useNickname: player.use_nickname }),
   }));
   const playerById = new Map(players.map((player) => [player.id, player]));
-  const matches: ProfileMatch[] = (matchRows ?? []).map((match) => ({
+  const matches: ProfileMatch[] = (matchRows ?? []).filter((match) => match.player2_id !== null && match.type !== "unranked_external").map((match) => ({
     id: match.id,
     player1Id: match.player1_id,
-    player2Id: match.player2_id,
+    player2Id: match.player2_id!,
     winnerId: match.winner_id,
     type: match.type,
     status: match.status,
@@ -81,6 +82,26 @@ export default async function PlayerProfilePage({
     useNickname: target.use_nickname,
   });
   const profile = derivePlayerProfile(playerId, matches);
+  const externalRecord = (matchRows ?? []).reduce((record, match) => {
+    if (match.type === "unranked_external" && match.status === "approved" && match.player1_id === playerId) {
+      record.played += 1;
+      if (match.winner_id === playerId) record.won += 1;
+      else record.lost += 1;
+    }
+    return record;
+  }, { won: 0, lost: 0, played: 0 });
+  const externalNameByMatch = new Map((externalDetails ?? []).map((detail) => [detail.match_id, detail.opponent_name]));
+  const externalHeadToHead = [...(matchRows ?? []).reduce((records, match) => {
+    if (match.type !== "unranked_external" || match.status !== "approved" || match.player1_id !== playerId) return records;
+    const opponentName = externalNameByMatch.get(match.id);
+    if (!opponentName) return records;
+    const record = records.get(opponentName) ?? { opponentName, won: 0, lost: 0 };
+    if (match.winner_id === playerId) record.won += 1;
+    else record.lost += 1;
+    records.set(opponentName, record);
+    return records;
+  }, new Map<string, { opponentName: string; won: number; lost: number }>()).values()]
+    .sort((a, b) => (b.won + b.lost) - (a.won + a.lost) || a.opponentName.localeCompare(b.opponentName));
   const cache = buildRatingCache(
     players.map((player) => player.id),
     (matchRows ?? []) as ScoringMatchRow[],
@@ -146,6 +167,7 @@ export default async function PlayerProfilePage({
         {[
           { label: "Ranked", record: profile.ranked, tone: "border-green bg-green text-cream" },
           { label: "Exhibition", record: profile.exhibition, tone: "border-ink bg-surface text-ink" },
+          ...(sessionPlayer.id === playerId ? [{ label: "Non-Ciabatta", record: externalRecord, tone: "border-green border-dashed bg-surface text-ink" }] : []),
         ].map(({ label, record, tone }) => (
           <div key={label} className={`border-2 p-5 shadow-[3px_3px_0_var(--color-ink)] ${tone}`}>
             <p className={`${eyebrow} ${label === "Ranked" ? "text-green-muted" : "text-muted"}`}>{label} record</p>
@@ -154,6 +176,15 @@ export default async function PlayerProfilePage({
           </div>
         ))}
       </section>
+
+      {sessionPlayer.id === playerId && externalHeadToHead.length > 0 && (
+        <section className="mt-6 border-2 border-dashed border-green bg-surface p-5">
+          <p className={`${eyebrow} text-green`}>Private non-Ciabatta history</p>
+          <ul className="mt-3 divide-y divide-hairline">
+            {externalHeadToHead.map((record) => <li key={record.opponentName} className="flex items-center justify-between py-2"><span className="font-heading font-bold text-ink">{record.opponentName}</span><span className="font-mono text-sm text-green">{record.won}-{record.lost}</span></li>)}
+          </ul>
+        </section>
+      )}
 
       <section className="mt-8 border-t-2 border-ink pt-5">
         <div className="flex items-baseline justify-between gap-4">

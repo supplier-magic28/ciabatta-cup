@@ -14,10 +14,10 @@ export default async function NewMatchPage() {
   if (!player) redirect("/sign-in");
 
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("players")
-    .select("id, first_name, last_name, email, nickname, use_nickname, status")
-    .order("first_name", { ascending: true });
+  const [{ data }, { data: savedExternalRows }] = await Promise.all([
+    supabase.from("players").select("id, first_name, last_name, email, nickname, use_nickname, status").order("first_name", { ascending: true }),
+    supabase.from("external_opponents").select("id, display_name").order("display_name", { ascending: true }),
+  ]);
 
   const rows = data ?? [];
   const opponents: OpponentOption[] = rows
@@ -38,7 +38,7 @@ export default async function NewMatchPage() {
 
   return (
     <main className="mx-auto w-full max-w-md flex-1 px-6 py-10">
-      <LogMatchForm selfName={selfName} opponents={opponents} />
+      <LogMatchForm selfName={selfName} opponents={opponents} savedExternalOpponents={(savedExternalRows ?? []).map((row) => ({ id: row.id, name: row.display_name }))} />
     </main>
   );
 }

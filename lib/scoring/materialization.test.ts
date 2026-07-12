@@ -77,6 +77,20 @@ describe("rating cache materialization", () => {
     ]);
   });
 
+  it("adds ten for every approved external match without changing Elo records", () => {
+    const external: ScoringMatchRow[] = [
+      { id: "x1", player1_id: "carol", player2_id: null, winner_id: null, type: "unranked_external", status: "approved", played_at: "2026-07-02T10:00:00Z", tournament_id: null },
+      { id: "x2", player1_id: "carol", player2_id: null, winner_id: "carol", type: "unranked_external", status: "approved", played_at: "2026-07-03T10:00:00Z", tournament_id: null },
+      { id: "x3", player1_id: "carol", player2_id: null, winner_id: "carol", type: "unranked_external", status: "pending_confirmation", played_at: "2026-07-04T10:00:00Z", tournament_id: null },
+    ];
+    const cache = buildRatingCache(["carol"], external);
+    expect(cache.rankings).toEqual([{ playerId: "carol", rating: 20, rank: 1, played: 0, won: 0, lost: 0 }]);
+    expect(cache.ratingHistory).toEqual([
+      expect.objectContaining({ matchId: "x1", playerId: "carol", pointsBefore: 0, pointsAfter: 10, rankBefore: 1, rankAfter: 1 }),
+      expect.objectContaining({ matchId: "x2", playerId: "carol", pointsBefore: 10, pointsAfter: 20, rankBefore: 1, rankAfter: 1 }),
+    ]);
+  });
+
   it("does not change its inputs", () => {
     const playerIds = ["alice", "bob", "carol"];
     const snapshot = structuredClone({ playerIds, rows });

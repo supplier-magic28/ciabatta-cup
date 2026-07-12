@@ -37,7 +37,7 @@ export default async function Home() {
       .order("first_name", { ascending: true }),
     supabase
       .from("matches")
-      .select("id, player1_id, player2_id, winner_id, type, status, played_at, tournament_id, fixture_id, match_sets(p1_games, p2_games)"),
+      .select("id, player1_id, player2_id, winner_id, external_won, type, status, played_at, location, tournament_id, fixture_id, match_sets(p1_games, p2_games)"),
     supabase.from("tournament_placements").select("tournament_id, player_id, placement, points, awarded_at"),
     supabase.from("tournaments").select("id, counts_as"),
     supabase.from("fixtures").select("id, ruleset"),
@@ -89,9 +89,12 @@ export default async function Home() {
         rankedMatches: { won: 0, lost: 0 },
         rankedSets: { won: 0, lost: 0 },
         tournamentMatches: { won: 0, lost: 0 },
+        externalMatches: { won: 0, lost: 0 },
       },
+      showExternalHistory: standing.playerId === sessionPlayer.id,
     };
   });
+  const recentMatches = (matchRows ?? []).filter((match) => match.status === "approved").slice().sort((a, b) => b.played_at.localeCompare(a.played_at)).slice(0, 8);
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 pb-10 pt-5 sm:px-6">
@@ -124,6 +127,14 @@ export default async function Home() {
       ) : (
         <ExpandableLeaderboard players={leaderboardPlayers} />
       )}
+
+      {recentMatches.length > 0 && <section className="mt-10"><p className="font-mono text-[10px] uppercase tracking-[2px] text-muted">Recent match feed</p><h2 className="mb-3 font-heading text-2xl font-bold text-ink">Fresh from the court</h2><ul className="divide-y-2 divide-hairline border-2 border-ink bg-surface">{recentMatches.map((match) => {
+        const first = playerById.get(match.player1_id)?.name ?? "Unknown player";
+        const second = match.player2_id ? (playerById.get(match.player2_id)?.name ?? "Unknown player") : "Non-Ciabatta opponent";
+        const firstWon = match.type === "unranked_external" ? !match.external_won : match.winner_id === match.player1_id;
+        const score = (match.match_sets ?? []).map((set) => `${set.p1_games}-${set.p2_games}`).join(", ");
+        return <li key={match.id} className={`p-4 ${match.type === "unranked_external" ? "border-l-4 border-dashed border-green" : ""}`}><p className="font-heading font-bold text-ink">{firstWon ? `${first} d. ${second}` : `${second} d. ${first}`} <span className="font-mono text-sm font-normal">{score}</span></p><p className="mt-1 font-mono text-[9px] uppercase tracking-[1px] text-muted">{match.type === "unranked_external" ? "Non-Ciabatta · Unranked · No ladder movement · +10" : match.type} · {new Intl.DateTimeFormat("en-AU", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(match.played_at))}{match.location ? ` · ${match.location}` : ""}</p></li>;
+      })}</ul></section>}
     </main>
   );
 }

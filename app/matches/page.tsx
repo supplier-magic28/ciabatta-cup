@@ -7,6 +7,7 @@ import { formatScore } from "@/lib/match/score";
 import { indexEmbeddedScoreSets } from "@/lib/match/embeddedSets";
 import { Button } from "@/components/ui/Button";
 import { ConfirmMatchButton } from "@/components/match/ConfirmMatchButton";
+import { DeleteExternalMatchButton } from "@/components/match/DeleteExternalMatchButton";
 
 const STATUS_LABEL: Record<string, string> = {
   pending_confirmation: "Waiting for opponent",
@@ -36,14 +37,15 @@ export default async function MatchesPage() {
 
   const supabase = await createClient();
 
-  const [{ data: matches }, { data: players }, { data: myConfirmations }] = await Promise.all([
+  const [{ data: matches }, { data: players }, { data: myConfirmations }, { data: externalDetails }] = await Promise.all([
     supabase
       .from("matches")
-      .select("id, type, format, format_note, status, played_at, player1_id, player2_id, winner_id, match_sets(set_number, p1_games, p2_games, tiebreak_p1, tiebreak_p2)")
+      .select("id, type, format, format_note, status, played_at, location, player1_id, player2_id, winner_id, external_won, match_sets(set_number, p1_games, p2_games, tiebreak_p1, tiebreak_p2)")
       .or(`player1_id.eq.${player.id},player2_id.eq.${player.id}`)
       .order("played_at", { ascending: false }),
     supabase.from("players").select("id, first_name, last_name, email, nickname, use_nickname"),
     supabase.from("match_confirmations").select("match_id").eq("player_id", player.id),
+    supabase.from("external_match_details").select("match_id, opponent_name"),
   ]);
   const rows = matches ?? [];
 
@@ -57,6 +59,7 @@ export default async function MatchesPage() {
   const setsByMatch = indexEmbeddedScoreSets(rows);
 
   const confirmedByMe = new Set((myConfirmations ?? []).map((c) => c.match_id));
+  const externalNameByMatch = new Map((externalDetails ?? []).map((detail) => [detail.match_id, detail.opponent_name]));
 
   return (
     <main className="mx-auto w-full max-w-md flex-1 px-6 py-10">
@@ -80,7 +83,8 @@ export default async function MatchesPage() {
         <ul className="flex flex-col gap-3">
           {rows.map((m) => {
             const opponentId = m.player1_id === player.id ? m.player2_id : m.player1_id;
-            const won = m.winner_id === player.id;
+            const isExternal = m.type === "unranked_external";
+            const won = isExternal ? !m.external_won : m.winner_id === player.id;
             // I'm the opponent who hasn't confirmed yet (the submitter auto-confirms).
             const needsMyConfirmation =
               m.status === "pending_confirmation" && !confirmedByMe.has(m.id);
@@ -91,7 +95,7 @@ export default async function MatchesPage() {
               >
                 <div className="flex items-center justify-between">
                   <span className="font-heading text-base font-bold text-ink">
-                    vs {nameOf.get(opponentId) ?? "Unknown"}
+                    vs {isExternal ? (externalNameByMatch.get(m.id) ?? "Non-Ciabatta opponent") : (nameOf.get(opponentId) ?? "Unknown")}
                   </span>
                   <span
                     className={
@@ -106,14 +110,16 @@ export default async function MatchesPage() {
                   {formatScore(setsByMatch.get(m.id) ?? []) || "No sets recorded"}
                 </p>
                 <p className={`${eyebrow} mt-1`}>
-                  {m.type === "ranked" ? "Ranked" : "Exhibition"} ·{" "}
+                  {isExternal ? "Non-Ciabatta · Unranked · +10 pts" : (m.type === "ranked" ? "Ranked" : "Exhibition")} ·{" "}
                   {FORMAT_LABEL[m.format] ?? m.format}
                   {m.format === "custom" && m.format_note ? ` (${m.format_note})` : ""}
                 </p>
+                <p className="mt-1 font-mono text-[10px] text-muted">{new Intl.DateTimeFormat("en-AU", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(m.played_at))}{m.location ? ` · ${m.location}` : ""}</p>
                 <p className="mt-2 font-mono text-[11px] uppercase tracking-[1.5px] text-crust">
                   {needsMyConfirmation ? "Needs your confirmation" : STATUS_LABEL[m.status] ?? m.status}
                 </p>
                 {needsMyConfirmation && <ConfirmMatchButton matchId={m.id} />}
+                {isExternal && <DeleteExternalMatchButton matchId={m.id} />}
               </li>
             );
           })}

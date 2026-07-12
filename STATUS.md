@@ -1,6 +1,6 @@
 # Ciabatta Cup Status
 
-**Last updated:** 2026-07-11
+**Last updated:** 2026-07-12
 
 This is the short operational handover. Durable intent belongs in
 `ARCHITECTURE.md`, the data model in `docs/SCHEMA.md`, and decisions in ADRs.
@@ -18,6 +18,13 @@ This is the short operational handover. Durable intent belongs in
 - Players can submit a singles match with validated set scores; the opponent
   confirms it. Ranked matches then await admin approval, while exhibitions are
   approved automatically.
+- Every player-logged result requires its played date and may include an
+  optional court or venue location; both are retained on the match fact.
+- Active players can log owner-private non-Ciabatta opponents. Those matches
+  approve immediately, award a rebuildable flat +10 points win or lose, remain
+  outside Elo/form/ranked records, and send a non-blocking result email.
+- Players can delete their own Non-Ciabatta test or mistaken results; deletion
+  removes the derived +10/history and rebuilds the complete rating cache.
 - Approved ranked facts are fed into the pure Elo engine. The derived
   `rating_history`, `players.rating_points`, and `ciabatta_reigns` caches are
   rebuilt from the full chronological match history after approval.
@@ -63,6 +70,7 @@ after that password update succeeds.
 | `20260709000000` through `20260710120000` | Applied to production (operator reported) |
 | `20260710130000_tournament_placement_awards.sql` | Applied to production (operator verified four qualifier placements) |
 | `20260710140000_safe_rating_cache_rebuild.sql` | Applied to production (operator reported) |
+| `20260712100000_non_ciabatta_opponents.sql` | Ready to apply |
 
 ## Current blockers
 

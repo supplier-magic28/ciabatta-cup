@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; background:#20221E; font-family:'Work Sans',sans-serif; }
+  a { color:#C9DA5A; text-decoration:none; }
+  a:hover { color:#ffffff; }
+</style>
+</helmet>
+
+<section data-screen-label="Non-Ciabatta Match Email" style="padding:48px 56px 64px 56px;">
+  <div style="color:#8A9188; font-family:'IBM Plex Mono',monospace; font-size:13px; letter-spacing:2px; margin-bottom:6px;">POST-MATCH EMAIL · NON-CIABATTA · 600PX · VOICED BY ZEUS</div>
+  <div style="color:#8A9188; font-family:'Work Sans',sans-serif; font-size:13px; margin-bottom:28px;">Dynamic fields stay as literal tokens: {{firstName}}, {{opponentName}}, {{score}}</div>
+  <div style="display:flex; flex-wrap:wrap; gap:44px; align-items:flex-start;">
+
+    <!-- ============ 08 NON-CIABATTA MATCH LOGGED ============ -->
+    <div style="width:600px; flex-shrink:0;">
+      <div style="color:#8A9188; font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:2px; margin-bottom:12px;">08 · MATCH LOGGED · NON-CIABATTA WIN</div>
+      <div style="background:#EFE6D0; border:2px solid #1B1A16; border-radius:10px; overflow:hidden;">
+        <div style="background:#1B1A16; padding:14px 28px; display:flex; align-items:center; justify-content:space-between;">
+          <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:16px; color:#EFE6D0; letter-spacing:1px;">CIABATTA <span style="color:#C9DA5A;">CUP</span></div>
+          <sc-if value="{{ zeusInHeader }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; color:#8A9188;">THE ORACLE IS IN</div>
+              <div style="position:relative; width:36px; height:36px;">
+                <img src="assets/zeus-red.png" alt="Zeus" style="width:36px; height:36px; border-radius:50%; border:2px solid #C9DA5A; object-fit:cover; display:block;">
+              </div>
+            </div>
+          </sc-if>
+        </div>
+        <div style="padding:36px 36px 36px 36px; display:flex; flex-direction:column; gap:18px;">
+          <div style="display:flex; gap:8px;">
+            <div style="background:#1B1A16; color:#EFE6D0; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; padding:7px 14px; border-radius:20px;">MATCH LOGGED</div>
+            <div style="border:2px solid #1B1A16; color:#1B1A16; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; padding:5px 14px; border-radius:20px;">UNRANKED</div>
+          </div>
+          <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:32px; color:#1B1A16; letter-spacing:0.5px; line-height:1.1;">A win beyond the walls, {{firstName}}.</div>
+          <div style="font-family:'Work Sans',sans-serif; font-size:15px; line-height:1.55; color:#1B1A16;">You logged a win over <strong>{{opponentName}}</strong> — a non-Ciabatta player. It doesn't move the ladder (outsiders never do), but the record stands and the flat ten points are yours.</div>
+          <div style="background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; box-shadow:3px 3px 0 #1B1A16; overflow:hidden;">
+            <div style="display:grid; grid-template-columns:88px 1fr; gap:10px; padding:14px 18px; border-bottom:1px solid #D9CCAE; align-items:baseline;">
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672;">RESULT</div>
+              <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:14px; color:#1B1A16;">W · {{score}} vs {{opponentName}}</div>
+            </div>
+            <div style="display:grid; grid-template-columns:88px 1fr; gap:10px; padding:14px 18px; border-bottom:1px solid #D9CCAE; align-items:baseline;">
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672;">POINTS</div>
+              <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:14px; color:#1B1A16;">+10 flat <span style="font-family:'IBM Plex Mono',monospace; font-weight:400; font-size:11px; color:#8C8672;">(every non-Ciabatta match, win or lose)</span></div>
+            </div>
+            <div style="display:grid; grid-template-columns:88px 1fr; gap:10px; padding:14px 18px; align-items:baseline;">
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C8672;">RECORD</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; line-height:1.6; color:#1B1A16;">1-0 non-Ciabatta match history · saved to your profile</div>
+            </div>
+          </div>
+          <div style="display:flex; gap:14px; background:#F7F0DE; border:2px solid #1B1A16; border-radius:8px; box-shadow:3px 3px 0 #8C5426; padding:16px 18px;">
+            <img src="assets/zeus-red.png" alt="Zeus" style="width:56px; height:56px; border-radius:50%; border:2px solid #1B1A16; object-fit:cover; flex-shrink:0;">
+            <div style="display:flex; flex-direction:column; gap:5px;">
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8C5426;">A WORD FROM ZEUS</div>
+              <div style="font-family:'Work Sans',sans-serif; font-size:15px; line-height:1.5; color:#1B1A16;">"Well done on the winning match with the non-Ciabatta player, {{firstName}}. Beyond our walls, against a stranger, you carried the loaf with honour. I hope you did Ciabatta proud. Zeus approves."</div>
+            </div>
+          </div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; line-height:1.6; color:#8C8672;">{{opponentName}} stays on your profile for your own head-to-head history. They will not be invited — Zeus does not extend invitations to strangers.</div>
+          <a href="#" style="display:block; text-align:center; background:#3E6B35; color:#EFE6D0; font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:16px; letter-spacing:1px; padding:16px 20px; border:2px solid #1B1A16; border-radius:8px; box-shadow:3px 3px 0 #1B1A16;">See your match history</a>
+        </div>
+        <div style="background:#1B1A16; padding:18px 28px; display:flex; flex-direction:column; gap:6px; align-items:center;">
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:#8A9188;">COMPETE · TRAIN · LAUGH · REPEAT</div>
+          <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:11px; color:#EFE6D0; letter-spacing:1px;">CIABATTA <span style="color:#C9DA5A;">CUP</span> <span style="font-family:'IBM Plex Mono',monospace; font-weight:400; color:#8A9188;">2026</span></div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:#8A9188;">You're getting this because you stepped on court. <a href="#">Unsubscribe</a>. Zeus will know.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;$preview&quot;: {},
+  &quot;zeusInHeader&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Zeus&quot;}
+}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      firstName: '{{firstName}}',
+      placement: '{{placement}}',
+      opponentName: '{{opponentName}}',
+      margin: '{{margin}}',
+      score: '{{score}}',
+      points: '{{points}}',
+      zeusInHeader: this.props.zeusInHeader ?? true
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -32,8 +32,35 @@ export interface MatchSubmission {
   format: MatchFormat;
   /** Free-text note; only meaningful (and required) when format is `custom`. */
   formatNote: string;
+  playedDate: string;
+  location: string;
   sets: SetScore[];
 }
+
+export interface ExternalMatchSubmission {
+  opponentName: string;
+  saveOpponent: boolean;
+  format: MatchFormat;
+  formatNote: string;
+  playedDate: string;
+  location: string;
+  sets: SetScore[];
+}
+
+export interface ValidatedExternalSubmission {
+  opponentName: string;
+  saveOpponent: boolean;
+  format: MatchFormat;
+  formatNote: string | null;
+  playedAt: string;
+  location: string | null;
+  externalWon: boolean;
+  sets: ValidatedSet[];
+}
+
+export type ExternalValidationResult =
+  | { ok: true; value: ValidatedExternalSubmission }
+  | { ok: false; error: string };
 
 /** A validated, DB-ready set row (1-based `setNumber`). */
 export interface ValidatedSet {
@@ -50,6 +77,8 @@ export interface ValidatedSubmission {
   type: MatchType;
   format: MatchFormat;
   formatNote: string | null;
+  playedAt: string;
+  location: string | null;
   /** The submitter's id or the opponent's id — never anyone else. */
   winnerId: string;
   sets: ValidatedSet[];

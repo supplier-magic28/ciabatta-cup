@@ -45,6 +45,11 @@ of Done (`CLAUDE.md`).
   activation (client, `useActionState`).
 
 **Match**
+- `match/DeleteExternalMatchButton` — confirmed owner-only deletion for a
+  Non-Ciabatta test or mistaken result, followed by a complete rating rebuild.
+- `match/LogMatchForm` also implements the owner-private non-Ciabatta variant:
+  saved-name reuse, immediate approval, flat +10, and non-blocking email status.
+  Both variants require the played date and accept an optional location.
 - `match/LogMatchForm` — the log-match wizard (design screen 03): 3 steps
   (matchup → type & format → per-set scores), shared pure validation, submits via
   the `submitMatch` server action. Submission only — no confirm/approve/scoring.

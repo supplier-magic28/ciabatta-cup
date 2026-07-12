@@ -54,6 +54,15 @@ describe("leaderboard history", () => {
     });
   });
 
+  it("tracks external results only for the submitting player", () => {
+    const history = deriveLeaderboardHistory(players, [
+      match({ type: "unranked_external", player2_id: null, winner_id: "alice", match_sets: [] }),
+      match({ type: "unranked_external", player2_id: null, winner_id: null, match_sets: [] }),
+    ], [], tournaments, fixtures);
+    expect(history.get("alice")?.externalMatches).toEqual({ won: 1, lost: 1 });
+    expect(history.get("bob")?.externalMatches).toEqual({ won: 0, lost: 0 });
+  });
+
   it("ignores unapproved, exhibition, friendly-tournament, and malformed results", () => {
     const ignored = [
       match({ status: "pending_approval" }),
@@ -68,6 +77,7 @@ describe("leaderboard history", () => {
         rankedMatches: { won: 0, lost: 0 },
         rankedSets: { won: 0, lost: 0 },
         tournamentMatches: { won: 0, lost: 0 },
+        externalMatches: { won: 0, lost: 0 },
       });
     }
   });

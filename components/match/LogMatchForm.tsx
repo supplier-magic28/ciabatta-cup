@@ -4,9 +4,9 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
-import { submitMatch } from "@/lib/match/actions";
-import { validateSubmission } from "@/lib/match/submission";
-import type { MatchFormat, MatchSubmission, MatchType, SetScore } from "@/lib/match/types";
+import { submitExternalMatch, submitMatch } from "@/lib/match/actions";
+import { validateExternalSubmission, validateSubmission } from "@/lib/match/submission";
+import type { ExternalMatchSubmission, MatchFormat, MatchSubmission, MatchType, SetScore } from "@/lib/match/types";
 
 export interface OpponentOption {
   id: string;
@@ -21,6 +21,7 @@ interface SetInput {
 }
 
 const MAX_SETS = 7;
+const EXTERNAL = "__external__";
 
 const TYPE_OPTIONS: { value: MatchType; label: string; sublabel: string }[] = [
   { value: "ranked", label: "Ranked", sublabel: "Counts for points" },
@@ -59,21 +60,29 @@ const scoreBox =
 export function LogMatchForm({
   selfName,
   opponents,
+  savedExternalOpponents,
 }: {
   selfName: string;
   opponents: OpponentOption[];
+  savedExternalOpponents: OpponentOption[];
 }) {
   const [step, setStep] = useState(1);
   const [opponentId, setOpponentId] = useState("");
   const [type, setType] = useState<MatchType | "">("");
   const [format, setFormat] = useState<MatchFormat | "">("");
   const [formatNote, setFormatNote] = useState("");
+  const [playedDate, setPlayedDate] = useState(() => new Date().toLocaleDateString("en-CA"));
+  const [location, setLocation] = useState("");
   const [sets, setSets] = useState<SetInput[]>([blankSet()]);
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [warning, setWarning] = useState<string | null>(null);
+  const [externalName, setExternalName] = useState("");
+  const [saveExternal, setSaveExternal] = useState(true);
   const [pending, startTransition] = useTransition();
 
-  const opponentName = opponents.find((o) => o.id === opponentId)?.name ?? "your opponent";
+  const isExternal = opponentId === EXTERNAL;
+  const opponentName = isExternal ? (externalName.trim() || "Non-Ciabatta opponent") : opponents.find((o) => o.id === opponentId)?.name ?? "your opponent";
 
   function build(): MatchSubmission {
     const parsedSets: SetScore[] = sets.map((s) => ({
@@ -87,7 +96,24 @@ export function LogMatchForm({
       type: type as MatchType,
       format: format as MatchFormat,
       formatNote,
+      playedDate,
+      location,
       sets: parsedSets,
+    };
+  }
+
+  function buildExternal(): ExternalMatchSubmission {
+    return {
+      opponentName: externalName,
+      saveOpponent: saveExternal,
+      format: format as MatchFormat,
+      formatNote,
+      playedDate,
+      location,
+      sets: sets.map((s) => ({
+        selfGames: toGames(s.selfGames), opponentGames: toGames(s.opponentGames),
+        selfTiebreak: toTiebreak(s.selfTiebreak), opponentTiebreak: toTiebreak(s.opponentTiebreak),
+      })),
     };
   }
 
@@ -97,18 +123,23 @@ export function LogMatchForm({
 
   function onSubmit() {
     setError(null);
-    const submission = build();
+    const submission = isExternal ? buildExternal() : build();
     // Run the shared pure rules (score sanity, clear winner, custom note) for
     // instant feedback before the network. The server re-validates against the
     // real session id; SELF_SENTINEL never reaches the DB.
-    const clientCheck = validateSubmission(submission, SELF_SENTINEL);
+    const clientCheck = isExternal
+      ? validateExternalSubmission(submission as ExternalMatchSubmission, SELF_SENTINEL)
+      : validateSubmission(submission as MatchSubmission, SELF_SENTINEL);
     if (!clientCheck.ok) {
       setError(clientCheck.error);
       return;
     }
     startTransition(async () => {
-      const result = await submitMatch(submission);
+      const result = isExternal
+        ? await submitExternalMatch(submission as ExternalMatchSubmission)
+        : await submitMatch(submission as MatchSubmission);
       if (result.ok) {
+        setWarning(result.warning ?? null);
         setSubmitted(true);
       } else {
         setError(result.error);
@@ -122,8 +153,9 @@ export function LogMatchForm({
         <p className={eyebrow}>Submitted</p>
         <h2 className="mt-2 font-heading text-2xl font-bold text-ink">Match logged</h2>
         <p className="mt-2 font-body text-[15px] text-ink">
-          Waiting for {opponentName} to confirm the result.
+          {isExternal ? "+10 points applied. No confirmation or approval needed." : `Waiting for ${opponentName} to confirm the result.`}
         </p>
+        {warning && <p className="mt-3 font-mono text-[11px] text-rust">{warning}</p>}
         <div className="mt-6 flex flex-col gap-3">
           <Link href="/matches">
             <Button type="button">View your matches</Button>
@@ -137,8 +169,13 @@ export function LogMatchForm({
               setType("");
               setFormat("");
               setFormatNote("");
+              setPlayedDate(new Date().toLocaleDateString("en-CA"));
+              setLocation("");
               setSets([blankSet()]);
               setError(null);
+              setWarning(null);
+              setExternalName("");
+              setSaveExternal(true);
             }}
             className="font-mono text-[12px] uppercase tracking-[1.5px] text-muted underline"
           >
@@ -151,7 +188,7 @@ export function LogMatchForm({
 
   const canNextFromMatchup = opponentId !== "";
   const canNextFromType =
-    type !== "" && format !== "" && (format !== "custom" || formatNote.trim() !== "");
+    type !== "" && format !== "" && playedDate !== "" && (format !== "custom" || formatNote.trim() !== "") && (!isExternal || externalName.trim() !== "");
 
   return (
     <div className="rounded-[8px] border-2 border-ink bg-surface p-6 shadow-[3px_3px_0_var(--color-ink)]">
@@ -179,7 +216,7 @@ export function LogMatchForm({
                 <button
                   key={o.id}
                   type="button"
-                  onClick={() => setOpponentId(o.id)}
+                  onClick={() => { setOpponentId(o.id); if (type === "unranked_external") setType(""); }}
                   aria-pressed={opponentId === o.id}
                   className={
                     "rounded-[8px] border-2 border-ink px-4 py-3 text-left font-body text-[15px] " +
@@ -191,14 +228,27 @@ export function LogMatchForm({
               ))}
             </div>
           )}
+          <div className="my-1 flex items-center gap-3"><span className="h-px flex-1 bg-hairline" /><span className={eyebrow}>Not on the ladder?</span><span className="h-px flex-1 bg-hairline" /></div>
+          <button type="button" onClick={() => { setOpponentId(EXTERNAL); setType("unranked_external"); }} aria-pressed={isExternal} className={`rounded-[8px] border-2 border-dashed border-green px-4 py-3 text-left ${isExternal ? "bg-green text-cream" : "bg-cream text-ink"}`}>
+            <span className="block font-heading text-[15px] font-bold">Non-Ciabatta opponent</span>
+            <span className="mt-1 block font-mono text-[9px] uppercase tracking-[1.2px]">Unranked · flat +10 pts</span>
+          </button>
         </section>
       )}
 
       {step === 2 && (
         <section className="flex flex-col gap-5">
+          {isExternal && (
+            <div className="flex flex-col gap-3">
+              <label className={eyebrow} htmlFor="external-opponent-name">Opponent name</label>
+              <input id="external-opponent-name" value={externalName} maxLength={100} onChange={(event) => setExternalName(event.target.value)} placeholder="e.g. Dave from work" className="w-full rounded-[8px] border-2 border-dashed border-green bg-surface px-4 py-3 font-body text-[15px] text-ink outline-none focus:ring-2 focus:ring-green" />
+              {savedExternalOpponents.length > 0 && <div className="flex flex-wrap gap-2">{savedExternalOpponents.map((opponent) => <button key={opponent.id} type="button" onClick={() => setExternalName(opponent.name)} className="rounded-full border border-green px-3 py-1 font-mono text-[10px] text-green">{opponent.name}</button>)}</div>}
+              <label className="flex items-start gap-3 border-2 border-dashed border-hairline bg-cream p-3 font-body text-sm text-ink"><input type="checkbox" checked={saveExternal} onChange={(event) => setSaveExternal(event.target.checked)} className="mt-1 accent-green" /><span><strong>Save name to my profile</strong><span className="mt-1 block text-xs text-muted">For your history only. They won’t be invited and never appear on the ladder.</span></span></label>
+            </div>
+          )}
           <div className="flex flex-col gap-2">
             <p className={eyebrow}>Match type</p>
-            <div className="flex flex-wrap gap-2">
+            {isExternal ? <div className="grid grid-cols-2 gap-2"><div className="rounded-[8px] border-2 border-green bg-green p-3 text-cream"><strong className="font-heading">Unranked</strong><span className="block font-mono text-[9px]">FLAT +10 PTS</span></div><div className="rounded-[8px] border-2 border-dashed border-hairline p-3 text-muted"><strong className="font-heading">Ranked</strong><span className="block font-mono text-[9px]">CIABATTA ONLY</span></div></div> : <div className="flex flex-wrap gap-2">
               {TYPE_OPTIONS.map((o) => (
                 <Chip
                   key={o.value}
@@ -208,7 +258,7 @@ export function LogMatchForm({
                   onClick={() => setType(o.value)}
                 />
               ))}
-            </div>
+            </div>}
           </div>
           <div className="flex flex-col gap-2">
             <p className={eyebrow}>Format</p>
@@ -230,6 +280,10 @@ export function LogMatchForm({
                 className="mt-1 w-full rounded-[8px] border-2 border-ink bg-surface px-4 py-3 font-body text-[15px] text-ink outline-none focus:ring-2 focus:ring-green"
               />
             )}
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className={eyebrow}>Date played <span className="text-rust">Required</span><input type="date" required value={playedDate} onChange={(event) => setPlayedDate(event.target.value)} className="mt-2 w-full rounded-[8px] border-2 border-ink bg-surface px-3 py-3 font-body text-[15px] normal-case tracking-normal text-ink outline-none focus:ring-2 focus:ring-green" /></label>
+            <label className={eyebrow}>Location <span className="text-muted">Optional</span><input type="text" maxLength={160} value={location} onChange={(event) => setLocation(event.target.value)} placeholder="e.g. Northcote Tennis Club" className="mt-2 w-full rounded-[8px] border-2 border-ink bg-surface px-3 py-3 font-body text-[15px] normal-case tracking-normal text-ink outline-none focus:ring-2 focus:ring-green" /></label>
           </div>
         </section>
       )}
@@ -348,7 +402,7 @@ export function LogMatchForm({
           </div>
         ) : (
           <div className="w-[200px]">
-            <Button type="button" loading={pending} loadingLabel="Submitting..." onClick={onSubmit}>Submit for approval</Button>
+            <Button type="button" loading={pending} loadingLabel="Submitting..." onClick={onSubmit}>{isExternal ? "Log unranked match" : "Submit for approval"}</Button>
           </div>
         )}
       </div>

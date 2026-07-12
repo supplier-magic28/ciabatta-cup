@@ -5,6 +5,8 @@ import type {
   SetScore,
   ValidatedSet,
   ValidationResult,
+  ExternalMatchSubmission,
+  ExternalValidationResult,
 } from "./types";
 
 /**
@@ -25,6 +27,17 @@ const MATCH_FORMATS: readonly MatchFormat[] = ["one_set", "best_of_3", "pro_set_
 const MAX_GAMES = 30;
 const MAX_TIEBREAK = 99;
 const MAX_SETS = 7;
+const MAX_LOCATION = 160;
+
+function validateDateAndLocation(playedDate: string, locationInput: string) {
+  const date = playedDate?.trim() ?? "";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { ok: false as const, error: "Choose the date the match was played." };
+  const parsed = new Date(`${date}T12:00:00.000Z`);
+  if (Number.isNaN(parsed.valueOf()) || parsed.toISOString().slice(0, 10) !== date) return { ok: false as const, error: "Choose a valid match date." };
+  const location = locationInput?.trim() ?? "";
+  if (location.length > MAX_LOCATION) return { ok: false as const, error: `Location must be ${MAX_LOCATION} characters or fewer.` };
+  return { ok: true as const, playedAt: parsed.toISOString(), location: location || null };
+}
 
 /** Who won a single set: on games, or on the tie-break when games are level. */
 function setWinner(set: SetScore, selfId: string, opponentId: string): string | null {
@@ -63,6 +76,8 @@ export function validateSubmission(input: MatchSubmission, selfId: string): Vali
   if (!MATCH_FORMATS.includes(input.format)) {
     return { ok: false, error: "Choose a match format." };
   }
+  const details = validateDateAndLocation(input.playedDate, input.location);
+  if (!details.ok) return details;
 
   // format_note belongs only to `custom` (matches the DB check constraint).
   const note = input.formatNote?.trim() ?? "";
@@ -127,8 +142,48 @@ export function validateSubmission(input: MatchSubmission, selfId: string): Vali
       type: input.type,
       format: input.format,
       formatNote,
+      playedAt: details.playedAt,
+      location: details.location,
       winnerId: selfSetWins > opponentSetWins ? selfId : opponentId,
       sets,
+    },
+  };
+}
+
+/** Validate the owner-private external variant while reusing all score rules. */
+export function validateExternalSubmission(
+  input: ExternalMatchSubmission,
+  selfId: string,
+): ExternalValidationResult {
+  const opponentName = input.opponentName?.trim() ?? "";
+  if (!opponentName) return { ok: false, error: "Enter your opponent's name." };
+  if (opponentName.length > 100) return { ok: false, error: "Opponent name must be 100 characters or fewer." };
+  const details = validateDateAndLocation(input.playedDate, input.location);
+  if (!details.ok) return details;
+
+  const externalId = "__external_opponent__";
+  const result = validateSubmission({
+    opponentId: externalId,
+    type: "exhibition",
+    format: input.format,
+    formatNote: input.formatNote,
+    playedDate: input.playedDate,
+    location: input.location,
+    sets: input.sets,
+  }, selfId);
+  if (!result.ok) return result;
+
+  return {
+    ok: true,
+    value: {
+      opponentName,
+      saveOpponent: input.saveOpponent === true,
+      format: result.value.format,
+      formatNote: result.value.formatNote,
+      playedAt: details.playedAt,
+      location: details.location,
+      externalWon: result.value.winnerId === externalId,
+      sets: result.value.sets,
     },
   };
 }
