@@ -21,6 +21,8 @@ describe("renderTournamentEmail", () => {
     expect(email.html).toContain("Ringo &lt;Zeus&gt;");
     expect(email.html).not.toContain("Ringo <Zeus>");
     expect(email.html).toContain("https://cup.example/emails/poster-hero.jpg");
+    expect(email.html).toContain("https://cup.example/emails/zeus-avatar.jpg");
+    expect(email.html).not.toContain("zeus-red.png");
     expect(email.text).toContain("ENTRY CONFIRMED");
   });
 

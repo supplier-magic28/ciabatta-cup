@@ -32,6 +32,12 @@ of Done (`CLAUDE.md`).
 - `loading/PageSkeletons` — route-shaped compositions for leaderboard, auth,
   compact lists, forms, profiles, tournament lists, and tournament boards.
 
+**Email rendering**
+- `lib/email/components` - non-React, email-client-safe shell, header/footer,
+  button, pill, detail-card, and Zeus-quote primitives shared by tournament and
+  planned-match lifecycle mail. Tournament mail keeps its original Zeus asset;
+  planned-match mail selects the red Zeus portrait and optional quote sign-off.
+
 **Layout**
 - `layout/SiteHeader` — responsive three-area header with the wordmark,
   wrapping primary navigation, and a permanent top-right Zeus inbox action.

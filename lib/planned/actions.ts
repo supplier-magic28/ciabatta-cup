@@ -1,5 +1,4 @@
 "use server";
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSessionPlayer } from "@/lib/auth/session";
@@ -8,8 +7,16 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { rebuildRatingCache } from "@/lib/scoring/rebuild";
 import { validateSubmission, validateExternalSubmission } from "@/lib/match/submission";
 import type { MatchSubmission, ExternalMatchSubmission } from "@/lib/match/types";
+import { formatScore } from "@/lib/match/score";
 import { sendTournamentEmail } from "@/lib/tournament/email";
-import { plannedEmail } from "./email";
+import { matchLockedInEmail, resultConfirmedEmail } from "./email";
+import {
+  formatPlannedDateTime,
+  formatPlayedDate,
+  matchTypeLabel,
+  resolveResultNames,
+  type PlannedMatchFormat,
+} from "./email-data";
 import { queueUntaggedNudges } from "@/lib/notifications/untagged";
 
 type Result = { ok: true; id?: string } | { ok: false; error: string };
@@ -64,7 +71,125 @@ export async function submitPlannedResult(id:string, input:MatchSubmission|Exter
 
 export async function approvePlannedResult(id:string):Promise<Result>{ const player=await getSessionPlayer();if(!player)return {ok:false,error:"Sign in first."};const admin=createAdminClient();const {data:plan}=await admin.from("planned_matches").select("*").eq("id",id).single();const {data:proposal}=await admin.from("planned_match_results").select("*").eq("planned_match_id",id).eq("status","pending").single();if(!plan||!proposal||plan.opponent_player_id===null||proposal.submitted_by===player.id||player.id!==plan.created_by&&player.id!==plan.opponent_player_id)return {ok:false,error:"This result cannot be approved."};const status=proposal.match_type==="ranked"?"pending_approval":"approved";const {data:match,error}=await admin.from("matches").insert({type:proposal.match_type,format:proposal.format,format_note:proposal.format_note,player1_id:plan.created_by,player2_id:plan.opponent_player_id,winner_id:proposal.winner_player_id,submitted_by:proposal.submitted_by,played_at:proposal.played_at,location:proposal.location,court_id:proposal.court_id,surface:proposal.surface,status,planned_match_id:id}).select("id").single();if(error||!match)return {ok:false,error:"Couldn't create the match fact."};const sets=(proposal.score as Array<{setNumber:number;selfGames:number;opponentGames:number;selfTiebreak:number|null;opponentTiebreak:number|null}>).map(s=>({match_id:match.id,set_number:s.setNumber,p1_games:s.selfGames,p2_games:s.opponentGames,tiebreak_p1:s.selfTiebreak,tiebreak_p2:s.opponentTiebreak}));await admin.from("match_sets").insert(sets);await admin.from("planned_match_results").update({status:"approved",reviewed_at:new Date().toISOString()}).eq("id",proposal.id);await admin.from("planned_matches").update({status:status==="approved"?"confirmed":"awaiting_admin_approval"}).eq("id",id);if(status==="approved"){await rebuildRatingCache();await queueUntaggedNudges(match.id);await sendLifecycleEmail(id,"confirmed",match.id);}refresh();return {ok:true}; }
 
-export async function sendLifecycleEmail(plannedMatchId:string,kind:"locked"|"confirmed",matchId?:string){try{const admin=createAdminClient();const {data:plan}=await admin.from("planned_matches").select("*, external_opponents(display_name)").eq("id",plannedMatchId).single();if(!plan)return;const ids=[plan.created_by,plan.opponent_player_id].filter((id):id is string=>Boolean(id));const {data:people}=await admin.from("players").select("id,email,first_name").in("id",ids);let match:any=null;if(matchId){const {data}=await admin.from("matches").select("winner_id,type,played_at,match_sets(p1_games,p2_games)").eq("id",matchId).single();match=data;}for(const person of people??[]){const other=(people??[]).find(p=>p.id!==person.id);const externalName=plan.external_opponents?.[0]?.display_name;const winner=(people??[]).find(p=>p.id===match?.winner_id)?.first_name??(externalName&&match?.winner_id==null?externalName:"Winner");const loser=winner===person.first_name?(other?.first_name??externalName??"Opponent"):person.first_name??"Player";const email=kind==="locked"?plannedEmail({kind,firstName:person.first_name??"Player",opponentName:other?.first_name??externalName??"Opponent",when:new Intl.DateTimeFormat("en-AU",{dateStyle:"medium",timeStyle:"short"}).format(new Date(plan.scheduled_at)),location:plan.location}):plannedEmail({kind,firstName:person.first_name??"Player",winnerName:winner,loserName:loser,score:(match?.match_sets??[]).map((s:any)=>`${s.p1_games}-${s.p2_games}`).join(", "),type:match?.type==="ranked"?"Ranked · +30 / +15":"Non-ranked · +10"});await sendTournamentEmail(person.email,email,`planned/${plannedMatchId}/${kind}/${person.id}`);}}catch{/* committed lifecycle remains successful */}}
+export async function sendLifecycleEmail(
+  plannedMatchId: string,
+  kind: "locked" | "confirmed",
+  matchId?: string,
+) {
+  try {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
+    if (!siteUrl) throw new Error("Planned-match email URL is not configured.");
+
+    const admin = createAdminClient();
+    const { data: plan } = await admin
+      .from("planned_matches")
+      .select("*, external_opponents(display_name)")
+      .eq("id", plannedMatchId)
+      .single();
+    if (!plan) return;
+
+    const ids = [plan.created_by, plan.opponent_player_id].filter(
+      (id): id is string => Boolean(id),
+    );
+    const { data: people } = await admin
+      .from("players")
+      .select("id,email,first_name")
+      .in("id", ids);
+    const recipients = people ?? [];
+    const relation = plan.external_opponents as
+      | { display_name: string }
+      | Array<{ display_name: string }>
+      | null;
+    const externalName = Array.isArray(relation)
+      ? relation[0]?.display_name ?? null
+      : relation?.display_name ?? null;
+    const assetBaseUrl = `${siteUrl}/emails`;
+
+    type LifecycleMatch = {
+      winner_id: string | null;
+      type: "ranked" | "exhibition" | "unranked_external";
+      format: PlannedMatchFormat;
+      format_note: string | null;
+      external_won: boolean;
+      player1_id: string;
+      player2_id: string | null;
+      played_at: string;
+      match_sets: Array<{
+        set_number: number;
+        p1_games: number;
+        p2_games: number;
+        tiebreak_p1: number | null;
+        tiebreak_p2: number | null;
+      }>;
+    };
+    let match: LifecycleMatch | null = null;
+    if (matchId) {
+      const { data } = await admin
+        .from("matches")
+        .select("winner_id,type,format,format_note,external_won,player1_id,player2_id,played_at,match_sets(set_number,p1_games,p2_games,tiebreak_p1,tiebreak_p2)")
+        .eq("id", matchId)
+        .single();
+      match = data as LifecycleMatch | null;
+    }
+
+    for (const person of recipients) {
+      const other = recipients.find((candidate) => candidate.id !== person.id);
+      const email = kind === "locked"
+        ? matchLockedInEmail({
+            firstName: person.first_name ?? "Player",
+            opponentName: other?.first_name ?? externalName ?? "Opponent",
+            matchDateTime: formatPlannedDateTime(plan.scheduled_at),
+            location: plan.location.trim() || "To be decided",
+            matchUrl: `${siteUrl}/matches/${plannedMatchId}`,
+            assetBaseUrl,
+            externalOpponent: plan.opponent_player_id === null,
+          })
+        : (() => {
+            if (!match) throw new Error("Confirmed planned match is missing its match fact.");
+            const names = resolveResultNames({
+              player1Id: match.player1_id,
+              player2Id: match.player2_id,
+              winnerId: match.winner_id,
+              externalWon: match.external_won,
+              externalName,
+              players: recipients.map((player) => ({
+                id: player.id,
+                firstName: player.first_name ?? "Player",
+              })),
+            });
+            const sets = [...(match.match_sets ?? [])].sort(
+              (left, right) => left.set_number - right.set_number,
+            );
+            return resultConfirmedEmail({
+              ...names,
+              score: formatScore(sets.map((set) => ({
+                p1Games: set.p1_games,
+                p2Games: set.p2_games,
+                tiebreakP1: set.tiebreak_p1,
+                tiebreakP2: set.tiebreak_p2,
+              }))),
+              matchTypeLabel: matchTypeLabel(match.type, match.format, match.format_note),
+              matchDate: formatPlayedDate(match.played_at),
+              scoringVariant: match.type === "ranked"
+                ? "ranked"
+                : match.type === "exhibition"
+                  ? "exhibition"
+                  : "external",
+              ladderUrl: `${siteUrl}/`,
+              assetBaseUrl,
+            });
+          })();
+
+      await sendTournamentEmail(
+        person.email,
+        email,
+        `planned/${plannedMatchId}/${kind}/${person.id}`,
+      );
+    }
+  } catch {
+    // Email remains non-blocking after the lifecycle transition has committed.
+  }
+}
 
 export type MarkNotificationsResult = { ok: true; count: number } | { ok: false; error: string };
 

@@ -14,6 +14,9 @@ replace the raw handoff artifacts.
   `design-reference/design_handoff_profile_updates/`.
 - Courts and surfaces handoff: `court locations.zip` supplied externally;
   implemented through the maintained route and component patterns below.
+- Planned-match email handoff: `match email updates.zip` supplied externally;
+  implemented through the shared table-based email primitives and lifecycle
+  mapping described below.
 - Authoritative design tokens: `components/tokens.ts` and the matching CSS
   theme in `app/globals.css`.
 - Shared production UI vocabulary: `components/README.md`.
@@ -66,5 +69,12 @@ inside the existing auth shell; the callback route is `/auth/confirm`.
 ## Planned matches and notifications
 
 `/matches/plan` creates a stake-free upcoming-match shell; `/matches/[plannedMatchId]` is the participant review surface for proposal, locked-in, and result states. Zeus notifications live permanently at `/notifications` and are not embedded in Profile, while upcoming plans are public on the ladder.
+
+Locked-in and result-confirmed planned-match emails use the same 600px,
+table-based shell as tournament lifecycle mail, with inline tokens, hosted Zeus
+imagery, matching plain text, and absolute match/ladder actions. Result cards
+state the actual scoring variant: ranked +30/+15, internal exhibition +10 each,
+or owner-only +10 for a Non-Ciabatta result. Dates follow Melbourne calendar
+boundaries and empty planned locations display as `To be decided`.
 
 The July 2026 points handoff is represented by `/points`, `/practice/new`, practice rows and filters in `/admin/approvals`, and the profile decay-watch card. Crust denotes approval-pending practice; rust denotes permanent point loss. The prototype HTML remains reference-only; production screens use the shared token and component vocabulary.

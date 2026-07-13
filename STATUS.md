@@ -21,7 +21,11 @@ This is the short operational handover. Durable intent belongs in
   owner-filtered Realtime, lifecycle cards navigate to their match, and weekly-deduped
   missing-tag nudges navigate to the tagging queue; Profile stays profile-only.
 
-- Players can create and respond to planned upcoming-match shells; proposed and locked-in plans appear on the public ladder calendar, and Zeus notification cards appear on the owner profile.
+- Players can create and respond to planned upcoming-match shells; proposed and
+  locked-in plans appear on the public ladder calendar. Full-fidelity Zeus
+  locked-in and result-confirmed emails use Melbourne dates, direct match/ladder
+  actions, accurate ranked/exhibition/external point cards, and the established
+  non-blocking, idempotent lifecycle delivery stages.
 
 - Public ladder totals now use activity points while ordinary Elo remains derived for history/seeding: ranked +30/+15, exhibition/external +10, approved practice +5, and tournament placements unchanged.
 - Permanent Melbourne-day decay applies from first tennis activity (−1 daily plus stacked −10/7-day and −30/30-day drought penalties), with manual play marks protecting the day and resetting drought risk without awarding points.
