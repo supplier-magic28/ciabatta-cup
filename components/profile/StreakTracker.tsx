@@ -4,8 +4,10 @@ import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { setPlayedToday, type ProfileActionState } from "@/lib/profile/actions";
 import { streakWindow } from "@/lib/profile/streak";
+import Link from "next/link";
+import type { DecayWatch } from "@/lib/scoring";
 
-export function StreakTracker({ playedDays, todayKey, currentStreak, bestStreak, manuallyMarkedToday }: { playedDays: string[]; todayKey: string; currentStreak: number; bestStreak: number; manuallyMarkedToday: boolean }) {
+export function StreakTracker({ playedDays, todayKey, currentStreak, bestStreak, manuallyMarkedToday, decayWatch }: { playedDays: string[]; todayKey: string; currentStreak: number; bestStreak: number; manuallyMarkedToday: boolean; decayWatch: DecayWatch }) {
   const [period, setPeriod] = useState<7 | 30>(7);
   const [state, action, pending] = useActionState<ProfileActionState | undefined, FormData>(setPlayedToday, undefined);
   const days = streakWindow(new Set(playedDays), todayKey, period);
@@ -24,6 +26,7 @@ export function StreakTracker({ playedDays, todayKey, currentStreak, bestStreak,
       <div className="border-2 border-ink bg-surface p-4"><p className="font-mono text-[9px] uppercase text-muted">Best streak</p><p className="mt-2 font-mono text-3xl font-bold text-ink">{bestStreak}</p><p className="font-body text-xs text-muted">days</p></div>
       <div className="border-2 border-ink bg-surface p-4"><p className="font-mono text-[9px] uppercase text-muted">Days played</p><p className="mt-2 font-mono text-3xl font-bold text-ink">{daysPlayed}</p><p className="font-body text-xs text-muted">of {period}</p></div>
     </section>
+    {!decayWatch.playedToday && decayWatch.daysSinceLastTennis > 0 && <section className="border-2 border-ink bg-ink p-5 text-cream shadow-[4px_4px_0_var(--color-rust)]"><p className="font-mono text-[10px] uppercase tracking-[2px] text-green-muted">Decay watch</p><div className="mt-3 flex items-end justify-between gap-4"><div><p className="font-mono text-3xl font-bold text-rust">−{decayWatch.decayedSoFar}</p><p className="font-mono text-[10px] uppercase">{decayWatch.daysSinceLastTennis} days since tennis</p></div><p className="max-w-44 text-right font-body text-sm">Play in the next {decayWatch.daysUntil7DayFine} days or another −10 lands.</p></div><div className="mt-5 flex gap-4"><Link href="/matches/new" className="font-mono text-[10px] uppercase text-chartreuse underline">Log a match</Link><Link href="/practice/new" className="font-mono text-[10px] uppercase text-chartreuse underline">Log solo practice</Link></div><p className="mt-4 font-mono text-[9px] uppercase text-green-muted">30-day fine in {decayWatch.daysUntil30DayFine} days · points floor at zero</p></section>}
     <form action={action}><input type="hidden" name="mode" value={manuallyMarkedToday ? "remove" : "mark"} /><Button type="submit" loading={pending} loadingLabel="Updating..." className="w-full">{manuallyMarkedToday ? "Remove today’s manual mark" : "I played today"}</Button>{state && <p className={`mt-3 font-mono text-xs ${state.ok ? "text-green" : "text-rust"}`}>{state.ok ? state.message : state.error}</p>}</form>
   </div>;
 }

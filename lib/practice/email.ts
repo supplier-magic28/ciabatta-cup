@@ -1,0 +1,9 @@
+const esc = (value: string) => value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]!);
+export type PracticeEmailKind = "logged" | "approved" | "rejected";
+
+export function renderPracticeEmail(input: { kind: PracticeEmailKind; firstName: string; activity: string; minutes: number; practiceDate: string }) {
+  const title = input.kind === "logged" ? "Practice logged" : input.kind === "approved" ? "+5 points approved" : "Practice claim reviewed";
+  const message = input.kind === "logged" ? "Zeus has received your claim. An organiser must approve it before the points land." : input.kind === "approved" ? "The work has been witnessed. Five points are yours, and the drought clock resets on your practice date." : "This claim was not approved, so it earns no points or drought protection.";
+  const detail = `${input.activity.replace(/_/g, " ")} · ${input.minutes} minutes · ${input.practiceDate}`;
+  return { subject: `Ciabatta Cup: ${title}`, text: `${title}\n\n${input.firstName}, ${message}\n\n${detail}`, html: `<!doctype html><html><body style="margin:0;background:#EFE6D0;color:#1B1A16;font-family:Arial,sans-serif"><table role="presentation" width="100%"><tr><td align="center" style="padding:24px"><table role="presentation" width="600" style="max-width:600px;background:#F7F0DE;border:2px solid #1B1A16"><tr><td style="background:#1B1A16;padding:32px;color:#C9DA5A;text-align:center"><div style="font:11px monospace;letter-spacing:3px">SOLO PRACTICE</div><h1>${esc(title)}</h1></td></tr><tr><td style="padding:32px"><h2>${esc(input.firstName)},</h2><p>${esc(message)}</p><div style="border:2px dashed #8C5426;padding:18px;font-family:monospace;text-transform:uppercase">${esc(detail)}</div><p style="margin-top:24px;color:#3E6B35"><strong>— ZEUS</strong></p></td></tr></table></td></tr></table></body></html>` };
+}

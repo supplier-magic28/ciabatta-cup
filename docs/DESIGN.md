@@ -55,3 +55,6 @@ inside the existing auth shell; the callback route is `/auth/confirm`.
 - Loading states must reserve the major geometry of their final route at mobile
   and desktop widths. Mutation controls acknowledge immediately but never imply
   that an immutable result or rating changed before server confirmation.
+# Ladder points and solo practice addition
+
+The July 2026 points handoff is represented by `/points`, `/practice/new`, practice rows and filters in `/admin/approvals`, and the profile decay-watch card. Crust denotes approval-pending practice; rust denotes permanent point loss. The prototype HTML remains reference-only; production screens use the shared token and component vocabulary.

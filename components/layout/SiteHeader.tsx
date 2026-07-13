@@ -2,7 +2,7 @@ import Link from "next/link";
 import { signOut } from "@/lib/auth/actions";
 import { Wordmark } from "@/components/brand/Wordmark";
 
-export function SiteHeader({ role, active }: { role: "player" | "admin"; active?: "leaderboard" | "tournaments" | "profile" }) {
+export function SiteHeader({ role, active }: { role: "player" | "admin"; active?: "leaderboard" | "tournaments" | "profile" | "points" }) {
   const linkClass = "font-mono text-[10px] uppercase tracking-[1.5px]";
   return (
     <header className="mb-7 flex flex-wrap items-start justify-between gap-4 border-b-2 border-ink pb-4">
@@ -13,6 +13,7 @@ export function SiteHeader({ role, active }: { role: "player" | "admin"; active?
         <Link href="/" className={`${linkClass} ${active === "leaderboard" ? "text-ink underline decoration-green decoration-2 underline-offset-4" : "text-ink"}`}>
           Ladder
         </Link>
+        <Link href="/points" className={`${linkClass} ${active === "points" ? "text-ink underline decoration-green decoration-2 underline-offset-4" : "text-green"}`}>Points</Link>
         <Link href="/tournaments" className={`${linkClass} ${active === "tournaments" ? "text-ink underline decoration-green decoration-2 underline-offset-4" : "text-green"}`}>
           Cups
         </Link>

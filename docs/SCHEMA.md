@@ -290,3 +290,10 @@ Manual streak marks only; match-derived days are never copied here.
 The streak projection unions these marks with every participating match except
 rejected submissions. H2H and history projections continue to use approved
 facts only. No current streak, best streak, or H2H aggregate is stored.
+# Activity-points delta (2026-07-13)
+
+`players.rating_points` is a rebuildable snapshot of public activity points, not authoritative Elo. Public points are derived from approved ordinary matches (+15 participation each, +15 winner bonus), approved exhibition/external participation (+10), approved `practice_sessions` (+5), tournament placements, and permanent derived inactivity deductions. Ordinary Elo remains a separate pure projection for seeding/history.
+
+`practice_sessions` stores an owner claim (`serves`, `wall_hits`, or `other`), 1–300 minutes, Melbourne-calendar practice date, optional 500-character note, and pending/approved/rejected review metadata. Owners insert/select their own pending facts; organisers select and terminally review all. Reviewed facts are immutable.
+
+`play_days` marks are tennis dates for streak and decay purposes but carry no point award. Decay begins at first tennis activity, charges −1 per missed Melbourne day plus stacked −10 per completed seven-day stretch and −30 per completed thirty-day stretch, and is floored at zero.

@@ -61,14 +61,16 @@ export function LogMatchForm({
   selfName,
   opponents,
   savedExternalOpponents,
+  initialType,
 }: {
   selfName: string;
   opponents: OpponentOption[];
   savedExternalOpponents: OpponentOption[];
+  initialType?: "ranked" | "exhibition";
 }) {
   const [step, setStep] = useState(1);
   const [opponentId, setOpponentId] = useState("");
-  const [type, setType] = useState<MatchType | "">("");
+  const [type, setType] = useState<MatchType | "">(initialType ?? "");
   const [format, setFormat] = useState<MatchFormat | "">("");
   const [formatNote, setFormatNote] = useState("");
   const [playedDate, setPlayedDate] = useState(() => new Date().toLocaleDateString("en-CA"));

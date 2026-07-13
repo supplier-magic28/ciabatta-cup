@@ -34,6 +34,9 @@ of Done (`CLAUDE.md`).
 
 **Layout**
 - `layout/SiteHeader` — shared wordmark and primary navigation for the ladder,
+  cups, points guide, matches, profile, and admin tools.
+- `practice/PracticeForm` — owner solo-practice claim form with activity, duration, date, notes, approval callout, and pending result state.
+- `practice/PracticeApprovalActions` — organiser approve +5/reject controls for pending practice claims.
   tournaments, matches, admin tools, and sign-out.
 
 **Leaderboard**
@@ -101,3 +104,6 @@ of Done (`CLAUDE.md`).
   profiles activate only after the password update succeeds.
 
 Planned next (from ARCHITECTURE.md): `Card`, `RankBadge`, `StatBlock`.
+# Test inventory
+
+- `ui/BackLink.test` — contract coverage for deterministic parent-link rendering.

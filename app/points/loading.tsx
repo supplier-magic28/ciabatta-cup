@@ -1,0 +1,1 @@
+export default function Loading() { return <main className="mx-auto w-full max-w-5xl animate-pulse p-6"><div className="h-9 w-64 bg-hairline"/><div className="mt-6 grid gap-4 sm:grid-cols-2">{[1,2,3,4].map((n)=><div key={n} className="h-48 border-2 border-hairline bg-surface"/>)}</div></main>; }

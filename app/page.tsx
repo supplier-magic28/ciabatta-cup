@@ -14,6 +14,7 @@ import { LoafBadge } from "@/components/brand/LoafBadge";
 import { ExpandableLeaderboard, type LeaderboardPlayer } from "@/components/leaderboard/ExpandableLeaderboard";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { ReignSummary } from "@/components/players/ReignSummary";
+import { dateKeyInZone } from "@/lib/profile/streak";
 
 /**
  * The real board (design screen 01). It reads match facts and derives the
@@ -30,6 +31,8 @@ export default async function Home() {
     { data: placementRows },
     { data: tournamentRows },
     { data: fixtureRows },
+    { data: practiceRows },
+    { data: playDayRows },
   ] = await Promise.all([
     supabase
       .from("players")
@@ -41,6 +44,8 @@ export default async function Home() {
     supabase.from("tournament_placements").select("tournament_id, player_id, placement, points, awarded_at"),
     supabase.from("tournaments").select("id, counts_as"),
     supabase.from("fixtures").select("id, ruleset"),
+    supabase.from("practice_sessions").select("id, player_id, practiced_on, status"),
+    supabase.from("play_days").select("player_id, played_on"),
   ]);
 
   const players = (playerRows ?? []).map((player) => ({
@@ -59,6 +64,9 @@ export default async function Home() {
     players.map((player) => player.id),
     (matchRows ?? []) as ScoringMatchRow[],
     (placementRows ?? []) as TournamentPlacementRow[],
+    practiceRows ?? [],
+    playDayRows ?? [],
+    dateKeyInZone(new Date()),
   );
   const standings = cache.rankings
     .filter((ranking) => activePlayerIds.has(ranking.playerId))

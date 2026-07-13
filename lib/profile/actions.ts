@@ -5,6 +5,7 @@ import { getSessionPlayer } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { AVATAR_MIME_TYPES, MAX_AVATAR_UPLOAD_BYTES } from "./crop";
 import { dateKeyInZone } from "./streak";
+import { rebuildRatingCache } from "@/lib/scoring/rebuild";
 
 export type ProfileActionState =
   | { ok: true; message: string }
@@ -115,6 +116,10 @@ export async function setPlayedToday(
     ? await query.delete().eq("player_id", player.id).eq("played_on", today)
     : await query.upsert({ player_id: player.id, played_on: today }, { onConflict: "player_id,played_on", ignoreDuplicates: true });
   if (error) return { ok: false, error: "Couldn't update today's tennis mark." };
+  try { await rebuildRatingCache(); }
+  catch { return { ok: false, error: "Tennis mark saved, but the points snapshot needs an admin rebuild." }; }
   revalidatePath("/profile/streak");
+  revalidatePath("/");
+  revalidatePath("/players/[playerId]", "page");
   return { ok: true, message: remove ? "Today's manual mark removed." : "Today counts as played." };
 }

@@ -50,13 +50,13 @@ describe("rating cache materialization", () => {
     const cache = buildRatingCache(["alice", "bob", "carol"], rows);
 
     expect(cache.rankings).toEqual([
-      { playerId: "alice", rating: 16, rank: 1, played: 1, won: 1, lost: 0 },
-      { playerId: "bob", rating: 0, rank: 2, played: 1, won: 0, lost: 1 },
+      { playerId: "alice", rating: 30, rank: 1, played: 1, won: 1, lost: 0 },
+      { playerId: "bob", rating: 15, rank: 2, played: 1, won: 0, lost: 1 },
       { playerId: "carol", rating: 0, rank: 3, played: 0, won: 0, lost: 0 },
     ]);
     expect(cache.ratingPoints).toEqual([
-      { playerId: "alice", rating: 16 },
-      { playerId: "bob", rating: 0 },
+      { playerId: "alice", rating: 30 },
+      { playerId: "bob", rating: 15 },
       { playerId: "carol", rating: 0 },
     ]);
     expect(cache.ratingHistory).toHaveLength(2);
@@ -72,8 +72,8 @@ describe("rating cache materialization", () => {
       { player_id: "bob", points: 50, awarded_at: "2026-08-11T04:00:00Z" },
     ]);
     expect(cache.ratingPoints).toEqual([
-      { playerId: "alice", rating: 216 },
-      { playerId: "bob", rating: 50 },
+      { playerId: "alice", rating: 230 },
+      { playerId: "bob", rating: 65 },
     ]);
   });
 

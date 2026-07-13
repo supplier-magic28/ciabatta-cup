@@ -11,7 +11,7 @@ import { PARENT_ROUTES } from "@/lib/navigation/parents";
  * loads the opponent list, and hands off to the client wizard. The proxy already
  * protects `/matches`; the guard here is belt-and-braces.
  */
-export default async function NewMatchPage() {
+export default async function NewMatchPage({ searchParams }: { searchParams: Promise<{ type?: string }> }) {
   const player = await getSessionPlayer();
   if (!player) redirect("/sign-in");
 
@@ -37,11 +37,13 @@ export default async function NewMatchPage() {
     nickname: self?.nickname,
     useNickname: self?.use_nickname,
   });
+  const requestedType = (await searchParams).type;
+  const initialType = requestedType === "ranked" || requestedType === "exhibition" ? requestedType : undefined;
 
   return (
     <main className="mx-auto w-full max-w-md flex-1 px-6 py-10">
       <BackLink href={PARENT_ROUTES.matches} className="mb-5">Your matches</BackLink>
-      <LogMatchForm selfName={selfName} opponents={opponents} savedExternalOpponents={(savedExternalRows ?? []).map((row) => ({ id: row.id, name: row.display_name }))} />
+      <LogMatchForm initialType={initialType} selfName={selfName} opponents={opponents} savedExternalOpponents={(savedExternalRows ?? []).map((row) => ({ id: row.id, name: row.display_name }))} />
     </main>
   );
 }

@@ -9,6 +9,8 @@ import type { ExternalMatchSubmission, MatchSubmission } from "./types";
 import { formatScore } from "./score";
 import { renderExternalMatchEmail } from "./external-email";
 import { sendTournamentEmail } from "@/lib/tournament/email";
+import { renderRankedMatchLoggedEmail } from "./submission-email";
+import { displayName } from "@/lib/auth/displayName";
 
 export type SubmitResult = { ok: true; matchId: string; warning?: string } | { ok: false; error: string };
 
@@ -85,8 +87,25 @@ export async function submitMatch(input: MatchSubmission): Promise<SubmitResult>
     return { ok: false, error: SAVE_FAILED };
   }
 
+  let warning: string | undefined;
+  if (match.type === "ranked") {
+    const { data: opponent } = await supabase.from("players").select("email, first_name, last_name, nickname, use_nickname").eq("id", match.opponentId).single();
+    const selfName = displayName({ firstName: player.firstName, lastName: player.lastName, email: player.email });
+    const opponentName = opponent ? displayName({ firstName: opponent.first_name, lastName: opponent.last_name, email: opponent.email, nickname: opponent.nickname, useNickname: opponent.use_nickname }) : "Opponent";
+    const winnerName = match.winnerId === player.id ? selfName : opponentName;
+    const loserName = match.winnerId === player.id ? opponentName : selfName;
+    const score = formatScore(match.sets.map((set) => ({ p1Games: set.selfGames, p2Games: set.opponentGames, tiebreakP1: set.selfTiebreak, tiebreakP2: set.opponentTiebreak })));
+    const base = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+    try {
+      await Promise.all([
+        sendTournamentEmail(player.email, renderRankedMatchLoggedEmail({ firstName: player.firstName ?? "Player", winnerName, loserName, score, matchDate: match.playedAt.slice(0, 10) }), `ranked-match/logged/${created.id}/${player.id}`),
+        opponent?.email ? sendTournamentEmail(opponent.email, renderRankedMatchLoggedEmail({ firstName: opponent.first_name ?? "Player", winnerName, loserName, score, matchDate: match.playedAt.slice(0, 10), confirmUrl: `${base}/matches` }), `ranked-match/logged/${created.id}/${match.opponentId}`) : Promise.resolve(),
+      ]);
+    } catch { warning = "Match logged, but one or more result emails could not be sent."; }
+  }
+
   revalidatePath("/matches");
-  return { ok: true, matchId: created.id };
+  return { ok: true, matchId: created.id, warning };
 }
 
 export async function submitExternalMatch(input: ExternalMatchSubmission): Promise<SubmitResult> {
@@ -180,6 +199,13 @@ export async function confirmMatch(matchId: string): Promise<MatchActionResult> 
   if (error) {
     // RLS denial, already-confirmed (PK), or no-longer-pending.
     return { ok: false, error: "Couldn't confirm this match — it may already be confirmed." };
+  }
+
+  const { data: advanced } = await supabase.from("matches").select("type, status").eq("id", matchId).single();
+  if (advanced?.type === "exhibition" && advanced.status === "approved") {
+    try { await rebuildRatingCache(); }
+    catch { return { ok: false, error: "Match confirmed, but points need an admin rebuild." }; }
+    revalidateRatingSurfaces();
   }
 
   revalidatePath("/matches");

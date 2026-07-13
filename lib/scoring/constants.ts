@@ -18,6 +18,13 @@ export const K_FACTOR = 32;
 
 /** Ratings never display below zero. */
 export const RATING_FLOOR = 0;
+export const RANKED_PLAY_POINTS = 15;
+export const RANKED_WIN_BONUS = 15;
+export const UNRANKED_FLAT_POINTS = 10;
+export const PRACTICE_POINTS = 5;
+export const DECAY_PER_DAY = 1;
+export const DROUGHT_7_PENALTY = 10;
+export const DROUGHT_30_PENALTY = 30;
 
 /** Elo divisor: a 400-point gap ⇒ the favourite is expected to score ~0.91. */
 export const ELO_DIVISOR = 400;

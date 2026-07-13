@@ -194,3 +194,6 @@ Dashboard → Authentication → Add user, then `insert` the `players` row with
 > alter table public.players enable trigger enforce_player_self_update;
 > commit;
 > ```
+# Activity points and practice
+
+Apply `20260712120000_profile_play_days.sql` before `20260713120000_ladder_points_practice.sql`. The latter adds organiser-reviewed `practice_sessions`, owner/admin RLS, field constraints, and reviewed-fact immutability. After deployment, use the existing admin rebuild control once so the persisted points snapshot matches the activity economy; read surfaces compute current Melbourne-day decay from facts.

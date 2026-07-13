@@ -49,6 +49,8 @@ export interface PlayerRating {
   playerId: string;
   /** Current Elo rating, or zero before the first approved ranked result. */
   rating: number;
+  /** Internal ordinary-match Elo retained for seeding and history. */
+  eloRating?: number;
   /** 1-based rank; 1 = highest rating. Ties break by `playerId` (interim). */
   rank: number;
   /** Ranked + approved matches played. */
@@ -99,4 +101,12 @@ export interface ScoringResult {
   ratingHistory: RatingHistoryEntry[];
   /** Rebuildable #1-holder periods, beginning with the first scored match. */
   reigns: CiabattaReign[];
+}
+
+export interface DecayWatch {
+  daysSinceLastTennis: number;
+  decayedSoFar: number;
+  daysUntil7DayFine: number;
+  daysUntil30DayFine: number;
+  playedToday: boolean;
 }

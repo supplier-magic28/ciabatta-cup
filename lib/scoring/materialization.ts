@@ -8,6 +8,8 @@ import type {
   PlayerRating,
   RatingHistoryEntry,
 } from "./types";
+import { computeActivityPoints, type PlayDayFact, type PracticeFact } from "./activityPoints";
+import type { DecayWatch } from "./types";
 
 /** The subset of a `matches` row the pure scoring engine needs. */
 export interface ScoringMatchRow {
@@ -32,6 +34,8 @@ export interface RatingCache {
   ratingHistory: RatingHistoryEntry[];
   reigns: CiabattaReign[];
   ratingPoints: Array<{ playerId: string; rating: number }>;
+  decayWatches: Map<string, DecayWatch>;
+  eloRatings: Map<string, number>;
 }
 
 /** Map database naming to the lossless input contract of `computeRankings`. */
@@ -57,18 +61,12 @@ export function toScoringMatches(rows: ScoringMatchRow[]): Match[] {
  * This function remains pure so both the database writer and read surfaces use
  * exactly the same interpretation of the facts.
  */
-export function buildRatingCache(playerIds: string[], rows: ScoringMatchRow[], awards: TournamentPlacementRow[] = []): RatingCache {
+export function buildRatingCache(playerIds: string[], rows: ScoringMatchRow[], awards: TournamentPlacementRow[] = [], practices: PracticeFact[] = [], playDays: PlayDayFact[] = [], asOfDate = latestActivityDate(rows, practices, playDays)): RatingCache {
   const computed = computeRankings(toScoringMatches(rows));
   const computedByPlayer = new Map(computed.rankings.map((ranking) => [ranking.playerId, ranking]));
   const roster = [...new Set(playerIds)];
 
-  const awardByPlayer = new Map<string, number>();
-  for (const award of awards) awardByPlayer.set(award.player_id, (awardByPlayer.get(award.player_id) ?? 0) + award.points);
-  for (const match of rows) {
-    if (match.type === "unranked_external" && match.status === "approved") {
-      awardByPlayer.set(match.player1_id, (awardByPlayer.get(match.player1_id) ?? 0) + 10);
-    }
-  }
+  const activity = computeActivityPoints(playerIds, rows, awards, practices, playDays, asOfDate);
   const rankings = roster
     .map((playerId) =>
       computedByPlayer.get(playerId) ?? {
@@ -81,8 +79,7 @@ export function buildRatingCache(playerIds: string[], rows: ScoringMatchRow[], a
       },
     )
     .map((ranking) => {
-      const award = awardByPlayer.get(ranking.playerId) ?? 0;
-      return award > 0 ? { ...ranking, rating: ranking.rating + award } : ranking;
+      return { ...ranking, rating: activity.points.get(ranking.playerId) ?? 0 };
     })
     .sort((a, b) => b.rating - a.rating || a.playerId.localeCompare(b.playerId))
     .map((ranking, index) => ({ ...ranking, rank: index + 1 }));
@@ -113,10 +110,27 @@ export function buildRatingCache(playerIds: string[], rows: ScoringMatchRow[], a
     externalHistory.push({ matchId: match.id, playerId: match.player1_id, pointsBefore, pointsAfter: pointsBefore + 10, rankBefore: rank, rankAfter: rank, playedAt: match.played_at });
     externalApplied.set(match.player1_id, applied + 10);
   }
+  const ordinaryHistory: RatingHistoryEntry[] = [];
+  const ordinaryApplied = new Map<string, number>();
+  for (const match of rows.filter((row) => row.status === "approved" && row.tournament_id == null && row.type !== "unranked_external").slice().sort((a, b) => a.played_at.localeCompare(b.played_at) || a.id.localeCompare(b.id))) {
+    for (const playerId of [match.player1_id, match.player2_id].filter((id): id is string => id !== null)) {
+      const award = match.type === "ranked" ? 15 + (match.winner_id === playerId ? 15 : 0) : 10;
+      const before = ordinaryApplied.get(playerId) ?? 0;
+      const rank = rankByPlayer.get(playerId) ?? 1;
+      ordinaryHistory.push({ matchId: match.id, playerId, pointsBefore: before, pointsAfter: before + award, rankBefore: rank, rankAfter: rank, playedAt: match.played_at });
+      ordinaryApplied.set(playerId, before + award);
+    }
+  }
   return {
     rankings,
-    ratingHistory: [...computed.ratingHistory, ...externalHistory].sort((a, b) => a.playedAt.localeCompare(b.playedAt) || a.matchId.localeCompare(b.matchId)),
+    ratingHistory: [...ordinaryHistory, ...externalHistory].sort((a, b) => a.playedAt.localeCompare(b.playedAt) || a.matchId.localeCompare(b.matchId)),
     reigns,
     ratingPoints: rankings.map(({ playerId, rating }) => ({ playerId, rating })),
+    decayWatches: activity.watches,
+    eloRatings: new Map(computed.rankings.map((ranking) => [ranking.playerId, ranking.rating])),
   };
+}
+
+function latestActivityDate(rows: ScoringMatchRow[], practices: PracticeFact[], playDays: PlayDayFact[]): string {
+  return [...rows.filter((row) => row.status !== "rejected").map((row) => row.played_at.slice(0, 10)), ...practices.filter((row) => row.status === "approved").map((row) => row.practiced_on), ...playDays.map((row) => row.played_on)].sort().at(-1) ?? new Date().toISOString().slice(0, 10);
 }

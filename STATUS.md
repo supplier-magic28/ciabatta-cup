@@ -1,11 +1,15 @@
 # Ciabatta Cup Status
 
-**Last updated:** 2026-07-12
+**Last updated:** 2026-07-13
 
 This is the short operational handover. Durable intent belongs in
 `ARCHITECTURE.md`, the data model in `docs/SCHEMA.md`, and decisions in ADRs.
 
 ## Current capability
+
+- Public ladder totals now use activity points while ordinary Elo remains derived for history/seeding: ranked +30/+15, exhibition/external +10, approved practice +5, and tournament placements unchanged.
+- Permanent Melbourne-day decay applies from first tennis activity (−1 daily plus stacked −10/7-day and −30/30-day drought penalties), with manual play marks protecting the day and resetting drought risk without awarding points.
+- Players can review the points economy, log organiser-reviewed solo practice, receive lifecycle emails, and see current drought risk on their profile; organisers review match and practice claims in one filtered queue.
 
 - Authenticated players can sign up, sign in, and view the active-player Elo
   leaderboard.
@@ -79,6 +83,7 @@ after that password update succeeds.
 | `20260710140000_safe_rating_cache_rebuild.sql` | Applied to production (operator reported) |
 | `20260712090000_external_match_type.sql` through `20260712110000_delete_own_external_matches.sql` | Applied to production (operator verified logging, email, history, and deletion) |
 | `20260712120000_profile_play_days.sql` | Ready to apply |
+| `20260713120000_ladder_points_practice.sql` | Ready to apply after profile play days |
 
 ## Current blockers
 
@@ -91,8 +96,7 @@ after that password update succeeds.
 
 ## Next product slice
 
-Deploy the zero-based ladder, run the existing admin rating rebuild once, then
-verify the qualifier at 100/50/20/10 and its expandable player histories.
+Apply the two ready migrations, deploy the activity-points release, run the admin rating rebuild once, and verify practice review, ranked emails, Melbourne decay, and the qualifier placement totals in production.
 Append-only corrections, generalised setup, and mid-event withdrawals remain
 deferred.
 
