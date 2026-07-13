@@ -5,6 +5,7 @@ import { displayName } from "@/lib/auth/displayName";
 import { LogMatchForm, type OpponentOption } from "@/components/match/LogMatchForm";
 import { BackLink } from "@/components/ui/BackLink";
 import { PARENT_ROUTES } from "@/lib/navigation/parents";
+import { loadCourtOptions } from "@/lib/courts/read";
 
 /**
  * Log-match screen (design screen 03). Server component: gates the session,
@@ -16,9 +17,10 @@ export default async function NewMatchPage({ searchParams }: { searchParams: Pro
   if (!player) redirect("/sign-in");
 
   const supabase = await createClient();
-  const [{ data }, { data: savedExternalRows }] = await Promise.all([
+  const [{ data }, { data: savedExternalRows }, courts] = await Promise.all([
     supabase.from("players").select("id, first_name, last_name, email, nickname, use_nickname, status").order("first_name", { ascending: true }),
     supabase.from("external_opponents").select("id, display_name").order("display_name", { ascending: true }),
+    loadCourtOptions(),
   ]);
 
   const rows = data ?? [];
@@ -43,7 +45,7 @@ export default async function NewMatchPage({ searchParams }: { searchParams: Pro
   return (
     <main className="mx-auto w-full max-w-md flex-1 px-6 py-10">
       <BackLink href={PARENT_ROUTES.matches} className="mb-5">Your matches</BackLink>
-      <LogMatchForm initialType={initialType} selfName={selfName} opponents={opponents} savedExternalOpponents={(savedExternalRows ?? []).map((row) => ({ id: row.id, name: row.display_name }))} />
+      <LogMatchForm initialType={initialType} selfName={selfName} opponents={opponents} savedExternalOpponents={(savedExternalRows ?? []).map((row) => ({ id: row.id, name: row.display_name }))} courts={courts} />
     </main>
   );
 }

@@ -1,0 +1,1 @@
+export default function NotificationsLoading(){return <main className="mx-auto w-full max-w-3xl p-6"><div className="h-16 animate-pulse border-b-2 border-hairline"/><div className="mt-8 h-12 w-2/3 animate-pulse bg-row"/><div className="mt-6 grid gap-3">{[1,2,3].map((item)=><div key={item} className="h-32 animate-pulse border-2 border-hairline bg-surface"/>)}</div></main>}

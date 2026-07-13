@@ -8,6 +8,7 @@ import type {
   ExternalMatchSubmission,
   ExternalValidationResult,
 } from "./types";
+import { SURFACES } from "@/lib/courts/types";
 
 /**
  * Pure validation + winner derivation for a match submission (ADR-0008).
@@ -78,6 +79,7 @@ export function validateSubmission(input: MatchSubmission, selfId: string): Vali
   }
   const details = validateDateAndLocation(input.playedDate, input.location);
   if (!details.ok) return details;
+  if (input.surface && !SURFACES.includes(input.surface)) return { ok: false, error: "Choose a valid surface." };
 
   // format_note belongs only to `custom` (matches the DB check constraint).
   const note = input.formatNote?.trim() ?? "";
@@ -144,6 +146,8 @@ export function validateSubmission(input: MatchSubmission, selfId: string): Vali
       formatNote,
       playedAt: details.playedAt,
       location: details.location,
+      courtId: input.courtId?.trim() || null,
+      surface: input.surface || null,
       winnerId: selfSetWins > opponentSetWins ? selfId : opponentId,
       sets,
     },
@@ -169,6 +173,8 @@ export function validateExternalSubmission(
     formatNote: input.formatNote,
     playedDate: input.playedDate,
     location: input.location,
+    courtId: input.courtId,
+    surface: input.surface,
     sets: input.sets,
   }, selfId);
   if (!result.ok) return result;
@@ -182,6 +188,8 @@ export function validateExternalSubmission(
       formatNote: result.value.formatNote,
       playedAt: details.playedAt,
       location: details.location,
+      courtId: input.courtId?.trim() || null,
+      surface: input.surface || null,
       externalWon: result.value.winnerId === externalId,
       sets: result.value.sets,
     },

@@ -1,0 +1,1 @@
+export default function CourtLoading(){return <main className="mx-auto max-w-4xl p-6"><div className="h-44 animate-pulse border-2 border-hairline bg-surface"/><div className="mt-8 h-80 animate-pulse border-2 border-hairline bg-surface"/></main>}

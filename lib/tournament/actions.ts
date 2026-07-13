@@ -13,6 +13,8 @@ import { MAX_TOURNAMENT_IMAGE_BYTES, TOURNAMENT_IMAGE_TYPES } from "./crop";
 import type { TournamentResult, TournamentRuleset } from "./types";
 import { deriveOfficialPlacements } from "./placements";
 import { loadTournamentBoard } from "./read";
+import { SURFACES } from "@/lib/courts/types";
+import { queueUntaggedNudges } from "@/lib/notifications/untagged";
 
 export type TournamentActionState =
   | { ok: true; message: string; tournamentId?: string }
@@ -289,6 +291,7 @@ export async function createTournament(
 
   const name = textValue(formData, "name");
   const locationName = textValue(formData, "locationName");
+  const defaultSurface = textValue(formData, "defaultSurface");
   const courts = Number(textValue(formData, "courts"));
   const startsAt = localDateTimeToIso(
     textValue(formData, "startsAtLocal"),
@@ -297,17 +300,22 @@ export async function createTournament(
   const participantIds = formData.getAll("participantIds").map(String);
 
   if (!name || !locationName || !startsAt) return { ok: false, error: "Complete the event name, time, and venue." };
+  if (defaultSurface && !SURFACES.includes(defaultSurface as (typeof SURFACES)[number])) return { ok: false, error: "Choose a valid default surface." };
   if (!Number.isInteger(courts) || courts < 1) return { ok: false, error: "Enter at least one court." };
   if (participantIds.length !== 4 || new Set(participantIds).size !== 4) {
     return { ok: false, error: "This release requires exactly four unique players." };
   }
 
   const supabase = await createClient();
+  const { data: courtId, error: courtError } = await supabase.rpc("resolve_court", { p_name: locationName });
+  if (courtError || !courtId) return { ok: false, error: "Couldn't save that court." };
   const { data: tournament, error } = await supabase
     .from("tournaments")
     .insert({
       name,
       location_name: locationName,
+      court_id: courtId,
+      default_surface: defaultSurface || null,
       starts_at: startsAt,
       timezone: "Australia/Melbourne",
       courts,
@@ -544,7 +552,7 @@ export async function recordTournamentResult(
   });
   if (!validated.ok) return validated;
 
-  const { error } = await supabase.rpc("record_tournament_result", {
+  const { data: recordedMatchId, error } = await supabase.rpc("record_tournament_result", {
     p_fixture_id: fixture.id,
     p_winner_id: validated.winnerId,
     p_sets: [{ p1_games: p1Games, p2_games: p2Games, tiebreak_p1: tiebreakP1, tiebreak_p2: tiebreakP2 }],
@@ -552,6 +560,7 @@ export async function recordTournamentResult(
     p_duration_minutes: null,
   });
   if (error) return { ok: false, error: "Couldn't record this result. It may already be complete." };
+  if (recordedMatchId) await queueUntaggedNudges(recordedMatchId as string);
 
   try {
     await rebuildRatingCache();

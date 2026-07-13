@@ -39,6 +39,15 @@ of Done (`CLAUDE.md`).
 - `practice/PracticeApprovalActions` — organiser approve +5/reject controls for pending practice claims.
   tournaments, matches, admin tools, and sign-out.
 
+**Courts and surfaces**
+- `courts/CourtPicker` — shared saved-court typeahead with match counts,
+  known-surface hints, and implicit free-text creation.
+- `courts/SurfaceChips` — optional hard/clay/grass/synthetic selection plus the
+  dashed deferred state.
+- `courts/MatchMetadataEditor` — participant/admin retro-tag control that never
+  reopens score approval.
+- `courts/CourtMergeForm` — organiser duplicate-to-canonical merge control.
+
 **Leaderboard**
 - `leaderboard/ExpandableLeaderboard` — compact trophy/holder/points rows with
   accessible per-player history toggles and one expand/collapse-all control.
@@ -112,6 +121,6 @@ Planned next (from ARCHITECTURE.md): `Card`, `RankBadge`, `StatBlock`.
 - `planned/PlannedActions` — participant accept, decline, and cancellation controls.
 - `planned/PlannedResultForm` — post-play stakes, score, date, location, and result submission.
 - `planned/ApproveResultButton` — opponent confirmation for a proposed planned-match result.
-- `notifications/ZeusNavLink` — global Zeus link with a live unread notification badge.
+- `notifications/ZeusNavLink` — global Zeus inbox link with a live unread badge.
 
 - `ui/BackLink.test` — contract coverage for deterministic parent-link rendering.

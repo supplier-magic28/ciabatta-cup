@@ -3,7 +3,7 @@ import { signOut } from "@/lib/auth/actions";
 import { Wordmark } from "@/components/brand/Wordmark";
 import { ZeusNavLink } from "@/components/notifications/ZeusNavLink";
 
-export function SiteHeader({ role, active }: { role: "player" | "admin"; active?: "leaderboard" | "tournaments" | "profile" | "points" }) {
+export function SiteHeader({ role, active }: { role: "player" | "admin"; active?: "leaderboard" | "tournaments" | "profile" | "points" | "zeus" }) {
   const linkClass = "font-mono text-[10px] uppercase tracking-[1.5px]";
   return (
     <header className="mb-7 flex flex-wrap items-start justify-between gap-4 border-b-2 border-ink pb-4">

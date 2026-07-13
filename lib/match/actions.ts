@@ -13,12 +13,20 @@ import { sendTournamentEmail } from "@/lib/tournament/email";
 import { renderRankedMatchLoggedEmail } from "./submission-email";
 import { displayName } from "@/lib/auth/displayName";
 import { sendLifecycleEmail } from "@/lib/planned/actions";
+import { queueUntaggedNudges } from "@/lib/notifications/untagged";
 
 export type SubmitResult = { ok: true; matchId: string; warning?: string } | { ok: false; error: string };
 
 export type MatchActionResult = { ok: true } | { ok: false; error: string };
 
 const SAVE_FAILED = "Couldn't save the match — please try again.";
+
+async function resolveCourtId(db: Awaited<ReturnType<typeof createClient>>, location: string | null) {
+  if (!location) return null;
+  const { data, error } = await db.rpc("resolve_court", { p_name: location });
+  if (error || !data) throw new Error("court resolution failed");
+  return data as string;
+}
 
 /**
  * Persist a submitted match as immutable facts (Phase 3c-part-1, ADR-0008).
@@ -39,6 +47,9 @@ export async function submitMatch(input: MatchSubmission): Promise<SubmitResult>
   const match = validated.value;
 
   const supabase = await createClient();
+  let courtId: string | null;
+  try { courtId = await resolveCourtId(supabase, match.location); }
+  catch { return { ok: false, error: "Couldn't save that court." }; }
 
   const { data: created, error: matchError } = await supabase
     .from("matches")
@@ -53,6 +64,8 @@ export async function submitMatch(input: MatchSubmission): Promise<SubmitResult>
       submitted_by: player.id,
       played_at: match.playedAt,
       location: match.location,
+      court_id: courtId,
+      surface: match.surface,
     })
     .select("id")
     .single();
@@ -117,6 +130,9 @@ export async function submitExternalMatch(input: ExternalMatchSubmission): Promi
   if (!validated.ok) return { ok: false, error: validated.error };
   const match = validated.value;
   const supabase = await createClient();
+  let courtId: string | null;
+  try { courtId = await resolveCourtId(supabase, match.location); }
+  catch { return { ok: false, error: "Couldn't save that court." }; }
   const { data: matchId, error } = await supabase.rpc("log_external_match", {
     p_opponent_name: match.opponentName,
     p_save_opponent: match.saveOpponent,
@@ -131,6 +147,10 @@ export async function submitExternalMatch(input: ExternalMatchSubmission): Promi
     })),
   });
   if (error || typeof matchId !== "string") return { ok: false, error: SAVE_FAILED };
+  if (courtId || match.surface) {
+    const { error: metadataError } = await createAdminClient().from("matches").update({ court_id: courtId, surface: match.surface, location: match.location }).eq("id", matchId);
+    if (metadataError) return { ok: false, error: "Match logged, but its court metadata could not be saved." };
+  }
 
   try {
     await rebuildRatingCache();
@@ -139,6 +159,7 @@ export async function submitExternalMatch(input: ExternalMatchSubmission): Promi
     revalidateRatingSurfaces();
     return { ok: false, error: "Match was logged, but ratings could not be rebuilt. Ask an admin to rebuild ratings." };
   }
+  await queueUntaggedNudges(matchId);
 
   let warning: string | undefined;
   try {
@@ -208,6 +229,7 @@ export async function confirmMatch(matchId: string): Promise<MatchActionResult> 
     try { await rebuildRatingCache(); }
     catch { return { ok: false, error: "Match confirmed, but points need an admin rebuild." }; }
     revalidateRatingSurfaces();
+    await queueUntaggedNudges(matchId);
   }
 
   revalidatePath("/matches");
@@ -263,6 +285,7 @@ async function adminSetStatus(
       await admin.from("planned_matches").update({ status: "confirmed" }).eq("id", match.planned_match_id);
       await sendLifecycleEmail(match.planned_match_id, "confirmed", matchId);
     }
+    await queueUntaggedNudges(matchId);
   }
 
   revalidatePath("/admin/approvals");

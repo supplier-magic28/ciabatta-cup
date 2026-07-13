@@ -12,6 +12,8 @@ replace the raw handoff artifacts.
   `design-reference/design_handoff_non_ciabatta/`.
 - Profile tabs, streak, H2H, and tournament-history handoff:
   `design-reference/design_handoff_profile_updates/`.
+- Courts and surfaces handoff: `court locations.zip` supplied externally;
+  implemented through the maintained route and component patterns below.
 - Authoritative design tokens: `components/tokens.ts` and the matching CSS
   theme in `app/globals.css`.
 - Shared production UI vocabulary: `components/README.md`.
@@ -36,6 +38,8 @@ pattern changes, update this guide and the component inventory in the same task.
 | Profile streak | `/profile/streak` | Implemented | Melbourne-day 7/30 tracker, current/best streak, manual today mark, and route-shaped loading are live. |
 | Profile history | `/profile/history` | Implemented | URL-preserved H2H/tournament views, five-match gate, full result ledger, private external opponents, and entered-event cards are live. |
 | Non-Ciabatta opponents | `/matches/new`, `/matches`, `/`, `/players/[playerId]` | Implemented | Owner-private saved names, immediate unranked approval, flat +10 scoring, owner deletion with cache rebuild, a standard leaderboard history line for every player, generic shared identity, and win/loss result email are live. |
+| Courts and surfaces | `/matches/new`, `/matches/untagged`, `/courts/[courtId]`, `/players/[playerId]` | Implemented | Shared court typeahead, optional surface chips, metadata-only retro tagging, court detail/tallies, surface records, tournament defaults, and organiser merging are live. |
+| Zeus inbox | `/notifications` | Implemented | Header unread badge, unread-first inbox, navigation-only read actions, planned-match destinations, and weekly-deduped untagged nudges are live. |
 
 ## Implementation rules
 
@@ -59,6 +63,6 @@ inside the existing auth shell; the callback route is `/auth/confirm`.
 
 ## Planned matches and notifications
 
-`/matches/plan` creates a stake-free upcoming-match shell; `/matches/[plannedMatchId]` is the participant review surface for proposal, locked-in, and result states. Zeus notifications appear on Profile, while upcoming plans are public on the ladder.
+`/matches/plan` creates a stake-free upcoming-match shell; `/matches/[plannedMatchId]` is the participant review surface for proposal, locked-in, and result states. Zeus notifications live at `/notifications`, with a small unread preview on Profile, while upcoming plans are public on the ladder.
 
 The July 2026 points handoff is represented by `/points`, `/practice/new`, practice rows and filters in `/admin/approvals`, and the profile decay-watch card. Crust denotes approval-pending practice; rust denotes permanent point loss. The prototype HTML remains reference-only; production screens use the shared token and component vocabulary.

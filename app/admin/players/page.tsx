@@ -6,6 +6,8 @@ import { InvitePlayerForm } from "@/components/players/InvitePlayerForm";
 import { DeletePlayerButton } from "@/components/players/DeletePlayerButton";
 import { BackLink } from "@/components/ui/BackLink";
 import { PARENT_ROUTES } from "@/lib/navigation/parents";
+import { loadCourtOptions } from "@/lib/courts/read";
+import { CourtMergeForm } from "@/components/courts/CourtMergeForm";
 
 const eyebrow = "font-mono text-[10px] uppercase tracking-[2px] text-muted";
 
@@ -41,11 +43,11 @@ export default async function ManagePlayersPage() {
   if (player.role !== "admin") redirect("/");
 
   const supabase = await createClient();
-  const { data } = await supabase
+  const [{ data }, courts] = await Promise.all([supabase
     .from("players")
     .select("id, first_name, last_name, email, nickname, use_nickname, role, status, invited_at, joined_at")
     .order("status", { ascending: true })
-    .order("first_name", { ascending: true });
+    .order("first_name", { ascending: true }), loadCourtOptions()]);
 
   const players = data ?? [];
 
@@ -102,6 +104,7 @@ export default async function ManagePlayersPage() {
         <p className={`${eyebrow} mb-3`}>Invite a player</p>
         <InvitePlayerForm />
       </section>
+      <section className="mt-8 rounded-[8px] border-2 border-ink bg-surface p-5 shadow-[3px_3px_0_var(--color-crust)]"><p className={`${eyebrow} mb-1`}>Court aliases</p><h2 className="font-heading text-xl font-bold">Merge duplicate courts</h2><p className="mt-2 font-body text-sm text-muted">Matches move to the canonical court. The old name remains an alias.</p><CourtMergeForm courts={courts}/></section>
     </main>
   );
 }

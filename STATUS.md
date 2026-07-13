@@ -1,11 +1,22 @@
 # Ciabatta Cup Status
 
-**Last updated:** 2026-07-14
+**Last updated:** 2026-07-15
 
 This is the short operational handover. Durable intent belongs in
 `ARCHITECTURE.md`, the data model in `docs/SCHEMA.md`, and decisions in ADRs.
 
 ## Current capability
+
+- Locations resolve to shared, case-insensitive courts across ordinary,
+  planned, external, and tournament results. Match surfaces are optional,
+  tournament defaults stamp result facts, and approved facts can be retagged
+  without changing scores, approval, points, or Elo.
+- Players can clear missing court/surface metadata at `/matches/untagged`, view
+  derived surface records and court detail/tallies, while organisers can merge
+  duplicate courts from the roster admin route.
+- Zeus has a dedicated `/notifications` inbox. The global unread badge opens
+  that inbox, planned lifecycle cards navigate to their match, and weekly-
+  deduped missing-tag nudges navigate to the tagging queue.
 
 - Players can create and respond to planned upcoming-match shells; proposed and locked-in plans appear on the public ladder calendar, and Zeus notification cards appear on the owner profile.
 
@@ -87,6 +98,8 @@ after that password update succeeds.
 | `20260712120000_profile_play_days.sql` | Ready to apply |
 | `20260713120000_ladder_points_practice.sql` | Ready to apply after profile play days |
 | `20260714120000_planned_matches_notifications.sql` | Ready to apply after activity-points migrations |
+| `20260715120000_courts_surfaces_zeus_inbox.sql` | Ready after planned matches |
+| `20260715121000_seed_untagged_notifications.sql` | Ready immediately after courts/surfaces |
 
 ## Current blockers
 
@@ -99,7 +112,10 @@ after that password update succeeds.
 
 ## Next product slice
 
-Apply the two ready migrations, deploy the activity-points release, run the admin rating rebuild once, and verify practice review, ranked emails, Melbourne decay, and the qualifier placement totals in production.
+Apply the ready migrations in order, deploy, run the admin rating rebuild once,
+and verify practice review, planned-result approval, Zeus navigation, court
+creation/merge, retro tagging, tournament defaults, Melbourne decay, and the
+qualifier placement totals in production.
 Append-only corrections, generalised setup, and mid-event withdrawals remain
 deferred.
 

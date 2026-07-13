@@ -94,6 +94,9 @@ partial index permits only one match fact per fixture (ADR-0016).
 | duration_minutes | int nullable | shown as "2h 14m" |
 | tournament_id | FK tournaments nullable | null = casual match |
 | fixture_id | FK fixtures nullable | links a tournament result to its slot |
+| court_id | FK courts nullable | canonical venue; legacy `location` remains populated |
+| surface | enum hard, clay, grass, synthetic nullable | metadata-only; may be tagged after approval |
+| location | text nullable | canonical court name or retained legacy free text |
 | created_at / updated_at | timestamptz | |
 
 **Match lifecycle**: `pending_confirmation` (opponent hasn't confirmed) → `pending_approval` (both confirmed; ranked only — exhibitions can auto-approve) → `approved` (points applied, stats count) | `queried` (admin flagged, back to submitter) | `rejected`.
@@ -102,6 +105,25 @@ Admin-recorded tournament results use a transactional RPC: insert at
 `pending_approval`, insert the score, then transition to `approved`. They do not
 claim participant confirmations. The transaction finishes before the existing
 immutable-fact triggers seal the match (ADR-0016).
+
+Approved facts permit one narrow metadata exception (ADR-0031): either
+participant or an organiser may update `court_id`, `surface`, and the matching
+legacy `location`. The trigger still rejects every score, participant, winner,
+scoring-input, and lifecycle change.
+
+### courts _(Phase 8 — implemented)_
+
+| field | type | notes |
+|---|---|---|
+| id | uuid PK | canonical or retained alias identity |
+| name | text | trimmed, case-insensitively unique shared display name |
+| created_by | FK players nullable | first logger; null for historical backfill |
+| merged_into | FK courts nullable | organiser merge target; resolvers follow the chain |
+| created_at | timestamptz | |
+
+Authenticated users read courts and implicitly create one by submitting a new
+location. Only organisers merge them. A merge rewrites structured court foreign
+keys while retaining the source name as an alias.
 
 ### match_sets _(Phase 3a — implemented)_
 | field | type | notes |
@@ -130,6 +152,8 @@ Once both rows exist, a database trigger advances a ranked result to
 | starts_at | timestamptz | |
 | timezone | text | IANA timezone used to display `starts_at` |
 | location_name | text | event venue |
+| court_id | FK courts nullable | structured venue identity |
+| default_surface | surface nullable | stamped onto each tournament result fact |
 | group_ruleset / playoff_ruleset | enum: short_first_to_3, standard_set_tiebreak_6_all | exact validation contract for generated fixtures |
 | rules_note | text nullable | human event summary; not used for scoring |
 | created_by | FK players | admin |
@@ -215,8 +239,8 @@ the first approved ranked result; an open row (`ended_at` null) is the current
 holder. A new holder closes the old reign at the deciding match time.
 | id uuid PK, player_id FK, started_at, ended_at nullable | derived by the pure Elo replay; never authoritative over match facts |
 
-### activity_log _(later phase — not yet built)_
-| id, actor_id FK players nullable, verb enum (match_submitted, match_confirmed, match_approved, match_queried, player_invited, player_joined, tournament_created, tournament_entered, …), subject_type + subject_id, created_at | powers the admin "Recent activity" feed |
+### activity_log _(Phase 8 — minimally implemented)_
+| id, actor_id FK players nullable, verb text, match_id FK nullable, metadata jsonb, created_at | audit seam; currently records `match_surface_tagged` old/new metadata |
 
 ---
 
@@ -235,6 +259,22 @@ holder. A new holder closes the old reign at the deciding match time.
 - **Ladder ratings**: ordinary approved ranked matches use Elo. Tournament-linked
   matches do not move Elo; completed tournament placements add fixed cumulative
   awards to the player's existing ladder rating.
+- **Surface records**: per-surface W–L, win percentage, and match count over
+  approved tagged ranked and tournament facts. Untagged eligible facts are
+  excluded and counted separately.
+
+## Planned matches and Zeus notifications _(Phase 7–8 — implemented)_
+
+`planned_matches` stores stake-free participants, schedule, status, legacy
+location, and optional `court_id`. `planned_match_results` stores the post-play
+proposal plus optional `court_id` and `surface`; those values flow to the final
+match fact through the external, exhibition, or ranked approval path.
+
+`notifications` is owner-private and includes a safe internal `target_path`,
+optional planned-match link, read timestamp, and optional per-player dedupe key.
+The `/notifications` Zeus inbox marks an item read when its navigation action is
+opened. `untagged_matches_nudge` targets `/matches/untagged` and is created no
+more than weekly per player.
 
 ## Points system
 Ordinary Elo uses K=32 with a zero entry baseline and zero floor. An equal first

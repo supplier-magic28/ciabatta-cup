@@ -7,6 +7,9 @@ import { Chip } from "@/components/ui/Chip";
 import { submitExternalMatch, submitMatch } from "@/lib/match/actions";
 import { validateExternalSubmission, validateSubmission } from "@/lib/match/submission";
 import type { ExternalMatchSubmission, MatchFormat, MatchSubmission, MatchType, SetScore } from "@/lib/match/types";
+import { CourtPicker } from "@/components/courts/CourtPicker";
+import { SurfaceChips } from "@/components/courts/SurfaceChips";
+import type { CourtOption, Surface } from "@/lib/courts/types";
 
 export interface OpponentOption {
   id: string;
@@ -62,11 +65,13 @@ export function LogMatchForm({
   opponents,
   savedExternalOpponents,
   initialType,
+  courts,
 }: {
   selfName: string;
   opponents: OpponentOption[];
   savedExternalOpponents: OpponentOption[];
   initialType?: "ranked" | "exhibition";
+  courts: CourtOption[];
 }) {
   const [step, setStep] = useState(1);
   const [opponentId, setOpponentId] = useState("");
@@ -75,6 +80,8 @@ export function LogMatchForm({
   const [formatNote, setFormatNote] = useState("");
   const [playedDate, setPlayedDate] = useState(() => new Date().toLocaleDateString("en-CA"));
   const [location, setLocation] = useState("");
+  const [courtId, setCourtId] = useState("");
+  const [surface, setSurface] = useState<Surface | "">("");
   const [sets, setSets] = useState<SetInput[]>([blankSet()]);
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
@@ -100,6 +107,8 @@ export function LogMatchForm({
       formatNote,
       playedDate,
       location,
+      courtId,
+      surface,
       sets: parsedSets,
     };
   }
@@ -112,6 +121,8 @@ export function LogMatchForm({
       formatNote,
       playedDate,
       location,
+      courtId,
+      surface,
       sets: sets.map((s) => ({
         selfGames: toGames(s.selfGames), opponentGames: toGames(s.opponentGames),
         selfTiebreak: toTiebreak(s.selfTiebreak), opponentTiebreak: toTiebreak(s.opponentTiebreak),
@@ -173,6 +184,8 @@ export function LogMatchForm({
               setFormatNote("");
               setPlayedDate(new Date().toLocaleDateString("en-CA"));
               setLocation("");
+              setCourtId("");
+              setSurface("");
               setSets([blankSet()]);
               setError(null);
               setWarning(null);
@@ -285,8 +298,9 @@ export function LogMatchForm({
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className={eyebrow}>Date played <span className="text-rust">Required</span><input type="date" required value={playedDate} onChange={(event) => setPlayedDate(event.target.value)} className="mt-2 w-full rounded-[8px] border-2 border-ink bg-surface px-3 py-3 font-body text-[15px] normal-case tracking-normal text-ink outline-none focus:ring-2 focus:ring-green" /></label>
-            <label className={eyebrow}>Location <span className="text-muted">Optional</span><input type="text" maxLength={160} value={location} onChange={(event) => setLocation(event.target.value)} placeholder="e.g. Northcote Tennis Club" className="mt-2 w-full rounded-[8px] border-2 border-ink bg-surface px-3 py-3 font-body text-[15px] normal-case tracking-normal text-ink outline-none focus:ring-2 focus:ring-green" /></label>
+            <CourtPicker courts={courts} value={location} courtId={courtId} onChange={(name, id) => { setLocation(name); setCourtId(id); }} label="Location" />
           </div>
+          <SurfaceChips value={surface} onChange={setSurface} preferred={courts.find((court) => court.id === courtId)?.surfaces ?? []} />
         </section>
       )}
 

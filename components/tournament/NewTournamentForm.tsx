@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { createTournament } from "@/lib/tournament/actions";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
+import { CourtPicker } from "@/components/courts/CourtPicker";
+import { SurfaceChips } from "@/components/courts/SurfaceChips";
+import type { CourtOption, Surface } from "@/lib/courts/types";
 
 interface PlayerOption { id: string; name: string }
 
@@ -12,8 +15,11 @@ function preferredPlayer(players: PlayerOption[], term: string, fallback: number
   return players.find((player) => player.name.toLowerCase().includes(term))?.id ?? players[fallback]?.id ?? "";
 }
 
-export function NewTournamentForm({ players }: { players: PlayerOption[] }) {
+export function NewTournamentForm({ players, courts: courtOptions }: { players: PlayerOption[]; courts: CourtOption[] }) {
   const [state, action, pending] = useActionState(createTournament, undefined);
+  const [location, setLocation] = useState("Northcote Tennis Club");
+  const [courtId, setCourtId] = useState("");
+  const [surface, setSurface] = useState<Surface | "">("");
   const defaults = ["ben", "string", "michael", "ringo"].map((term, index) => preferredPlayer(players, term, index));
   const selectClass = "w-full rounded-[8px] border-2 border-ink bg-surface px-4 py-3 font-body text-[15px] text-ink outline-none focus:ring-2 focus:ring-green";
 
@@ -30,7 +36,11 @@ export function NewTournamentForm({ players }: { players: PlayerOption[] }) {
         <Field label="Start" name="startsAtLocal" type="datetime-local" defaultValue="2026-07-11T10:30" required />
         <Field label="Courts" name="courts" type="number" min={1} max={20} defaultValue={2} required />
       </div>
-      <Field label="Venue" name="locationName" defaultValue="Northcote Tennis Club" required />
+      <input type="hidden" name="locationName" value={location} />
+      <input type="hidden" name="courtId" value={courtId} />
+      <input type="hidden" name="defaultSurface" value={surface} />
+      <CourtPicker courts={courtOptions} value={location} courtId={courtId} onChange={(name,id)=>{setLocation(name);setCourtId(id)}} label="Venue" optional={false}/>
+      <SurfaceChips value={surface} onChange={setSurface} preferred={courtOptions.find((court)=>court.id===courtId)?.surfaces??[]}/>
 
       <fieldset className="border-t-2 border-hairline pt-4">
         <legend className="mb-3 font-mono text-[10px] uppercase tracking-[2px] text-muted">Seed order</legend>

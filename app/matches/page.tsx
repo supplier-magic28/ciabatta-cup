@@ -42,7 +42,7 @@ export default async function MatchesPage() {
   const [{ data: matches }, { data: players }, { data: myConfirmations }, { data: externalDetails }] = await Promise.all([
     supabase
       .from("matches")
-      .select("id, type, format, format_note, status, played_at, location, player1_id, player2_id, winner_id, external_won, match_sets(set_number, p1_games, p2_games, tiebreak_p1, tiebreak_p2)")
+      .select("id, type, format, format_note, status, played_at, location, court_id, surface, player1_id, player2_id, winner_id, external_won, match_sets(set_number, p1_games, p2_games, tiebreak_p1, tiebreak_p2)")
       .or(`player1_id.eq.${player.id},player2_id.eq.${player.id}`)
       .order("played_at", { ascending: false }),
     supabase.from("players").select("id, first_name, last_name, email, nickname, use_nickname"),
@@ -67,7 +67,7 @@ export default async function MatchesPage() {
     <main className="mx-auto w-full max-w-md flex-1 px-6 py-10">
       <header className="mb-6 flex items-center justify-between">
         <h1 className="font-heading text-2xl font-bold text-ink">Your matches</h1>
-        <div className="flex items-center gap-4"><BackLink href={PARENT_ROUTES.ladder}>Ladder</BackLink><Link href="/matches/plan" className="font-mono text-[12px] uppercase tracking-[1.5px] text-green">+ Plan</Link><Link href="/matches/new" className="font-mono text-[12px] uppercase tracking-[1.5px] text-green">+ Log match</Link></div>
+        <div className="flex flex-wrap items-center justify-end gap-4"><BackLink href={PARENT_ROUTES.ladder}>Ladder</BackLink><Link href="/matches/untagged" className="font-mono text-[12px] uppercase tracking-[1.5px] text-crust">Tag missing</Link><Link href="/matches/plan" className="font-mono text-[12px] uppercase tracking-[1.5px] text-green">+ Plan</Link><Link href="/matches/new" className="font-mono text-[12px] uppercase tracking-[1.5px] text-green">+ Log match</Link></div>
       </header>
 
       {rows.length === 0 ? (
@@ -114,7 +114,8 @@ export default async function MatchesPage() {
                   {FORMAT_LABEL[m.format] ?? m.format}
                   {m.format === "custom" && m.format_note ? ` (${m.format_note})` : ""}
                 </p>
-                <p className="mt-1 font-mono text-[10px] text-muted">{new Intl.DateTimeFormat("en-AU", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(m.played_at))}{m.location ? ` · ${m.location}` : ""}</p>
+                <p className="mt-1 font-mono text-[10px] text-muted">{new Intl.DateTimeFormat("en-AU", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(m.played_at))}{m.location ? <> · {m.court_id ? <Link href={`/courts/${m.court_id}`} className="underline">{m.location}</Link> : m.location}</> : ""}</p>
+                <span className={`mt-2 inline-block border px-2 py-1 font-mono text-[9px] uppercase ${m.surface ? "border-green text-green" : "border-dashed border-crust text-crust"}`}>{m.surface ?? "No surface"}</span>
                 <p className="mt-2 font-mono text-[11px] uppercase tracking-[1.5px] text-crust">
                   {needsMyConfirmation ? "Needs your confirmation" : STATUS_LABEL[m.status] ?? m.status}
                 </p>

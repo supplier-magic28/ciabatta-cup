@@ -1,4 +1,5 @@
 import type { MatchType } from "@/lib/scoring/types";
+import type { Surface } from "@/lib/courts/types";
 
 /**
  * Types for the log-match submission flow (Phase 3c-part-1). These describe what
@@ -34,6 +35,8 @@ export interface MatchSubmission {
   formatNote: string;
   playedDate: string;
   location: string;
+  courtId?: string;
+  surface?: Surface | "";
   sets: SetScore[];
 }
 
@@ -44,6 +47,8 @@ export interface ExternalMatchSubmission {
   formatNote: string;
   playedDate: string;
   location: string;
+  courtId?: string;
+  surface?: Surface | "";
   sets: SetScore[];
 }
 
@@ -54,6 +59,8 @@ export interface ValidatedExternalSubmission {
   formatNote: string | null;
   playedAt: string;
   location: string | null;
+  courtId: string | null;
+  surface: Surface | null;
   externalWon: boolean;
   sets: ValidatedSet[];
 }
@@ -79,6 +86,8 @@ export interface ValidatedSubmission {
   formatNote: string | null;
   playedAt: string;
   location: string | null;
+  courtId: string | null;
+  surface: Surface | null;
   /** The submitter's id or the opponent's id — never anyone else. */
   winnerId: string;
   sets: ValidatedSet[];

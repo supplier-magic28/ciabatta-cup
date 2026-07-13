@@ -11,6 +11,7 @@ import { buildRatingCache, type ScoringMatchRow, type TournamentPlacementRow } f
 import { createClient } from "@/lib/supabase/server";
 import { BackLink } from "@/components/ui/BackLink";
 import { PARENT_ROUTES } from "@/lib/navigation/parents";
+import { deriveSurfaceRecords, type SurfaceMatch } from "@/lib/courts/records";
 
 const eyebrow = "font-mono text-[10px] uppercase tracking-[1.5px]";
 
@@ -51,7 +52,7 @@ export default async function PlayerProfilePage({
       .order("first_name", { ascending: true }),
     supabase
       .from("matches")
-      .select("id, player1_id, player2_id, winner_id, type, status, played_at, tournament_id, match_sets(set_number, p1_games, p2_games, tiebreak_p1, tiebreak_p2)")
+      .select("id, player1_id, player2_id, winner_id, type, status, played_at, tournament_id, surface, match_sets(set_number, p1_games, p2_games, tiebreak_p1, tiebreak_p2)")
       .eq("status", "approved"),
     supabase.from("tournament_placements").select("player_id, points, awarded_at"),
     supabase.from("external_match_details").select("match_id, opponent_name"),
@@ -84,6 +85,7 @@ export default async function PlayerProfilePage({
     useNickname: target.use_nickname,
   });
   const profile = derivePlayerProfile(playerId, matches);
+  const surfaceRecords = deriveSurfaceRecords(playerId, (matchRows ?? []).map((match) => ({ type: match.type, tournamentId: match.tournament_id, surface: match.surface, player1Id: match.player1_id, player2Id: match.player2_id, winnerId: match.winner_id })) as SurfaceMatch[]);
   const externalRecord = (matchRows ?? []).reduce((record, match) => {
     if (match.type === "unranked_external" && match.status === "approved" && match.player1_id === playerId) {
       record.played += 1;
@@ -160,6 +162,8 @@ export default async function PlayerProfilePage({
           </div>
         </div>
       </section>
+
+      <section className="mt-8 border-2 border-ink bg-surface p-5 shadow-[4px_4px_0_var(--color-crust)]"><div className="flex items-end justify-between gap-4"><div><p className={`${eyebrow} text-muted`}>Ranked + cups · tagged only</p><h2 className="mt-1 font-heading text-xl font-bold">Surface records</h2></div>{sessionPlayer.id===playerId&&surfaceRecords.untagged>0&&<Link href="/matches/untagged" className="font-mono text-[10px] uppercase text-crust underline">Tag {surfaceRecords.untagged} missing</Link>}</div><div className="mt-4 grid grid-cols-2 gap-3">{surfaceRecords.records.map(record=><div key={record.surface} className={`p-4 ${record.played?"border-2 border-ink":"border-2 border-dashed border-hairline text-muted"}`}><p className="font-mono text-[10px] uppercase">{record.surface}</p><p className="mt-2 font-mono text-2xl font-bold">{record.won}-{record.lost}</p><p className="font-body text-xs text-muted">{record.played?`${record.winPercent}% · ${record.played} matches`:"Never played"}</p></div>)}</div>{surfaceRecords.untagged>0&&<p className="mt-4 font-body text-xs text-muted">{surfaceRecords.untagged} eligible {surfaceRecords.untagged===1?"match is":"matches are"} excluded until tagged.</p>}</section>
 
       {vitals.length > 0 && <section className="grid grid-cols-2 gap-4 border-x-2 border-b-2 border-ink bg-surface p-5 sm:grid-cols-4">{vitals}</section>}
 

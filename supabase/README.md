@@ -72,6 +72,12 @@ Database migrations for Ciabatta Cup. The authoritative data model is
 - `20260712120000_profile_play_days.sql` adds owner-only, Melbourne-today-only
   manual tennis-day marks. Match-derived play days and all streak statistics
   remain computed rather than stored.
+- `20260715120000_courts_surfaces_zeus_inbox.sql` adds shared canonical courts,
+  optional per-match surfaces, structured court links across planned matches
+  and tournaments, metadata-only retro tagging/audit, organiser merges, and
+  general Zeus notification destinations (ADR-0031).
+- `20260715121000_seed_untagged_notifications.sql` runs after the enum change
+  commits and seeds one Zeus nudge for players with historical untagged facts.
 
 The tournament participant table is editable only before the first tournament
 result. The admin console's replacement action preserves the selected seed and
@@ -84,7 +90,8 @@ the tournament list and detail pages. The browser crops and resizes accepted
 source images to a 1280 x 560 WebP before upload.
 
 The player, match, confirmation, rating-history, reign, tournament, participant,
-and fixture tables exist in migration form. Activity remains a later phase.
+fixture, court, notification, and minimal metadata-audit tables exist in
+migration form. A broader admin activity feed remains a later phase.
 
 ## Environment variables
 
