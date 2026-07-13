@@ -23,6 +23,8 @@ const workSans = Work_Sans({
 export const metadata: Metadata = {
   title: "Ciabatta Cup",
   description: "Earn your seed. Earn your bread.",
+  manifest: "/manifest.json",
+  icons: { apple: "/cup-icon-192.png" },
 };
 
 export default function RootLayout({

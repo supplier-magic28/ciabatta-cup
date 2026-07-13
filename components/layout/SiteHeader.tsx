@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { signOut } from "@/lib/auth/actions";
 import { Wordmark } from "@/components/brand/Wordmark";
+import { ZeusNavLink } from "@/components/notifications/ZeusNavLink";
 
 export function SiteHeader({ role, active }: { role: "player" | "admin"; active?: "leaderboard" | "tournaments" | "profile" | "points" }) {
   const linkClass = "font-mono text-[10px] uppercase tracking-[1.5px]";
@@ -19,6 +20,7 @@ export function SiteHeader({ role, active }: { role: "player" | "admin"; active?
         </Link>
         <Link href="/matches" className={`${linkClass} text-ink`}>Matches</Link>
         <Link href="/matches/new" className={`${linkClass} text-green`}>Log result</Link>
+        <ZeusNavLink />
         {role === "admin" && (
           <>
             <Link href="/admin/approvals" className={`${linkClass} text-crust`}>Approvals</Link>

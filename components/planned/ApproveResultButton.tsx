@@ -1,0 +1,1 @@
+"use client"; import { useTransition } from "react"; import { approvePlannedResult } from "@/lib/planned/actions"; import { Button } from "@/components/ui/Button"; export function ApproveResultButton({id}:{id:string}){const[pending,start]=useTransition();return <Button loading={pending} onClick={()=>start(async()=>{await approvePlannedResult(id);})}>That’s how it went</Button>}

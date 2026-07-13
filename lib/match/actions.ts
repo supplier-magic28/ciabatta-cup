@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getSessionPlayer } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { rebuildRatingCache } from "@/lib/scoring/rebuild";
 import { validateExternalSubmission, validateSubmission } from "./submission";
 import type { ExternalMatchSubmission, MatchSubmission } from "./types";
@@ -11,6 +12,7 @@ import { renderExternalMatchEmail } from "./external-email";
 import { sendTournamentEmail } from "@/lib/tournament/email";
 import { renderRankedMatchLoggedEmail } from "./submission-email";
 import { displayName } from "@/lib/auth/displayName";
+import { sendLifecycleEmail } from "@/lib/planned/actions";
 
 export type SubmitResult = { ok: true; matchId: string; warning?: string } | { ok: false; error: string };
 
@@ -230,7 +232,7 @@ async function adminSetStatus(
   const supabase = await createClient();
   const { data: match } = await supabase
     .from("matches")
-    .select("status")
+    .select("status, planned_match_id")
     .eq("id", matchId)
     .single();
 
@@ -255,6 +257,11 @@ async function adminSetStatus(
         ok: false,
         error: "Match was approved, but ratings could not be rebuilt. Check the server configuration.",
       };
+    }
+    if (match.planned_match_id) {
+      const admin = createAdminClient();
+      await admin.from("planned_matches").update({ status: "confirmed" }).eq("id", match.planned_match_id);
+      await sendLifecycleEmail(match.planned_match_id, "confirmed", matchId);
     }
   }
 

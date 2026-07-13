@@ -1,0 +1,14 @@
+{
+  "name": "Ciabatta Cup",
+  "short_name": "Ciabatta Cup",
+  "description": "Tennis ladder and tournament tracker",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#EFE6D0",
+  "theme_color": "#3E6B35",
+  "icons": [
+    { "src": "/cup-icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/cup-icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/cup-icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

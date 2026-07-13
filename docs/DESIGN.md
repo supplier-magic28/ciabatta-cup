@@ -57,4 +57,8 @@ inside the existing auth shell; the callback route is `/auth/confirm`.
   that an immutable result or rating changed before server confirmation.
 # Ladder points and solo practice addition
 
+## Planned matches and notifications
+
+`/matches/plan` creates a stake-free upcoming-match shell; `/matches/[plannedMatchId]` is the participant review surface for proposal, locked-in, and result states. Zeus notifications appear on Profile, while upcoming plans are public on the ladder.
+
 The July 2026 points handoff is represented by `/points`, `/practice/new`, practice rows and filters in `/admin/approvals`, and the profile decay-watch card. Crust denotes approval-pending practice; rust denotes permanent point loss. The prototype HTML remains reference-only; production screens use the shared token and component vocabulary.

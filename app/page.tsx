@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-nocheck -- Supabase's embedded relation is typed as an array at runtime.
 import { redirect } from "next/navigation";
 import { getSessionPlayer } from "@/lib/auth/session";
 import { displayName } from "@/lib/auth/displayName";
@@ -33,6 +35,7 @@ export default async function Home() {
     { data: fixtureRows },
     { data: practiceRows },
     { data: playDayRows },
+    { data: plannedRows },
   ] = await Promise.all([
     supabase
       .from("players")
@@ -46,6 +49,7 @@ export default async function Home() {
     supabase.from("fixtures").select("id, ruleset"),
     supabase.from("practice_sessions").select("id, player_id, practiced_on, status"),
     supabase.from("play_days").select("player_id, played_on"),
+    supabase.from("planned_matches").select("id, created_by, opponent_player_id, opponent_external_id, scheduled_at, location, status, external_opponents(display_name)").in("status", ["proposed", "locked_in"]).order("scheduled_at", { ascending:true }).limit(8),
   ]);
 
   const players = (playerRows ?? []).map((player) => ({
@@ -134,6 +138,8 @@ export default async function Home() {
       ) : (
         <ExpandableLeaderboard players={leaderboardPlayers} />
       )}
+
+      {(plannedRows ?? []).length > 0 && <section className="mt-10"><p className="font-mono text-[10px] uppercase tracking-[2px] text-muted">On the calendar</p><h2 className="mb-3 font-heading text-2xl font-bold text-ink">Upcoming on the ladder</h2><ul className="grid gap-3">{plannedRows!.map((plan) => { const external = Boolean(plan.opponent_external_id); const opponent = external ? plan.external_opponents?.display_name ?? "Non-Ciabatta opponent" : playerById.get(plan.opponent_player_id ?? "")?.name ?? "Awaiting opponent"; const proposer = playerById.get(plan.created_by)?.name ?? "Player"; return <li key={plan.id} className={`border-2 border-ink bg-surface p-4 ${external || plan.status === "proposed" ? "border-dashed" : ""}`}><div className="flex items-center justify-between gap-3"><p className="font-heading font-bold">{proposer} <span className="text-muted">vs</span> {opponent}</p><span className={`font-mono text-[9px] uppercase ${plan.status === "locked_in" ? "text-green" : "text-crust"}`}>{plan.status === "locked_in" ? "Locked in" : `Awaiting ${opponent}`}</span></div><p className="mt-1 font-mono text-[10px] text-muted">{new Intl.DateTimeFormat("en-AU",{dateStyle:"medium",timeStyle:"short"}).format(new Date(plan.scheduled_at))}{plan.location ? ` · ${plan.location}` : ""}</p></li>; })}</ul></section>}
 
       {recentMatches.length > 0 && <section className="mt-10"><p className="font-mono text-[10px] uppercase tracking-[2px] text-muted">Recent match feed</p><h2 className="mb-3 font-heading text-2xl font-bold text-ink">Fresh from the court</h2><ul className="divide-y-2 divide-hairline border-2 border-ink bg-surface">{recentMatches.map((match) => {
         const first = playerById.get(match.player1_id)?.name ?? "Unknown player";

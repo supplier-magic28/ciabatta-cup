@@ -106,4 +106,12 @@ of Done (`CLAUDE.md`).
 Planned next (from ARCHITECTURE.md): `Card`, `RankBadge`, `StatBlock`.
 # Test inventory
 
+## Planned matches
+
+- `planned/PlanMatchForm` — player/external opponent picker and upcoming-match proposal form.
+- `planned/PlannedActions` — participant accept, decline, and cancellation controls.
+- `planned/PlannedResultForm` — post-play stakes, score, date, location, and result submission.
+- `planned/ApproveResultButton` — opponent confirmation for a proposed planned-match result.
+- `notifications/ZeusNavLink` — global Zeus link with a live unread notification badge.
+
 - `ui/BackLink.test` — contract coverage for deterministic parent-link rendering.

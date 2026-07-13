@@ -67,7 +67,7 @@ export default async function MatchesPage() {
     <main className="mx-auto w-full max-w-md flex-1 px-6 py-10">
       <header className="mb-6 flex items-center justify-between">
         <h1 className="font-heading text-2xl font-bold text-ink">Your matches</h1>
-        <div className="flex items-center gap-4"><BackLink href={PARENT_ROUTES.ladder}>Ladder</BackLink><Link href="/matches/new" className="font-mono text-[12px] uppercase tracking-[1.5px] text-green">+ Log match</Link></div>
+        <div className="flex items-center gap-4"><BackLink href={PARENT_ROUTES.ladder}>Ladder</BackLink><Link href="/matches/plan" className="font-mono text-[12px] uppercase tracking-[1.5px] text-green">+ Plan</Link><Link href="/matches/new" className="font-mono text-[12px] uppercase tracking-[1.5px] text-green">+ Log match</Link></div>
       </header>
 
       {rows.length === 0 ? (

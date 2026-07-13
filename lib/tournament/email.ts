@@ -32,7 +32,7 @@ export function renderTournamentEmail(input: TournamentEmail): RenderedEmail {
     : renderGameDayEmail(params);
 }
 
-export async function sendTournamentEmail(to: string, email: ReturnType<typeof renderTournamentEmail>, idempotencyKey: string) {
+export async function sendTournamentEmail(to: string, email: RenderedEmail, idempotencyKey: string) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.TOURNAMENT_EMAIL_FROM;
   if (!apiKey || !from) throw new Error("Tournament email is not configured.");

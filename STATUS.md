@@ -1,11 +1,13 @@
 # Ciabatta Cup Status
 
-**Last updated:** 2026-07-13
+**Last updated:** 2026-07-14
 
 This is the short operational handover. Durable intent belongs in
 `ARCHITECTURE.md`, the data model in `docs/SCHEMA.md`, and decisions in ADRs.
 
 ## Current capability
+
+- Players can create and respond to planned upcoming-match shells; proposed and locked-in plans appear on the public ladder calendar, and Zeus notification cards appear on the owner profile.
 
 - Public ladder totals now use activity points while ordinary Elo remains derived for history/seeding: ranked +30/+15, exhibition/external +10, approved practice +5, and tournament placements unchanged.
 - Permanent Melbourne-day decay applies from first tennis activity (−1 daily plus stacked −10/7-day and −30/30-day drought penalties), with manual play marks protecting the day and resetting drought risk without awarding points.
@@ -84,6 +86,7 @@ after that password update succeeds.
 | `20260712090000_external_match_type.sql` through `20260712110000_delete_own_external_matches.sql` | Applied to production (operator verified logging, email, history, and deletion) |
 | `20260712120000_profile_play_days.sql` | Ready to apply |
 | `20260713120000_ladder_points_practice.sql` | Ready to apply after profile play days |
+| `20260714120000_planned_matches_notifications.sql` | Ready to apply after activity-points migrations |
 
 ## Current blockers
 
