@@ -14,9 +14,10 @@ This is the short operational handover. Durable intent belongs in
 - Players can clear missing court/surface metadata at `/matches/untagged`, view
   derived surface records and court detail/tallies, while organisers can merge
   duplicate courts from the roster admin route.
-- Zeus has a dedicated `/notifications` inbox. The global unread badge opens
-  that inbox, planned lifecycle cards navigate to their match, and weekly-
-  deduped missing-tag nudges navigate to the tagging queue.
+- Zeus has a permanent, portrait-led `/notifications` inbox with explicit
+  empty/read/unread states and a failure-aware mark-all-read control. The global
+  badge opens it, lifecycle cards navigate to their match, and weekly-deduped
+  missing-tag nudges navigate to the tagging queue; Profile stays profile-only.
 
 - Players can create and respond to planned upcoming-match shells; proposed and locked-in plans appear on the public ladder calendar, and Zeus notification cards appear on the owner profile.
 

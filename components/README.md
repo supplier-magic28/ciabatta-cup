@@ -122,5 +122,7 @@ Planned next (from ARCHITECTURE.md): `Card`, `RankBadge`, `StatBlock`.
 - `planned/PlannedResultForm` — post-play stakes, score, date, location, and result submission.
 - `planned/ApproveResultButton` — opponent confirmation for a proposed planned-match result.
 - `notifications/ZeusNavLink` — global Zeus inbox link with a live unread badge.
+- `notifications/MarkAllReadButton` — failure-aware pending control that clears
+  every unread Zeus item and refreshes the global badge.
 
 - `ui/BackLink.test` — contract coverage for deterministic parent-link rendering.

@@ -39,7 +39,7 @@ pattern changes, update this guide and the component inventory in the same task.
 | Profile history | `/profile/history` | Implemented | URL-preserved H2H/tournament views, five-match gate, full result ledger, private external opponents, and entered-event cards are live. |
 | Non-Ciabatta opponents | `/matches/new`, `/matches`, `/`, `/players/[playerId]` | Implemented | Owner-private saved names, immediate unranked approval, flat +10 scoring, owner deletion with cache rebuild, a standard leaderboard history line for every player, generic shared identity, and win/loss result email are live. |
 | Courts and surfaces | `/matches/new`, `/matches/untagged`, `/courts/[courtId]`, `/players/[playerId]` | Implemented | Shared court typeahead, optional surface chips, metadata-only retro tagging, court detail/tallies, surface records, tournament defaults, and organiser merging are live. |
-| Zeus inbox | `/notifications` | Implemented | Header unread badge, unread-first inbox, navigation-only read actions, planned-match destinations, and weekly-deduped untagged nudges are live. |
+| Zeus inbox | `/notifications` | Implemented | Permanent Zeus portrait/inbox across empty, read, and unread states; header badge, failure-aware mark-all-read, navigation-only actions, planned-match destinations, and weekly-deduped untagged nudges are live. |
 
 ## Implementation rules
 
@@ -63,6 +63,6 @@ inside the existing auth shell; the callback route is `/auth/confirm`.
 
 ## Planned matches and notifications
 
-`/matches/plan` creates a stake-free upcoming-match shell; `/matches/[plannedMatchId]` is the participant review surface for proposal, locked-in, and result states. Zeus notifications live at `/notifications`, with a small unread preview on Profile, while upcoming plans are public on the ladder.
+`/matches/plan` creates a stake-free upcoming-match shell; `/matches/[plannedMatchId]` is the participant review surface for proposal, locked-in, and result states. Zeus notifications live permanently at `/notifications` and are not embedded in Profile, while upcoming plans are public on the ladder.
 
 The July 2026 points handoff is represented by `/points`, `/practice/new`, practice rows and filters in `/admin/approvals`, and the profile decay-watch card. Crust denotes approval-pending practice; rust denotes permanent point loss. The prototype HTML remains reference-only; production screens use the shared token and component vocabulary.

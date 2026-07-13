@@ -70,7 +70,22 @@ export async function approvePlannedResult(id:string):Promise<Result>{ const pla
 
 export async function sendLifecycleEmail(plannedMatchId:string,kind:"locked"|"confirmed",matchId?:string){try{const admin=createAdminClient();const {data:plan}=await admin.from("planned_matches").select("*, external_opponents(display_name)").eq("id",plannedMatchId).single();if(!plan)return;const ids=[plan.created_by,plan.opponent_player_id].filter((id):id is string=>Boolean(id));const {data:people}=await admin.from("players").select("id,email,first_name").in("id",ids);let match:any=null;if(matchId){const {data}=await admin.from("matches").select("winner_id,type,played_at,match_sets(p1_games,p2_games)").eq("id",matchId).single();match=data;}for(const person of people??[]){const other=(people??[]).find(p=>p.id!==person.id);const externalName=plan.external_opponents?.[0]?.display_name;const winner=(people??[]).find(p=>p.id===match?.winner_id)?.first_name??(externalName&&match?.winner_id==null?externalName:"Winner");const loser=winner===person.first_name?(other?.first_name??externalName??"Opponent"):person.first_name??"Player";const email=kind==="locked"?plannedEmail({kind,firstName:person.first_name??"Player",opponentName:other?.first_name??externalName??"Opponent",when:new Intl.DateTimeFormat("en-AU",{dateStyle:"medium",timeStyle:"short"}).format(new Date(plan.scheduled_at)),location:plan.location}):plannedEmail({kind,firstName:person.first_name??"Player",winnerName:winner,loserName:loser,score:(match?.match_sets??[]).map((s:any)=>`${s.p1_games}-${s.p2_games}`).join(", "),type:match?.type==="ranked"?"Ranked · +30 / +15":"Non-ranked · +10"});await sendTournamentEmail(person.email,email,`planned/${plannedMatchId}/${kind}/${person.id}`);}}catch{/* committed lifecycle remains successful */}}
 
-export async function markNotificationsRead(){const player=await getSessionPlayer();if(!player)return;const db=await createClient();await db.from("notifications").update({read_at:new Date().toISOString()}).eq("player_id",player.id).is("read_at",null);revalidatePath("/profile");revalidatePath("/notifications");}
+export type MarkNotificationsResult = { ok: true; count: number } | { ok: false; error: string };
+
+export async function markNotificationsRead(): Promise<MarkNotificationsResult> {
+  const player = await getSessionPlayer();
+  if (!player) return { ok: false, error: "Sign in first." };
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from("notifications")
+    .update({ read_at: new Date().toISOString() })
+    .eq("player_id", player.id)
+    .is("read_at", null)
+    .select("id");
+  if (error) return { ok: false, error: "Zeus couldn't update your notifications." };
+  for (const path of ["/", "/notifications", "/profile", "/matches"]) revalidatePath(path);
+  return { ok: true, count: data?.length ?? 0 };
+}
 
 export async function openNotification(formData: FormData) {
   const player = await getSessionPlayer();
