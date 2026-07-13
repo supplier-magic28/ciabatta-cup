@@ -33,8 +33,8 @@ of Done (`CLAUDE.md`).
   compact lists, forms, profiles, tournament lists, and tournament boards.
 
 **Layout**
-- `layout/SiteHeader` — shared wordmark and primary navigation for the ladder,
-  cups, points guide, matches, profile, and admin tools.
+- `layout/SiteHeader` — responsive three-area header with the wordmark,
+  wrapping primary navigation, and a permanent top-right Zeus inbox action.
 - `practice/PracticeForm` — owner solo-practice claim form with activity, duration, date, notes, approval callout, and pending result state.
 - `practice/PracticeApprovalActions` — organiser approve +5/reject controls for pending practice claims.
   tournaments, matches, admin tools, and sign-out.
@@ -121,8 +121,11 @@ Planned next (from ARCHITECTURE.md): `Card`, `RankBadge`, `StatBlock`.
 - `planned/PlannedActions` — participant accept, decline, and cancellation controls.
 - `planned/PlannedResultForm` — post-play stakes, score, date, location, and result submission.
 - `planned/ApproveResultButton` — opponent confirmation for a proposed planned-match result.
-- `notifications/ZeusNavLink` — global Zeus inbox link with a live unread badge.
+- `notifications/ZeusInboxButton` — persistent 44px Zeus-avatar inbox action
+  with a server-derived unread badge and active-route treatment.
 - `notifications/MarkAllReadButton` — failure-aware pending control that clears
   every unread Zeus item and refreshes the global badge.
+- `notifications/ZeusInboxButton.test` — zero/unread/active-state rendering,
+  accessible count wording, 44px target, and `99+` visual-cap coverage.
 
 - `ui/BackLink.test` — contract coverage for deterministic parent-link rendering.

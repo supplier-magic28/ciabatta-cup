@@ -9,6 +9,7 @@ import { planFinalStage } from "@/lib/tournament/logic";
 import { loadActiveTournamentPlayers, loadTournamentBoard } from "@/lib/tournament/read";
 import { BackLink } from "@/components/ui/BackLink";
 import { PARENT_ROUTES } from "@/lib/navigation/parents";
+import { WorkflowZeusInboxAction } from "@/components/notifications/ZeusInboxButton";
 
 export default async function ManageTournamentPage({ params }: { params: Promise<{ tournamentId: string }> }) {
   const admin = await getSessionPlayer();
@@ -58,6 +59,7 @@ export default async function ManageTournamentPage({ params }: { params: Promise
 
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
+      <WorkflowZeusInboxAction />
       <header className="mb-6 flex flex-wrap items-start justify-between gap-4 border-b-2 border-ink pb-4">
         <div>
           <p className="font-mono text-[10px] uppercase tracking-[2px] text-crust">Director console · {board.tournament.status}</p>

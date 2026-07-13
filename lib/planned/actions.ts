@@ -83,7 +83,8 @@ export async function markNotificationsRead(): Promise<MarkNotificationsResult> 
     .is("read_at", null)
     .select("id");
   if (error) return { ok: false, error: "Zeus couldn't update your notifications." };
-  for (const path of ["/", "/notifications", "/profile", "/matches"]) revalidatePath(path);
+  revalidatePath("/", "layout");
+  revalidatePath("/notifications");
   return { ok: true, count: data?.length ?? 0 };
 }
 
@@ -95,8 +96,8 @@ export async function openNotification(formData: FormData) {
   const { data } = await db.from("notifications").select("id, target_path, planned_match_id").eq("id", id).eq("player_id", player.id).single();
   if (!data) redirect("/notifications");
   await db.from("notifications").update({ read_at: new Date().toISOString() }).eq("id", data.id).eq("player_id", player.id);
+  revalidatePath("/", "layout");
   revalidatePath("/notifications");
-  revalidatePath("/profile");
   const target = data.target_path ?? (data.planned_match_id ? `/matches/${data.planned_match_id}` : "/notifications");
   redirect(target.startsWith("/") ? target : "/notifications");
 }

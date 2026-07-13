@@ -6,6 +6,7 @@ import { InvitePlayerForm } from "@/components/players/InvitePlayerForm";
 import { DeletePlayerButton } from "@/components/players/DeletePlayerButton";
 import { BackLink } from "@/components/ui/BackLink";
 import { PARENT_ROUTES } from "@/lib/navigation/parents";
+import { WorkflowZeusInboxAction } from "@/components/notifications/ZeusInboxButton";
 import { loadCourtOptions } from "@/lib/courts/read";
 import { CourtMergeForm } from "@/components/courts/CourtMergeForm";
 
@@ -53,6 +54,7 @@ export default async function ManagePlayersPage() {
 
   return (
     <main className="mx-auto w-full max-w-lg flex-1 px-6 py-10">
+      <WorkflowZeusInboxAction />
       <header className="mb-6 flex items-center justify-between">
         <h1 className="font-heading text-2xl font-bold text-ink">Players</h1>
         <BackLink href={PARENT_ROUTES.ladder}>Ladder</BackLink>

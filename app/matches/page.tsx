@@ -10,6 +10,7 @@ import { ConfirmMatchButton } from "@/components/match/ConfirmMatchButton";
 import { DeleteExternalMatchButton } from "@/components/match/DeleteExternalMatchButton";
 import { BackLink } from "@/components/ui/BackLink";
 import { PARENT_ROUTES } from "@/lib/navigation/parents";
+import { WorkflowZeusInboxAction } from "@/components/notifications/ZeusInboxButton";
 
 const STATUS_LABEL: Record<string, string> = {
   pending_confirmation: "Waiting for opponent",
@@ -65,6 +66,7 @@ export default async function MatchesPage() {
 
   return (
     <main className="mx-auto w-full max-w-md flex-1 px-6 py-10">
+      <WorkflowZeusInboxAction />
       <header className="mb-6 flex items-center justify-between">
         <h1 className="font-heading text-2xl font-bold text-ink">Your matches</h1>
         <div className="flex flex-wrap items-center justify-end gap-4"><BackLink href={PARENT_ROUTES.ladder}>Ladder</BackLink><Link href="/matches/untagged" className="font-mono text-[12px] uppercase tracking-[1.5px] text-crust">Tag missing</Link><Link href="/matches/plan" className="font-mono text-[12px] uppercase tracking-[1.5px] text-green">+ Plan</Link><Link href="/matches/new" className="font-mono text-[12px] uppercase tracking-[1.5px] text-green">+ Log match</Link></div>

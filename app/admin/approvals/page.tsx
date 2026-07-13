@@ -10,6 +10,7 @@ import { BackLink } from "@/components/ui/BackLink";
 import { PARENT_ROUTES } from "@/lib/navigation/parents";
 import Link from "next/link";
 import { PracticeApprovalActions } from "@/components/practice/PracticeApprovalActions";
+import { WorkflowZeusInboxAction } from "@/components/notifications/ZeusInboxButton";
 
 const eyebrow = "font-mono text-[10px] uppercase tracking-[2px] text-muted";
 
@@ -51,6 +52,7 @@ export default async function ApprovalsPage({ searchParams }: { searchParams: Pr
 
   return (
     <main className="mx-auto w-full max-w-lg flex-1 px-6 py-10">
+      <WorkflowZeusInboxAction />
       <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-heading text-2xl font-bold text-ink">Approvals</h1>

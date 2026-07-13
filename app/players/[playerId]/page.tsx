@@ -12,6 +12,7 @@ import { createClient } from "@/lib/supabase/server";
 import { BackLink } from "@/components/ui/BackLink";
 import { PARENT_ROUTES } from "@/lib/navigation/parents";
 import { deriveSurfaceRecords, type SurfaceMatch } from "@/lib/courts/records";
+import { WorkflowZeusInboxAction } from "@/components/notifications/ZeusInboxButton";
 
 const eyebrow = "font-mono text-[10px] uppercase tracking-[1.5px]";
 
@@ -127,6 +128,7 @@ export default async function PlayerProfilePage({
 
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 px-4 pb-10 pt-5 sm:px-6">
+      <WorkflowZeusInboxAction />
       <header className="mb-5 flex items-center justify-between border-b-2 border-ink pb-4">
         <BackLink href={PARENT_ROUTES.ladder}>Ladder</BackLink>
         <Link href="/matches" className="font-mono text-[11px] uppercase tracking-[1.5px] text-muted">

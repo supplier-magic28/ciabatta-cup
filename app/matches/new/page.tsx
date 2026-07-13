@@ -6,6 +6,7 @@ import { LogMatchForm, type OpponentOption } from "@/components/match/LogMatchFo
 import { BackLink } from "@/components/ui/BackLink";
 import { PARENT_ROUTES } from "@/lib/navigation/parents";
 import { loadCourtOptions } from "@/lib/courts/read";
+import { WorkflowZeusInboxAction } from "@/components/notifications/ZeusInboxButton";
 
 /**
  * Log-match screen (design screen 03). Server component: gates the session,
@@ -44,6 +45,7 @@ export default async function NewMatchPage({ searchParams }: { searchParams: Pro
 
   return (
     <main className="mx-auto w-full max-w-md flex-1 px-6 py-10">
+      <WorkflowZeusInboxAction />
       <BackLink href={PARENT_ROUTES.matches} className="mb-5">Your matches</BackLink>
       <LogMatchForm initialType={initialType} selfName={selfName} opponents={opponents} savedExternalOpponents={(savedExternalRows ?? []).map((row) => ({ id: row.id, name: row.display_name }))} courts={courts} />
     </main>
