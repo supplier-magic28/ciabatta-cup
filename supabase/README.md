@@ -77,6 +77,8 @@ Database migrations for Ciabatta Cup. The authoritative data model is
   and tournaments, metadata-only retro tagging/audit, organiser merges, and
   general Zeus notification destinations (ADR-0031).
 - `20260715121000_seed_untagged_notifications.sql` runs after the enum change
+  and must be followed by `20260715122000_reliable_realtime_notifications.sql`
+  for transactional planned-match fan-out and receiver-live badge updates.
   commits and seeds one Zeus nudge for players with historical untagged facts.
 
 The tournament participant table is editable only before the first tournament

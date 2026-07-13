@@ -14,7 +14,6 @@ import { queueUntaggedNudges } from "@/lib/notifications/untagged";
 
 type Result = { ok: true; id?: string } | { ok: false; error: string };
 const refresh = () => ["/", "/matches", "/profile", "/notifications", "/admin/approvals"].forEach((path) => revalidatePath(path));
-const note = async (playerId: string, kind: "match_proposed"|"match_declined"|"match_cancelled"|"match_locked_in"|"result_to_approve"|"result_confirmed", plannedMatchId: string, body: string) => createAdminClient().from("notifications").insert({ player_id: playerId, kind, planned_match_id: plannedMatchId, target_path: `/matches/${plannedMatchId}`, body });
 
 export async function planMatch(input: { opponentPlayerId?: string; opponentExternalId?: string; scheduledAt: string; location: string; courtId?: string }): Promise<Result> {
   const player = await getSessionPlayer(); if (!player) return { ok:false, error:"Sign in to plan a match." };
@@ -32,7 +31,6 @@ export async function planMatch(input: { opponentPlayerId?: string; opponentExte
   const admin = createAdminClient();
   const { data, error } = await admin.from("planned_matches").insert({ created_by:player.id, opponent_player_id:input.opponentPlayerId ?? null, opponent_external_id:input.opponentExternalId ?? null, scheduled_at:input.scheduledAt, location:input.location.trim(), court_id:courtId, status:external ? "locked_in":"proposed", accepted_at:external ? new Date().toISOString():null }).select("id").single();
   if (error || !data) return { ok:false, error:"Couldn't plan that match." };
-  if (input.opponentPlayerId) await note(input.opponentPlayerId, "match_proposed", data.id, "I have a match proposal waiting for your answer.");
   if (external) await sendLifecycleEmail(data.id, "locked");
   refresh(); return { ok:true, id:data.id };
 }
@@ -45,8 +43,6 @@ export async function decidePlannedMatch(id:string, decision:"accept"|"decline"|
   const status=decision==="accept"?"locked_in":decision==="decline"?"declined":"cancelled";
   if(decision!=="accept" && plan.status!=="locked_in" && !(decision==="decline"&&plan.status==="proposed")) return {ok:false,error:"This plan cannot be changed."};
   const {error}=await admin.from("planned_matches").update({status,accepted_at:decision==="accept"?new Date().toISOString():plan.accepted_at,cancelled_by:decision==="cancel"?player.id:null}).eq("id",id); if(error)return {ok:false,error:"Couldn't update the plan."};
-  const other=plan.created_by===player.id?plan.opponent_player_id:plan.created_by;
-  if(other) await note(other, decision==="accept"?"match_locked_in":decision==="decline"?"match_declined":"match_cancelled", id, decision==="accept"?"I have locked your match in.":decision==="decline"?"I have been told the proposed match is declined.":"I have been told the match was cancelled.");
   if(decision==="accept") await sendLifecycleEmail(id,"locked");
   refresh();return {ok:true};
 }
@@ -63,7 +59,7 @@ export async function submitPlannedResult(id:string, input:MatchSubmission|Exter
   }
   const result=checked.value as import("@/lib/match/types").ValidatedSubmission;
   const payload={match_type:result.type,format:result.format,format_note:result.formatNote,winner_player_id:result.winnerId,score:result.sets,played_at:result.playedAt,location:result.location,court_id:courtId,surface:result.surface};
-  const {data:proposal,error}=await admin.from("planned_match_results").insert({...payload,planned_match_id:id,submitted_by:player.id,status:"pending"}).select("id").single(); if(error||!proposal)return {ok:false,error:"Couldn't submit result."}; await admin.from("planned_matches").update({status:"awaiting_result_approval"}).eq("id",id); const other=plan.created_by===player.id?plan.opponent_player_id:plan.created_by; if(other)await note(other,"result_to_approve",id,"I need you to review a match result."); refresh();return {ok:true};
+  const {data:proposal,error}=await admin.from("planned_match_results").insert({...payload,planned_match_id:id,submitted_by:player.id,status:"pending"}).select("id").single(); if(error||!proposal)return {ok:false,error:"Couldn't submit result."}; const {error:statusError}=await admin.from("planned_matches").update({status:"awaiting_result_approval"}).eq("id",id); if(statusError)return {ok:false,error:"The result was saved, but Zeus couldn't notify your opponent."}; refresh();return {ok:true};
 }
 
 export async function approvePlannedResult(id:string):Promise<Result>{ const player=await getSessionPlayer();if(!player)return {ok:false,error:"Sign in first."};const admin=createAdminClient();const {data:plan}=await admin.from("planned_matches").select("*").eq("id",id).single();const {data:proposal}=await admin.from("planned_match_results").select("*").eq("planned_match_id",id).eq("status","pending").single();if(!plan||!proposal||plan.opponent_player_id===null||proposal.submitted_by===player.id||player.id!==plan.created_by&&player.id!==plan.opponent_player_id)return {ok:false,error:"This result cannot be approved."};const status=proposal.match_type==="ranked"?"pending_approval":"approved";const {data:match,error}=await admin.from("matches").insert({type:proposal.match_type,format:proposal.format,format_note:proposal.format_note,player1_id:plan.created_by,player2_id:plan.opponent_player_id,winner_id:proposal.winner_player_id,submitted_by:proposal.submitted_by,played_at:proposal.played_at,location:proposal.location,court_id:proposal.court_id,surface:proposal.surface,status,planned_match_id:id}).select("id").single();if(error||!match)return {ok:false,error:"Couldn't create the match fact."};const sets=(proposal.score as Array<{setNumber:number;selfGames:number;opponentGames:number;selfTiebreak:number|null;opponentTiebreak:number|null}>).map(s=>({match_id:match.id,set_number:s.setNumber,p1_games:s.selfGames,p2_games:s.opponentGames,tiebreak_p1:s.selfTiebreak,tiebreak_p2:s.opponentTiebreak}));await admin.from("match_sets").insert(sets);await admin.from("planned_match_results").update({status:"approved",reviewed_at:new Date().toISOString()}).eq("id",proposal.id);await admin.from("planned_matches").update({status:status==="approved"?"confirmed":"awaiting_admin_approval"}).eq("id",id);if(status==="approved"){await rebuildRatingCache();await queueUntaggedNudges(match.id);await sendLifecycleEmail(id,"confirmed",match.id);}refresh();return {ok:true}; }

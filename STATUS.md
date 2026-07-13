@@ -17,7 +17,8 @@ This is the short operational handover. Durable intent belongs in
 - Zeus has a permanent, portrait-led `/notifications` inbox with explicit
   empty/read/unread states and a failure-aware mark-all-read control. A dedicated
   top-right Zeus-avatar action stays visible with a live unread badge, lifecycle
-  cards navigate to their match, and weekly-deduped
+  notifications fan out transactionally and refresh the receiver through
+  owner-filtered Realtime, lifecycle cards navigate to their match, and weekly-deduped
   missing-tag nudges navigate to the tagging queue; Profile stays profile-only.
 
 - Players can create and respond to planned upcoming-match shells; proposed and locked-in plans appear on the public ladder calendar, and Zeus notification cards appear on the owner profile.
@@ -102,6 +103,7 @@ after that password update succeeds.
 | `20260714120000_planned_matches_notifications.sql` | Ready to apply after activity-points migrations |
 | `20260715120000_courts_surfaces_zeus_inbox.sql` | Ready after planned matches |
 | `20260715121000_seed_untagged_notifications.sql` | Ready immediately after courts/surfaces |
+| `20260715122000_reliable_realtime_notifications.sql` | Ready immediately after the notification seed |
 
 ## Current blockers
 

@@ -123,8 +123,12 @@ Planned next (from ARCHITECTURE.md): `Card`, `RankBadge`, `StatBlock`.
 - `planned/ApproveResultButton` — opponent confirmation for a proposed planned-match result.
 - `notifications/ZeusInboxButton` — persistent 44px Zeus-avatar inbox action
   with a server-derived unread badge and active-route treatment.
+- `notifications/NotificationRealtimeBridge` — owner-filtered Supabase Realtime
+  refresh bridge for receiver inserts/read-state updates, with focus recovery.
 - `notifications/MarkAllReadButton` — failure-aware pending control that clears
   every unread Zeus item and refreshes the global badge.
+- `notifications/NotificationRealtimeBridge.test` — receiver-specific Realtime
+  filter contract coverage.
 - `notifications/ZeusInboxButton.test` — zero/unread/active-state rendering,
   accessible count wording, 44px target, and `99+` visual-cap coverage.
 

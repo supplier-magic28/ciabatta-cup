@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { getSessionPlayer } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
+import { NotificationRealtimeBridge } from "@/components/notifications/NotificationRealtimeBridge";
 
 export function unreadBadgeLabel(count: number) {
   return count > 99 ? "99+" : String(count);
@@ -49,7 +50,11 @@ export async function ZeusInboxAction({ active = false }: { active?: boolean }) 
     .eq("player_id", player.id)
     .is("read_at", null);
 
-  return <ZeusInboxButton unreadCount={count ?? 0} active={active} />;
+  return (
+    <NotificationRealtimeBridge playerId={player.id}>
+      <ZeusInboxButton unreadCount={count ?? 0} active={active} />
+    </NotificationRealtimeBridge>
+  );
 }
 
 export function WorkflowZeusInboxAction() {

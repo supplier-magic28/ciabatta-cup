@@ -282,7 +282,13 @@ async function adminSetStatus(
     }
     if (match.planned_match_id) {
       const admin = createAdminClient();
-      await admin.from("planned_matches").update({ status: "confirmed" }).eq("id", match.planned_match_id);
+      const { error: plannedError } = await admin.from("planned_matches").update({ status: "confirmed" }).eq("id", match.planned_match_id);
+      if (plannedError) {
+        revalidatePath("/admin/approvals");
+        revalidatePath("/matches");
+        revalidateRatingSurfaces();
+        return { ok: false, error: "Match was approved, but Zeus couldn't notify the players." };
+      }
       await sendLifecycleEmail(match.planned_match_id, "confirmed", matchId);
     }
     await queueUntaggedNudges(matchId);

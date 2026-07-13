@@ -276,6 +276,13 @@ The `/notifications` Zeus inbox marks an item read when its navigation action is
 opened. `untagged_matches_nudge` targets `/matches/untagged` and is created no
 more than weekly per player.
 
+Planned-match lifecycle notifications are inserted by a database trigger in
+the same transaction as the shell status transition. Stable per-player dedupe
+keys make the fan-out retry-safe, including final `result_confirmed` messages.
+`notifications` belongs to the `supabase_realtime` publication; Postgres
+Changes remains restricted by owner-select RLS and the client also filters by
+the signed-in player's ID.
+
 ## Points system
 Ordinary Elo uses K=32 with a zero entry baseline and zero floor. An equal first
 match gives the winner 16 and leaves the loser at zero. Only non-tournament
