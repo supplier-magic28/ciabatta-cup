@@ -25,10 +25,11 @@ describe("canonical calendar scorecard", () => {
 });
 
 describe("calendar event presentation", () => {
-  it("includes organiser-owned drafts without exposing them to unrelated players", () => {
+  it("publishes drafts while keeping non-draft cups personal", () => {
     expect(includeTournamentOnCalendar({ status:"draft", createdBy:"admin", isParticipant:false }, "admin")).toBe(true);
     expect(includeTournamentOnCalendar({ status:"draft", createdBy:"admin", isParticipant:true }, "player")).toBe(true);
-    expect(includeTournamentOnCalendar({ status:"draft", createdBy:"admin", isParticipant:false }, "player")).toBe(false);
+    expect(includeTournamentOnCalendar({ status:"draft", createdBy:"admin", isParticipant:false }, "player")).toBe(true);
+    expect(includeTournamentOnCalendar({ status:"scheduled", createdBy:"admin", isParticipant:false }, "player")).toBe(false);
     expect(includeTournamentOnCalendar({ status:"cancelled", createdBy:"admin", isParticipant:true }, "player")).toBe(false);
   });
 

@@ -6,7 +6,9 @@ export function includeTournamentOnCalendar(input: {
   createdBy: string;
   isParticipant: boolean;
 }, playerId: string) {
-  return input.status !== "cancelled" && (input.isParticipant || input.createdBy === playerId);
+  return input.status !== "cancelled" && (
+    input.status === "draft" || input.isParticipant || input.createdBy === playerId
+  );
 }
 
 export const eventsInRange = (events: readonly CalendarEvent[], from: string, to: string, showExternal = true) =>
