@@ -5,8 +5,8 @@ import { getSessionPlayer } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { rebuildRatingCache } from "@/lib/scoring/rebuild";
-import { validateExternalSubmission, validateSubmission } from "./submission";
-import type { ExternalMatchSubmission, MatchSubmission } from "./types";
+import { validateAdminSubmission, validateExternalSubmission, validateSubmission } from "./submission";
+import type { AdminMatchSubmission, ExternalMatchSubmission, MatchSubmission } from "./types";
 import { formatScore } from "./score";
 import { renderExternalMatchEmail } from "./external-email";
 import { sendTournamentEmail } from "@/lib/tournament/email";
@@ -72,6 +72,43 @@ export async function submitMatch(input: MatchSubmission): Promise<SubmitResult>
   }
 
   revalidatePath("/matches");
+  return { ok: true, matchId, warning };
+}
+
+export async function adminLogMatch(input: AdminMatchSubmission): Promise<SubmitResult> {
+  const player = await getSessionPlayer();
+  if (!player || player.role !== "admin") return { ok: false, error: "Only admins can directly log matches." };
+  const validated = validateAdminSubmission(input);
+  if (!validated.ok) return validated;
+  const match = validated.value;
+  const supabase = await createClient();
+  let courtId: string | null;
+  try { courtId = await resolveCourtId(supabase, match.location); }
+  catch { return { ok: false, error: "Couldn't save that court." }; }
+  const { data: matchId, error } = await supabase.rpc("admin_log_match_v1", {
+    p_player1_id: input.player1Id,
+    p_player2_id: input.player2Id,
+    p_match_type: match.type,
+    p_format: match.format,
+    p_format_note: match.formatNote,
+    p_winner_player_id: match.winnerId,
+    p_played_at: match.playedAt,
+    p_location: match.location,
+    p_court_id: courtId,
+    p_surface: match.surface,
+    p_sets: match.sets.map((set) => ({
+      set_number: set.setNumber, p1_games: set.selfGames, p2_games: set.opponentGames,
+      tiebreak_p1: set.selfTiebreak, tiebreak_p2: set.opponentTiebreak,
+    })),
+  });
+  if (error || typeof matchId !== "string") return { ok: false, error: error?.message || SAVE_FAILED };
+  let warning: string | undefined;
+  try { await rebuildRatingCache(); }
+  catch { warning = "Match approved, but the derived points cache needs an admin rebuild."; }
+  await queueUntaggedNudges(matchId);
+  revalidatePath("/matches");
+  revalidatePath("/admin/approvals");
+  revalidateRatingSurfaces();
   return { ok: true, matchId, warning };
 }
 

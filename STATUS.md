@@ -1,11 +1,21 @@
 # Ciabatta Cup Status
 
-**Last updated:** 2026-07-15
+**Last updated:** 2026-07-17
 
 This is the short operational handover. Durable intent belongs in
 `ARCHITECTURE.md`, the data model in `docs/SCHEMA.md`, and decisions in ADRs.
 
 ## Current capability
+
+- Organisers can log and immediately approve a result between any two active
+  members from the Matches workflow. The immutable fact records the organiser,
+  skips participant confirmation and approval work, and notifies both players.
+- Ladder and public player profiles now share one service-backed activity-points
+  projection and Melbourne as-of date, including a complete award/decay timeline.
+  Expanded history and profiles share ranked, set, tournament, exhibition, and
+  aggregate Non-Ciabatta records.
+- Match logging is no longer a global navigation tab; Matches owns every visible
+  entry point, and leaderboard profile navigation acknowledges clicks immediately.
 
 - Locations resolve to shared, case-insensitive courts across ordinary,
   planned, external, and tournament results. Match surfaces are optional,
@@ -117,6 +127,7 @@ after that password update succeeds.
 | `20260715122000_reliable_realtime_notifications.sql` | Ready immediately after the notification seed |
 | `20260716120000_match_workflow_repair_types.sql` | Ready after reliable Realtime notifications |
 | `20260716121000_atomic_match_workflows.sql` | Ready immediately after workflow repair types |
+| `20260717120000_admin_match_logging.sql` | Ready immediately after atomic match workflows |
 
 ## Current blockers
 
@@ -129,7 +140,7 @@ after that password update succeeds.
 
 ## Next product slice
 
-Apply the ready migrations in order, deploy, run the admin rating rebuild once,
+Apply the ready migrations in order (including admin match logging), deploy, run the admin rating rebuild once,
 and verify practice review, delayed planned-result entry, participant correction,
 organiser approval, Zeus navigation, court
 creation/merge, retro tagging, tournament defaults, Melbourne decay, and the

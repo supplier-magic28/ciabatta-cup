@@ -19,7 +19,6 @@ export function SiteHeader({ role, active }: { role: "player" | "admin"; active?
           Cups
         </Link>
         <Link href="/matches" className={`${linkClass} text-ink`}>Matches</Link>
-        <Link href="/matches/new" className={`${linkClass} text-green`}>Log result</Link>
         {role === "admin" && (
           <>
             <Link href="/admin/approvals" className={`${linkClass} text-crust`}>Approvals</Link>

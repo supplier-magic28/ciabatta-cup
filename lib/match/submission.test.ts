@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { validateExternalSubmission, validateSubmission } from "./submission";
-import type { MatchSubmission, SetScore } from "./types";
+import { validateAdminSubmission, validateExternalSubmission, validateSubmission } from "./submission";
+import type { AdminMatchSubmission, MatchSubmission, SetScore } from "./types";
 
 const SELF = "me";
 const OPP = "opponent";
@@ -115,6 +115,20 @@ describe("validateSubmission", () => {
     const snapshot = structuredClone(input);
     validateSubmission(input, SELF);
     expect(input).toEqual(snapshot);
+  });
+});
+
+describe("validateAdminSubmission", () => {
+  it("derives the winner from player-one-oriented scores", () => {
+    const input: AdminMatchSubmission = { ...submission(), player1Id: "alice", player2Id: "bob" };
+    const result = validateAdminSubmission(input);
+    expect(result.ok && result.value.winnerId).toBe("alice");
+  });
+
+  it("requires two distinct selected players", () => {
+    const base: AdminMatchSubmission = { ...submission(), player1Id: "alice", player2Id: "alice" };
+    expect(validateAdminSubmission(base).ok).toBe(false);
+    expect(validateAdminSubmission({ ...base, player2Id: "" }).ok).toBe(false);
   });
 });
 

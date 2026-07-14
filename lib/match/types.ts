@@ -40,6 +40,12 @@ export interface MatchSubmission {
   sets: SetScore[];
 }
 
+/** Admin-entered member match, with scores oriented to player 1. */
+export interface AdminMatchSubmission extends Omit<MatchSubmission, "opponentId"> {
+  player1Id: string;
+  player2Id: string;
+}
+
 export interface ExternalMatchSubmission {
   opponentName: string;
   saveOpponent: boolean;

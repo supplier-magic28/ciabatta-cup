@@ -63,7 +63,7 @@ describe("leaderboard history", () => {
     expect(history.get("bob")?.externalMatches).toEqual({ won: 0, lost: 0 });
   });
 
-  it("ignores unapproved, exhibition, friendly-tournament, and malformed results", () => {
+  it("counts exhibitions while ignoring unapproved, friendly-ranked, and malformed results", () => {
     const ignored = [
       match({ status: "pending_approval" }),
       match({ type: "exhibition" }),
@@ -71,14 +71,15 @@ describe("leaderboard history", () => {
       match({ winner_id: "carol" }),
     ];
     const history = deriveLeaderboardHistory(players, ignored, [], tournaments, fixtures);
-    for (const playerId of players) {
-      expect(history.get(playerId)).toEqual({
+    expect(history.get("alice")).toEqual({
         trophies: 0,
         rankedMatches: { won: 0, lost: 0 },
         rankedSets: { won: 0, lost: 0 },
         tournamentMatches: { won: 0, lost: 0 },
+        nonRankedMatches: { won: 1, lost: 0 },
         externalMatches: { won: 0, lost: 0 },
-      });
-    }
+    });
+    expect(history.get("bob")?.nonRankedMatches).toEqual({ won: 0, lost: 1 });
+    expect(history.get("carol")?.nonRankedMatches).toEqual({ won: 0, lost: 0 });
   });
 });

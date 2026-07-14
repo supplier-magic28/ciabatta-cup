@@ -350,6 +350,20 @@ Manual streak marks only; match-derived days are never copied here.
 The streak projection unions these marks with every participating match except
 rejected submissions. H2H and history projections continue to use approved
 facts only. No current streak, best streak, or H2H aggregate is stored.
+## Admin match logging and public projection (2026-07-17)
+
+`matches.admin_logged_by` identifies an organiser who used the guarded
+`admin_log_match_v1` RPC to record a match for any two active members. The RPC
+stores the score before sealing the match as `approved`; it creates no
+participant confirmations or approval-queue work. `submitted_by` remains
+player 1 for score orientation, while `admin_logged_by` is the audit authority.
+
+Public current points, rank, and point timelines are one pure activity replay
+loaded server-side from complete match, placement, approved-practice, and
+play-day facts. Only derived totals/events leave that boundary. Leaderboard and
+public profiles use the same career projection; exhibition W-L is the all-time
+non-ranked record and external opponent identities remain owner-private.
+
 # Activity-points delta (2026-07-13)
 
 `players.rating_points` is a rebuildable snapshot of public activity points, not authoritative Elo. Public points are derived from approved ordinary matches (+15 participation each, +15 winner bonus), approved exhibition/external participation (+10), approved `practice_sessions` (+5), tournament placements, and permanent derived inactivity deductions. Ordinary Elo remains a separate pure projection for seeding/history.

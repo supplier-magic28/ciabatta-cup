@@ -7,7 +7,8 @@ import { getSessionPlayer } from "@/lib/auth/session";
 import { formatScore } from "@/lib/match/score";
 import { indexEmbeddedScoreSets } from "@/lib/match/embeddedSets";
 import { derivePlayerProfile, type ProfileMatch } from "@/lib/players/profile";
-import { buildRatingCache, type ScoringMatchRow, type TournamentPlacementRow } from "@/lib/scoring";
+import { loadPublicLadderProjection } from "@/lib/scoring/publicProjection";
+import { deriveLeaderboardHistory, type LeaderboardFixtureRow, type LeaderboardMatchRow, type LeaderboardTournamentRow } from "@/lib/leaderboard/history";
 import { createClient } from "@/lib/supabase/server";
 import { BackLink } from "@/components/ui/BackLink";
 import { PARENT_ROUTES } from "@/lib/navigation/parents";
@@ -41,7 +42,7 @@ export default async function PlayerProfilePage({
   const { playerId } = await params;
   const supabase = await createClient();
 
-  const [{ data: target }, { data: playerRows }, { data: matchRows }, { data: placementRows }, { data: externalDetails }] = await Promise.all([
+  const [{ data: target }, { data: playerRows }, { data: matchRows }, { data: externalDetails }, { data: tournamentRows }, { data: fixtureRows }] = await Promise.all([
     supabase
       .from("players")
       .select("id, first_name, last_name, email, nickname, use_nickname, avatar_url, height_cm, weight_kg, plays, backhand, game_style, status")
@@ -53,10 +54,11 @@ export default async function PlayerProfilePage({
       .order("first_name", { ascending: true }),
     supabase
       .from("matches")
-      .select("id, player1_id, player2_id, winner_id, type, status, played_at, tournament_id, surface, match_sets(set_number, p1_games, p2_games, tiebreak_p1, tiebreak_p2)")
+      .select("id, player1_id, player2_id, winner_id, type, status, played_at, tournament_id, fixture_id, surface, match_sets(set_number, p1_games, p2_games, tiebreak_p1, tiebreak_p2)")
       .eq("status", "approved"),
-    supabase.from("tournament_placements").select("player_id, points, awarded_at"),
     supabase.from("external_match_details").select("match_id, opponent_name"),
+    supabase.from("tournaments").select("id, counts_as"),
+    supabase.from("fixtures").select("id, ruleset"),
   ]);
 
   if (!target) notFound();
@@ -107,15 +109,20 @@ export default async function PlayerProfilePage({
     return records;
   }, new Map<string, { opponentName: string; won: number; lost: number }>()).values()]
     .sort((a, b) => (b.won + b.lost) - (a.won + a.lost) || a.opponentName.localeCompare(b.opponentName));
-  const cache = buildRatingCache(
-    players.map((player) => player.id),
-    (matchRows ?? []) as ScoringMatchRow[],
-    (placementRows ?? []) as TournamentPlacementRow[],
-  );
+  const projection = await loadPublicLadderProjection(players.map((player) => player.id));
+  const cache = projection.cache;
   const standing = cache.rankings.find((ranking) => ranking.playerId === playerId);
+  const activityTimeline = cache.activityTimelines.get(playerId) ?? [];
+  const careerHistory = deriveLeaderboardHistory(
+    players.map((player) => player.id),
+    (matchRows ?? []) as LeaderboardMatchRow[],
+    projection.placements,
+    (tournamentRows ?? []) as LeaderboardTournamentRow[],
+    (fixtureRows ?? []) as LeaderboardFixtureRow[],
+  ).get(playerId)!;
   const reigns = cache.reigns.filter((reign) => reign.playerId === playerId);
   const currentReign = reigns.find((reign) => reign.endedAt === null);
-  const points = profile.pointsTrend.map((entry) => entry.points);
+  const points = activityTimeline.map((entry) => entry.points);
   const minPoints = Math.min(...points, standing?.rating ?? 0);
   const maxPoints = Math.max(...points, standing?.rating ?? 0);
   const pointRange = Math.max(1, maxPoints - minPoints);
@@ -173,7 +180,7 @@ export default async function PlayerProfilePage({
         {[
           { label: "Ranked", record: profile.ranked, tone: "border-green bg-green text-cream" },
           { label: "Exhibition", record: profile.exhibition, tone: "border-ink bg-surface text-ink" },
-          ...(sessionPlayer.id === playerId ? [{ label: "Non-Ciabatta", record: externalRecord, tone: "border-green border-dashed bg-surface text-ink" }] : []),
+          { label: "Non-Ciabatta", record: externalRecord, tone: "border-green border-dashed bg-surface text-ink" },
         ].map(({ label, record, tone }) => (
           <div key={label} className={`border-2 p-5 shadow-[3px_3px_0_var(--color-ink)] ${tone}`}>
             <p className={`${eyebrow} ${label === "Ranked" ? "text-green-muted" : "text-muted"}`}>{label} record</p>
@@ -181,6 +188,20 @@ export default async function PlayerProfilePage({
             <p className={`mt-1 font-body text-sm ${label === "Ranked" ? "text-cream" : "text-muted"}`}>{record.played} approved matches</p>
           </div>
         ))}
+      </section>
+
+      <section className="mt-8 border-2 border-ink bg-surface p-5 shadow-[3px_3px_0_var(--color-ink)]">
+        <p className={`${eyebrow} text-muted`}>All-time history</p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {[
+            `${careerHistory.trophies} ranked ${careerHistory.trophies === 1 ? "trophy" : "trophies"}`,
+            `${recordLabel(careerHistory.rankedMatches)} all-time ranked matches`,
+            `${recordLabel(careerHistory.rankedSets)} all-time ranked sets`,
+            `${recordLabel(careerHistory.tournamentMatches)} ranked tournament matches`,
+            `${recordLabel(careerHistory.nonRankedMatches)} all-time non-ranked matches`,
+            `${recordLabel(careerHistory.externalMatches)} non-Ciabatta match history`,
+          ].map((label) => <p key={label} className="font-mono text-[10px] uppercase tracking-[1px] text-muted">{label}</p>)}
+        </div>
       </section>
 
       {sessionPlayer.id === playerId && externalHeadToHead.length > 0 && (
@@ -197,12 +218,12 @@ export default async function PlayerProfilePage({
           <h2 className="font-heading text-xl font-bold text-ink">Points history</h2>
           <p className="font-mono text-[11px] text-muted">{standing?.rating ?? 0} current</p>
         </div>
-        {profile.pointsTrend.length === 0 ? (
-          <p className="mt-3 font-body text-sm text-muted">No ranked results yet.</p>
+        {activityTimeline.length === 0 ? (
+          <p className="mt-3 font-body text-sm text-muted">No points activity yet.</p>
         ) : (
           <div className="mt-4 flex h-28 items-end gap-2 border-b-2 border-ink pb-1">
-            {profile.pointsTrend.map((entry) => (
-              <div key={entry.playedAt} className="flex flex-1 flex-col justify-end" title={`${entry.points} points`}>
+            {activityTimeline.map((entry) => (
+              <div key={entry.date} className="flex flex-1 flex-col justify-end" title={`${entry.date}: ${entry.points} points (${entry.delta >= 0 ? "+" : ""}${entry.delta})`}>
                 <div
                   className="min-h-2 bg-green"
                   style={{ height: `${18 + ((entry.points - minPoints) / pointRange) * 82}%` }}

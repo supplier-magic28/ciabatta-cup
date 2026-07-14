@@ -4,9 +4,9 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
-import { submitExternalMatch, submitMatch } from "@/lib/match/actions";
-import { validateExternalSubmission, validateSubmission } from "@/lib/match/submission";
-import type { ExternalMatchSubmission, MatchFormat, MatchSubmission, MatchType, SetScore } from "@/lib/match/types";
+import { adminLogMatch, submitExternalMatch, submitMatch } from "@/lib/match/actions";
+import { validateAdminSubmission, validateExternalSubmission, validateSubmission } from "@/lib/match/submission";
+import type { AdminMatchSubmission, ExternalMatchSubmission, MatchFormat, MatchSubmission, MatchType, SetScore } from "@/lib/match/types";
 import { CourtPicker } from "@/components/courts/CourtPicker";
 import { SurfaceChips } from "@/components/courts/SurfaceChips";
 import type { CourtOption, Surface } from "@/lib/courts/types";
@@ -62,18 +62,26 @@ const scoreBox =
  */
 export function LogMatchForm({
   selfName,
+  selfId,
   opponents,
+  adminPlayers = [],
+  isAdmin = false,
   savedExternalOpponents,
   initialType,
   courts,
 }: {
   selfName: string;
+  selfId: string;
   opponents: OpponentOption[];
+  adminPlayers?: OpponentOption[];
+  isAdmin?: boolean;
   savedExternalOpponents: OpponentOption[];
   initialType?: "ranked" | "exhibition";
   courts: CourtOption[];
 }) {
   const [step, setStep] = useState(1);
+  const [organiserMode, setOrganiserMode] = useState(isAdmin);
+  const [player1Id, setPlayer1Id] = useState(selfId);
   const [opponentId, setOpponentId] = useState("");
   const [type, setType] = useState<MatchType | "">(initialType ?? "");
   const [format, setFormat] = useState<MatchFormat | "">("");
@@ -91,7 +99,8 @@ export function LogMatchForm({
   const [pending, startTransition] = useTransition();
 
   const isExternal = opponentId === EXTERNAL;
-  const opponentName = isExternal ? (externalName.trim() || "Non-Ciabatta opponent") : opponents.find((o) => o.id === opponentId)?.name ?? "your opponent";
+  const player1Name = organiserMode ? adminPlayers.find((player) => player.id === player1Id)?.name ?? "Player 1" : selfName;
+  const opponentName = isExternal ? (externalName.trim() || "Non-Ciabatta opponent") : (organiserMode ? adminPlayers : opponents).find((o) => o.id === opponentId)?.name ?? "your opponent";
 
   function build(): MatchSubmission {
     const parsedSets: SetScore[] = sets.map((s) => ({
@@ -130,17 +139,24 @@ export function LogMatchForm({
     };
   }
 
+  function buildAdmin(): AdminMatchSubmission {
+    const regular = build();
+    return { ...regular, player1Id, player2Id: opponentId };
+  }
+
   function updateSet(index: number, patch: Partial<SetInput>) {
     setSets((prev) => prev.map((s, i) => (i === index ? { ...s, ...patch } : s)));
   }
 
   function onSubmit() {
     setError(null);
-    const submission = isExternal ? buildExternal() : build();
+    const submission = organiserMode ? buildAdmin() : isExternal ? buildExternal() : build();
     // Run the shared pure rules (score sanity, clear winner, custom note) for
     // instant feedback before the network. The server re-validates against the
     // real session id; SELF_SENTINEL never reaches the DB.
-    const clientCheck = isExternal
+    const clientCheck = organiserMode
+      ? validateAdminSubmission(submission as AdminMatchSubmission)
+      : isExternal
       ? validateExternalSubmission(submission as ExternalMatchSubmission, SELF_SENTINEL)
       : validateSubmission(submission as MatchSubmission, SELF_SENTINEL);
     if (!clientCheck.ok) {
@@ -148,7 +164,9 @@ export function LogMatchForm({
       return;
     }
     startTransition(async () => {
-      const result = isExternal
+      const result = organiserMode
+        ? await adminLogMatch(submission as AdminMatchSubmission)
+        : isExternal
         ? await submitExternalMatch(submission as ExternalMatchSubmission)
         : await submitMatch(submission as MatchSubmission);
       if (result.ok) {
@@ -166,7 +184,7 @@ export function LogMatchForm({
         <p className={eyebrow}>Submitted</p>
         <h2 className="mt-2 font-heading text-2xl font-bold text-ink">Match logged</h2>
         <p className="mt-2 font-body text-[15px] text-ink">
-          {isExternal ? "+10 points applied. No confirmation or approval needed." : `Waiting for ${opponentName} to confirm the result.`}
+          {organiserMode ? "Approved immediately. No participant confirmation is needed." : isExternal ? "+10 points applied. No confirmation or approval needed." : `Waiting for ${opponentName} to confirm the result.`}
         </p>
         {warning && <p className="mt-3 font-mono text-[11px] text-rust">{warning}</p>}
         <div className="mt-6 flex flex-col gap-3">
@@ -178,6 +196,7 @@ export function LogMatchForm({
             onClick={() => {
               setSubmitted(false);
               setStep(1);
+              setPlayer1Id(selfId);
               setOpponentId("");
               setType("");
               setFormat("");
@@ -201,21 +220,21 @@ export function LogMatchForm({
     );
   }
 
-  const canNextFromMatchup = opponentId !== "";
+  const canNextFromMatchup = organiserMode ? player1Id !== "" && opponentId !== "" && player1Id !== opponentId : opponentId !== "";
   const canNextFromType =
     type !== "" && format !== "" && playedDate !== "" && (format !== "custom" || formatNote.trim() !== "") && (!isExternal || externalName.trim() !== "");
 
   return (
     <div className="rounded-[8px] border-2 border-ink bg-surface p-6 shadow-[3px_3px_0_var(--color-ink)]">
       <header className="mb-5 flex items-baseline justify-between">
-        <h1 className="font-heading text-2xl font-bold text-ink">Log match</h1>
+        <div><h1 className="font-heading text-2xl font-bold text-ink">Log match</h1>{isAdmin && <button type="button" onClick={() => { setOrganiserMode((value) => !value); setPlayer1Id(selfId); setOpponentId(""); setError(null); }} className="mt-1 font-mono text-[9px] uppercase text-crust underline">{organiserMode ? "Switch to my own result" : "Log as organiser"}</button>}</div>
         <span className={eyebrow}>{step}/3</span>
       </header>
 
       {step === 1 && (
         <section className="flex flex-col gap-3">
           <p className={eyebrow}>Matchup</p>
-          <p className="font-body text-[15px] text-ink">
+          {organiserMode ? <div className="grid gap-3"><label className={eyebrow}>Player 1<select value={player1Id} onChange={(event) => { setPlayer1Id(event.target.value); if (event.target.value === opponentId) setOpponentId(""); }} className="mt-2 w-full rounded-[8px] border-2 border-ink bg-surface px-3 py-3 font-body text-[15px] normal-case tracking-normal text-ink"><option value="">Choose player 1</option>{adminPlayers.map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}</select></label><label className={eyebrow}>Player 2<select value={opponentId} onChange={(event) => setOpponentId(event.target.value)} className="mt-2 w-full rounded-[8px] border-2 border-ink bg-surface px-3 py-3 font-body text-[15px] normal-case tracking-normal text-ink"><option value="">Choose player 2</option>{adminPlayers.filter((player) => player.id !== player1Id).map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}</select></label><p className="font-body text-sm text-muted">Organiser-entered matches are approved immediately and both players are notified.</p></div> : <><p className="font-body text-[15px] text-ink">
             <span className="font-mono text-[11px] uppercase tracking-[1.5px] text-green">
               You
             </span>{" "}
@@ -248,6 +267,7 @@ export function LogMatchForm({
             <span className="block font-heading text-[15px] font-bold">Non-Ciabatta opponent</span>
             <span className="mt-1 block font-mono text-[9px] uppercase tracking-[1.2px]">Unranked · flat +10 pts</span>
           </button>
+          </>}
         </section>
       )}
 
@@ -325,19 +345,19 @@ export function LogMatchForm({
                   )}
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="w-24 truncate font-body text-[14px] text-ink">{selfName}</span>
+                  <span className="w-24 truncate font-body text-[14px] text-ink">{player1Name}</span>
                   <input
                     inputMode="numeric"
                     value={s.selfGames}
                     onChange={(e) => updateSet(i, { selfGames: digits(e.target.value) })}
-                    aria-label={`${selfName} games, set ${i + 1}`}
+                    aria-label={`${player1Name} games, set ${i + 1}`}
                     className={scoreBox}
                   />
                   <input
                     inputMode="numeric"
                     value={s.selfTiebreak}
                     onChange={(e) => updateSet(i, { selfTiebreak: digits(e.target.value) })}
-                    aria-label={`${selfName} tie-break, set ${i + 1}`}
+                    aria-label={`${player1Name} tie-break, set ${i + 1}`}
                     placeholder="TB"
                     className={scoreBox + " opacity-90"}
                   />
@@ -374,7 +394,7 @@ export function LogMatchForm({
           )}
           {type === "ranked" && (
             <p className="font-mono text-[10px] uppercase tracking-[1.5px] text-muted">
-              Ranked results need admin approval before points move.
+              {organiserMode ? "This organiser result will be approved immediately." : "Ranked results need admin approval before points move."}
             </p>
           )}
         </section>
@@ -418,7 +438,7 @@ export function LogMatchForm({
           </div>
         ) : (
           <div className="w-[200px]">
-            <Button type="button" loading={pending} loadingLabel="Submitting..." onClick={onSubmit}>{isExternal ? "Log unranked match" : "Submit for approval"}</Button>
+            <Button type="button" loading={pending} loadingLabel="Submitting..." onClick={onSubmit}>{organiserMode ? "Log and approve match" : isExternal ? "Log unranked match" : "Submit for approval"}</Button>
           </div>
         )}
       </div>

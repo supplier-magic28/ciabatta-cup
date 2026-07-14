@@ -21,4 +21,4 @@ export type {
   DecayWatch,
 } from "./types";
 export type { RatingCache, ScoringMatchRow, TournamentPlacementRow } from "./materialization";
-export type { PracticeFact, PlayDayFact } from "./activityPoints";
+export type { PracticeFact, PlayDayFact, ActivityPointEvent } from "./activityPoints";

@@ -7,6 +7,7 @@ import { TrophyBadge } from "@/components/brand/TrophyBadge";
 import { PlayerAvatar } from "@/components/players/PlayerAvatar";
 import type { LeaderboardHistory } from "@/lib/leaderboard/history";
 import { setAllExpanded, toggleExpanded } from "@/lib/leaderboard/expansion";
+import { PlayerProfileButton } from "./PlayerProfileButton";
 
 export type LeaderboardPlayer = {
   playerId: string;
@@ -73,15 +74,15 @@ export function ExpandableLeaderboard({ players }: { players: LeaderboardPlayer[
                       </div>
                     </div>
                   </Link>
-                  <button
+                  <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2"><button
                     type="button"
                     aria-expanded={isExpanded}
                     aria-controls={panelId}
                     onClick={() => setExpanded((current) => toggleExpanded(current, player.playerId))}
-                    className={`mt-2 font-mono text-[9px] uppercase tracking-[1.2px] underline decoration-2 underline-offset-4 ${player.isHolder ? "text-green-muted decoration-chartreuse" : "text-muted decoration-green"}`}
+                    className={`font-mono text-[9px] uppercase tracking-[1.2px] underline decoration-2 underline-offset-4 ${player.isHolder ? "text-green-muted decoration-chartreuse" : "text-muted decoration-green"}`}
                   >
                     {isExpanded ? "Hide history" : "View history"} <span aria-hidden="true">{isExpanded ? "↑" : "↓"}</span>
-                  </button>
+                  </button><PlayerProfileButton playerId={player.playerId} inverse={player.isHolder} /></div>
                 </div>
                 <div className="text-right">
                   <p className={`font-mono text-xl font-semibold ${player.isHolder ? "text-chartreuse" : "text-ink"}`}>
@@ -99,6 +100,7 @@ export function ExpandableLeaderboard({ players }: { players: LeaderboardPlayer[
                     `${record(player.history.rankedMatches)} all-time ranked matches`,
                     `${record(player.history.rankedSets)} all-time ranked sets`,
                     `${record(player.history.tournamentMatches)} ranked tournament matches`,
+                    `${record(player.history.nonRankedMatches)} all-time non-ranked matches`,
                     `${record(player.history.externalMatches)} non-Ciabatta match history`,
                   ].map((label) => (
                     <p key={label} className={`font-mono text-[10px] uppercase tracking-[1px] ${player.isHolder ? "text-green-muted" : "text-muted"}`}>

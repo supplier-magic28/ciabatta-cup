@@ -37,8 +37,8 @@ describe("rating cache materialization", () => {
       { player_id: "bob", points: 50, awarded_at: "2026-07-11T04:00:00Z" },
     ]);
     expect(cache.rankings).toEqual([
-      { playerId: "alice", rating: 100, rank: 1, played: 0, won: 0, lost: 0 },
-      { playerId: "bob", rating: 50, rank: 2, played: 0, won: 0, lost: 0 },
+      { playerId: "alice", rating: 80, rank: 1, played: 0, won: 0, lost: 0 },
+      { playerId: "bob", rating: 30, rank: 2, played: 0, won: 0, lost: 0 },
     ]);
     expect(cache.ratingHistory).toEqual([]);
     expect(cache.reigns).toEqual([
@@ -72,8 +72,8 @@ describe("rating cache materialization", () => {
       { player_id: "bob", points: 50, awarded_at: "2026-08-11T04:00:00Z" },
     ]);
     expect(cache.ratingPoints).toEqual([
-      { playerId: "alice", rating: 230 },
-      { playerId: "bob", rating: 65 },
+      { playerId: "alice", rating: 109 },
+      { playerId: "bob", rating: 0 },
     ]);
   });
 

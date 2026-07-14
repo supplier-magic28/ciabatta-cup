@@ -7,6 +7,7 @@ import type {
   ValidationResult,
   ExternalMatchSubmission,
   ExternalValidationResult,
+  AdminMatchSubmission,
 } from "./types";
 import { SURFACES } from "@/lib/courts/types";
 
@@ -152,6 +153,14 @@ export function validateSubmission(input: MatchSubmission, selfId: string): Vali
       sets,
     },
   };
+}
+
+/** Validate an organiser-entered score from player 1's perspective. */
+export function validateAdminSubmission(input: AdminMatchSubmission): ValidationResult {
+  const player1Id = input.player1Id?.trim() ?? "";
+  const player2Id = input.player2Id?.trim() ?? "";
+  if (!player1Id || !player2Id) return { ok: false, error: "Choose both players." };
+  return validateSubmission({ ...input, opponentId: player2Id }, player1Id);
 }
 
 /** Validate the owner-private external variant while reusing all score rules. */

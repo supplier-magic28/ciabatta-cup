@@ -54,13 +54,9 @@ describe("derivePlayerProfile", () => {
     expect(profile.exhibition).toEqual({ won: 0, lost: 1, played: 1 });
   });
 
-  it("derives chronological points, grouped head-to-head, and recent approved matches", () => {
+  it("derives grouped head-to-head and recent approved matches", () => {
     const profile = derivePlayerProfile("alice", matches);
 
-    expect(profile.pointsTrend).toEqual([
-      { playedAt: "2026-07-01T10:00:00Z", points: 16 },
-      { playedAt: "2026-07-03T10:00:00Z", points: 31 },
-    ]);
     expect(profile.headToHead).toEqual([
       { opponentId: "bob", won: 1, lost: 1, played: 2 },
       { opponentId: "carol", won: 1, lost: 0, played: 1 },

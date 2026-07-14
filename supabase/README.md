@@ -223,4 +223,9 @@ Use `ops/planned_match_workflow_audit.sql` for the read-only preflight. The
 companion cleanup script aborts unless exactly two IDs are supplied and aborts
 again if either plan has an approved immutable fact.
 
+Apply `20260717120000_admin_match_logging.sql` after the two workflow-repair
+migrations. It adds the audited `admin_logged_by` field, the admin-only atomic
+entry RPC, and notification fan-out that skips confirmation/approval requests
+while informing both participants of the final organiser-entered result.
+
 Apply `20260712120000_profile_play_days.sql` before `20260713120000_ladder_points_practice.sql`. The latter adds organiser-reviewed `practice_sessions`, owner/admin RLS, field constraints, and reviewed-fact immutability. After deployment, use the existing admin rebuild control once so the persisted points snapshot matches the activity economy; read surfaces compute current Melbourne-day decay from facts.

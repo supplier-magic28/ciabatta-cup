@@ -36,6 +36,7 @@ export interface RatingCache {
   ratingPoints: Array<{ playerId: string; rating: number }>;
   decayWatches: Map<string, DecayWatch>;
   eloRatings: Map<string, number>;
+  activityTimelines: Map<string, import("./activityPoints").ActivityPointEvent[]>;
 }
 
 /** Map database naming to the lossless input contract of `computeRankings`. */
@@ -61,7 +62,7 @@ export function toScoringMatches(rows: ScoringMatchRow[]): Match[] {
  * This function remains pure so both the database writer and read surfaces use
  * exactly the same interpretation of the facts.
  */
-export function buildRatingCache(playerIds: string[], rows: ScoringMatchRow[], awards: TournamentPlacementRow[] = [], practices: PracticeFact[] = [], playDays: PlayDayFact[] = [], asOfDate = latestActivityDate(rows, practices, playDays)): RatingCache {
+export function buildRatingCache(playerIds: string[], rows: ScoringMatchRow[], awards: TournamentPlacementRow[] = [], practices: PracticeFact[] = [], playDays: PlayDayFact[] = [], asOfDate = latestActivityDate(rows, awards, practices, playDays)): RatingCache {
   const computed = computeRankings(toScoringMatches(rows));
   const computedByPlayer = new Map(computed.rankings.map((ranking) => [ranking.playerId, ranking]));
   const roster = [...new Set(playerIds)];
@@ -128,9 +129,10 @@ export function buildRatingCache(playerIds: string[], rows: ScoringMatchRow[], a
     ratingPoints: rankings.map(({ playerId, rating }) => ({ playerId, rating })),
     decayWatches: activity.watches,
     eloRatings: new Map(computed.rankings.map((ranking) => [ranking.playerId, ranking.rating])),
+    activityTimelines: activity.timelines,
   };
 }
 
-function latestActivityDate(rows: ScoringMatchRow[], practices: PracticeFact[], playDays: PlayDayFact[]): string {
-  return [...rows.filter((row) => row.status !== "rejected").map((row) => row.played_at.slice(0, 10)), ...practices.filter((row) => row.status === "approved").map((row) => row.practiced_on), ...playDays.map((row) => row.played_on)].sort().at(-1) ?? new Date().toISOString().slice(0, 10);
+function latestActivityDate(rows: ScoringMatchRow[], awards: TournamentPlacementRow[], practices: PracticeFact[], playDays: PlayDayFact[]): string {
+  return [...rows.filter((row) => row.status !== "rejected").map((row) => row.played_at.slice(0, 10)), ...awards.map((row) => row.awarded_at.slice(0, 10)), ...practices.filter((row) => row.status === "approved").map((row) => row.practiced_on), ...playDays.map((row) => row.played_on)].sort().at(-1) ?? new Date().toISOString().slice(0, 10);
 }

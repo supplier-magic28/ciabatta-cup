@@ -5,6 +5,7 @@ export type LeaderboardHistory = {
   rankedMatches: WinLossRecord;
   rankedSets: WinLossRecord;
   tournamentMatches: WinLossRecord;
+  nonRankedMatches: WinLossRecord;
   externalMatches: WinLossRecord;
 };
 
@@ -49,6 +50,7 @@ export function deriveLeaderboardHistory(
       rankedMatches: emptyRecord(),
       rankedSets: emptyRecord(),
       tournamentMatches: emptyRecord(),
+      nonRankedMatches: emptyRecord(),
       externalMatches: emptyRecord(),
     }]),
   );
@@ -70,6 +72,13 @@ export function deriveLeaderboardHistory(
     if (match.status === "approved" && match.type === "unranked_external") {
       const history = result.get(match.player1_id);
       if (history) recordResult(history.externalMatches, match.winner_id === match.player1_id);
+      continue;
+    }
+    if (match.status === "approved" && match.type === "exhibition" && match.player2_id && match.winner_id) {
+      for (const playerId of [match.player1_id, match.player2_id]) {
+        const history = result.get(playerId);
+        if (history) recordResult(history.nonRankedMatches, match.winner_id === playerId);
+      }
       continue;
     }
     if (

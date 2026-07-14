@@ -71,8 +71,8 @@ of Done (`CLAUDE.md`).
   saved-name reuse, immediate approval, flat +10, and non-blocking email status.
   Both variants require the played date and accept an optional location.
 - `match/LogMatchForm` — the log-match wizard (design screen 03): 3 steps
-  (matchup → type & format → per-set scores), shared pure validation, submits via
-  the `submitMatch` server action. Submission only — no confirm/approve/scoring.
+  (matchup → type & format → per-set scores), shared pure validation, and either
+  participant submission or audited admin any-two-player direct finalization.
 - `match/ConfirmMatchButton` — opponent-side confirm (calls `confirmMatch`); the
   DB trigger advances the status once both players confirm.
 - `match/ApprovalActions` — admin Approve / Query / Reject for a `pending_approval`
@@ -88,6 +88,8 @@ of Done (`CLAUDE.md`).
 - `players/PlayerAvatar` — Supabase Storage avatar with deterministic initials
   fallback; used by leaderboard and profiles.
 - `players/ReignSummary` — hydrated current-holder duration and reign count.
+- `leaderboard/PlayerProfileButton` — prefetched profile navigation with an
+  immediate `Opening…` state and duplicate-activation lock.
 
 **Tournaments**
 - `tournament/NewTournamentForm` — director setup for event details, courts,

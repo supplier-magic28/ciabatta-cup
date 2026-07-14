@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { getSessionPlayer } from "@/lib/auth/session";
 import { displayName } from "@/lib/auth/displayName";
-import { buildRatingCache, type ScoringMatchRow, type TournamentPlacementRow } from "@/lib/scoring";
+import { loadPublicLadderProjection } from "@/lib/scoring/publicProjection";
 import {
   deriveLeaderboardHistory,
   type LeaderboardFixtureRow,
@@ -16,7 +16,6 @@ import { LoafBadge } from "@/components/brand/LoafBadge";
 import { ExpandableLeaderboard, type LeaderboardPlayer } from "@/components/leaderboard/ExpandableLeaderboard";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { ReignSummary } from "@/components/players/ReignSummary";
-import { dateKeyInZone } from "@/lib/profile/streak";
 
 /**
  * The real board (design screen 01). It reads match facts and derives the
@@ -29,26 +28,16 @@ export default async function Home() {
   const supabase = await createClient();
   const [
     { data: playerRows },
-    { data: matchRows },
-    { data: placementRows },
     { data: tournamentRows },
     { data: fixtureRows },
-    { data: practiceRows },
-    { data: playDayRows },
     { data: plannedRows },
   ] = await Promise.all([
     supabase
       .from("players")
       .select("id, first_name, last_name, email, nickname, use_nickname, avatar_url, status")
       .order("first_name", { ascending: true }),
-    supabase
-      .from("matches")
-      .select("id, player1_id, player2_id, winner_id, external_won, type, status, played_at, location, tournament_id, fixture_id, match_sets(p1_games, p2_games)"),
-    supabase.from("tournament_placements").select("tournament_id, player_id, placement, points, awarded_at"),
     supabase.from("tournaments").select("id, counts_as"),
     supabase.from("fixtures").select("id, ruleset"),
-    supabase.from("practice_sessions").select("id, player_id, practiced_on, status"),
-    supabase.from("play_days").select("player_id, played_on"),
     supabase.from("planned_matches").select("id, created_by, opponent_player_id, opponent_external_id, scheduled_at, location, status, external_opponents(display_name)").in("status", ["proposed", "locked_in"]).order("scheduled_at", { ascending:true }).limit(8),
   ]);
 
@@ -64,21 +53,17 @@ export default async function Home() {
   }));
   const playerById = new Map(players.map((player) => [player.id, player]));
   const activePlayerIds = new Set(players.filter((player) => player.status === "active").map((p) => p.id));
-  const cache = buildRatingCache(
-    players.map((player) => player.id),
-    (matchRows ?? []) as ScoringMatchRow[],
-    (placementRows ?? []) as TournamentPlacementRow[],
-    practiceRows ?? [],
-    playDayRows ?? [],
-    dateKeyInZone(new Date()),
-  );
+  const projection = await loadPublicLadderProjection(players.map((player) => player.id));
+  const cache = projection.cache;
+  const { data: historyMatchRows } = await supabase.from("matches").select("id,player1_id,player2_id,winner_id,external_won,type,status,played_at,location,tournament_id,fixture_id,match_sets(p1_games,p2_games)");
+  const matchRows = historyMatchRows ?? [];
   const standings = cache.rankings
     .filter((ranking) => activePlayerIds.has(ranking.playerId))
     .map((ranking, index) => ({ ...ranking, rank: index + 1 }));
   const histories = deriveLeaderboardHistory(
     players.map((player) => player.id),
     (matchRows ?? []) as LeaderboardMatchRow[],
-    (placementRows ?? []) as LeaderboardPlacementRow[],
+    projection.placements as LeaderboardPlacementRow[],
     (tournamentRows ?? []) as LeaderboardTournamentRow[],
     (fixtureRows ?? []) as LeaderboardFixtureRow[],
   );
@@ -101,6 +86,7 @@ export default async function Home() {
         rankedMatches: { won: 0, lost: 0 },
         rankedSets: { won: 0, lost: 0 },
         tournamentMatches: { won: 0, lost: 0 },
+        nonRankedMatches: { won: 0, lost: 0 },
         externalMatches: { won: 0, lost: 0 },
       },
     };

@@ -28,9 +28,9 @@ pattern changes, update this guide and the component inventory in the same task.
 
 | Handoff screen | Production route | State | Current gap |
 | --- | --- | --- | --- |
-| 01 Leaderboard | `/` | Partial | Holder history, zero-based points, repeated trophy markers, profile links, expandable ordinary match/full-set/tournament records, global history expansion, and a layout-matched loading state are live; filters, last-five form, and side rail are pending. |
-| 02 Player profile | `/players/[playerId]` | Partial | Hero, records, points history, head-to-head, match log, effective nickname display, avatar rendering, and profile-shaped loading are live; richer trend interaction is pending. |
-| 03 Log match | `/matches`, `/matches/new` | Partial | Submission, required played date, optional location, confirmation, history, score validation, stable pending actions, and route-shaped loading are live; the flow is not yet a full visual recreation of every handoff state. |
+| 01 Leaderboard | `/` | Partial | Holder history, canonical activity points, repeated trophies, expandable ranked/set/tournament/non-ranked/external records, global expansion, and immediate profile-navigation feedback are live; filters, last-five form, and side rail are pending. |
+| 02 Player profile | `/players/[playerId]` | Partial | Hero, the same career aggregates as leaderboard history, canonical award/decay points history, head-to-head, match log, nickname/avatar rendering, and profile-shaped loading are live; richer trend interaction is pending. |
+| 03 Log match | `/matches`, `/matches/new` | Partial | Matches owns all visible result-entry links; participant submission and audited any-two-player organiser finalization share the validated score wizard with stable pending feedback. The flow is not yet a full visual recreation of every handoff state. |
 | 04 Tournaments | `/tournaments`, `/tournaments/[tournamentId]` | Implemented | Event cards, optional cropped cover photos, live standings, qualification state, round/court schedule, results, final rules, champion, and responsive loading boards are live. Self-entry and multi-structure filtering remain deferred. |
 | 05 Sign in | `/sign-in`, `/sign-up`, `/accept-invite` | Implemented | Sign-in, signup, and invite password setup use the token-driven auth shell with stable pending controls and a matching form skeleton. |
 | 06 Admin dashboard | `/admin/approvals`, `/admin/players` | Partial | Approval queue, roster, per-action pending feedback, and loading queues exist as focused routes; dashboard stats and activity feed are pending. |
@@ -67,6 +67,8 @@ inside the existing auth shell; the callback route is `/auth/confirm`.
   that an immutable result or rating changed before server confirmation.
 - Notification actions acknowledge immediately with an Opening state and show
   an absolute Melbourne timestamp before navigating to their precise target.
+- Leaderboard profile actions prefetch their dynamic destination, display an
+  immediate `Opening…` state, and hand off to the profile-shaped loading route.
 # Ladder points and solo practice addition
 
 ## Planned matches and notifications

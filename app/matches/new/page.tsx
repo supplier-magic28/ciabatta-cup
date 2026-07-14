@@ -31,6 +31,12 @@ export default async function NewMatchPage({ searchParams }: { searchParams: Pro
       id: p.id,
       name: displayName({ firstName: p.first_name, lastName: p.last_name, email: p.email, nickname: p.nickname, useNickname: p.use_nickname }),
     }));
+  const adminPlayers: OpponentOption[] = rows
+    .filter((p) => p.status === "active")
+    .map((p) => ({
+      id: p.id,
+      name: displayName({ firstName: p.first_name, lastName: p.last_name, email: p.email, nickname: p.nickname, useNickname: p.use_nickname }),
+    }));
 
   const self = rows.find((p) => p.id === player.id);
   const selfName = displayName({
@@ -47,7 +53,7 @@ export default async function NewMatchPage({ searchParams }: { searchParams: Pro
     <main className="mx-auto w-full max-w-md flex-1 px-6 py-10">
       <WorkflowZeusInboxAction />
       <BackLink href={PARENT_ROUTES.matches} className="mb-5">Your matches</BackLink>
-      <LogMatchForm initialType={initialType} selfName={selfName} opponents={opponents} savedExternalOpponents={(savedExternalRows ?? []).map((row) => ({ id: row.id, name: row.display_name }))} courts={courts} />
+      <LogMatchForm initialType={initialType} selfId={player.id} selfName={selfName} opponents={opponents} adminPlayers={adminPlayers} isAdmin={player.role === "admin"} savedExternalOpponents={(savedExternalRows ?? []).map((row) => ({ id: row.id, name: row.display_name }))} courts={courts} />
     </main>
   );
 }

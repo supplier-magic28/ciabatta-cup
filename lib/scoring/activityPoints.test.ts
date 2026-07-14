@@ -25,4 +25,22 @@ describe("activity points", () => {
   it("does not accrue debt before a player's first activity", () => {
     expect(computeActivityPoints(["a"], [], [], [], [], "2026-07-31").points.get("a")).toBe(0);
   });
+  it("returns a chronological public timeline with same-day awards and stacked decay", () => {
+    const result = computeActivityPoints(
+      ["a", "b"],
+      [match()],
+      [{ player_id:"a", points:20, awarded_at:"2026-07-01T08:00:00Z" }],
+      [{ id:"p", player_id:"a", practiced_on:"2026-07-01", status:"approved" }],
+      [],
+      "2026-07-08",
+    );
+    expect(result.timelines.get("a")?.[0]).toEqual({ date:"2026-07-01", points:55, delta:55, awards:55, decay:0 });
+    expect(result.timelines.get("a")?.at(-1)).toEqual({ date:"2026-07-08", points:38, delta:-11, awards:0, decay:11 });
+    expect(result.points.get("a")).toBe(38);
+  });
+  it("replays a backdated approval on its played day and clamps visible history at zero", () => {
+    const result = computeActivityPoints(["a"], [match({ player2_id:null, type:"unranked_external", played_at:"2026-07-01T23:30:00Z" })], [], [], [], "2026-08-01");
+    expect(result.timelines.get("a")?.[0]).toMatchObject({ date:"2026-07-02", points:10, awards:10 });
+    expect(result.timelines.get("a")?.at(-1)?.points).toBe(0);
+  });
 });
