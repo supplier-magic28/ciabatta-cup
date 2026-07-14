@@ -7,6 +7,12 @@ This is the short operational handover. Durable intent belongs in
 
 ## Current capability
 
+- Ordinary cups can carry their own collectible trophy identity. The Claymore
+  invite flow sends frame-faithful email plus a Zeus inbox notification,
+  records player RSVPs without consuming roster seats, leaves final field
+  authority with the organiser, and awards the winner a permanent leaderboard
+  badge derived from the official placement fact.
+
 - Organisers can create a cup before its field or cover is ready, configure two
   to eight ordered seats, lock/unlock the schedule, select independent group and
   downstream formats plus one of three championship paths, and permanently lock
@@ -164,7 +170,8 @@ after that password update succeeds.
 | `20260718120000_core_backend_hardening.sql` | Applied to production (operator reported) |
 | `20260718121000_core_backend_enforcement.sql` | Applied; guard triggers independently verified present |
 | `20260718122000_admin_health_recovery.sql` | Ready after enforcement and before the admin health route deploy |
-| `20260718122500` through `20260718124000` configurable cup rollout | Local reset, 66 pgTAP checks, and database lint verified; additive migrations precede the application deploy and enforcement runs last |
+| `20260718122500` through `20260718124000` configurable cup rollout | Applied to production (operator reported); local reset, pgTAP, and database lint verified |
+| `20260718125000` / `20260718126000` trophy + RSVP rollout | Applied to production (operator reported); local reset, 76 pgTAP assertions, database lint, application checks, and production build verified |
 
 ## Current blockers
 

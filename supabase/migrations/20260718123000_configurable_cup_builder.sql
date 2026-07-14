@@ -50,6 +50,7 @@ begin
   end if;
   return new;
 end; $$;
+drop trigger if exists guard_locked_tournament_configuration on public.tournaments;
 create trigger guard_locked_tournament_configuration
 before update on public.tournaments for each row
 execute function public.guard_locked_tournament_configuration_v1();

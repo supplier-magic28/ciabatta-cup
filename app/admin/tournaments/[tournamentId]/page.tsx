@@ -11,15 +11,19 @@ import { loadActiveTournamentPlayers, loadTournamentBoard } from "@/lib/tourname
 import { BackLink } from "@/components/ui/BackLink";
 import { PARENT_ROUTES } from "@/lib/navigation/parents";
 import { WorkflowZeusInboxAction } from "@/components/notifications/ZeusInboxButton";
+import { CupInviteConsole } from "@/components/tournament/CupInviteConsole";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function ManageTournamentPage({ params }: { params: Promise<{ tournamentId: string }> }) {
   const admin = await getSessionPlayer();
   if (!admin) redirect("/sign-in");
   if (admin.role !== "admin") redirect("/");
   const { tournamentId } = await params;
-  const [board, activePlayers] = await Promise.all([
+  const db=await createClient();
+  const [board, activePlayers,{data:invites}] = await Promise.all([
     loadTournamentBoard(tournamentId),
     loadActiveTournamentPlayers(),
+    db.from("tournament_invites").select("player_id,status,hold_until").eq("tournament_id",tournamentId),
   ]);
   if (!board) notFound();
   const canGenerate = board.fixtures.length === 0;
@@ -83,6 +87,12 @@ export default async function ManageTournamentPage({ params }: { params: Promise
         tournament={board.tournament}
         participants={participants.map((participant)=>({id:participant.id,seed:participant.seed}))}
         players={activePlayers}
+      />}
+      {!board.tournament.draw_locked_at && <CupInviteConsole
+        tournamentId={tournamentId}
+        players={activePlayers}
+        participantIds={participants.map((participant) => participant.id)}
+        invites={invites ?? []}
       />}
 
       <section className="mb-7 grid gap-4 border-2 border-ink bg-row p-4 sm:grid-cols-[1fr_280px] sm:items-center">

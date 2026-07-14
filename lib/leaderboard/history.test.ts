@@ -3,7 +3,7 @@ import { deriveLeaderboardHistory, type LeaderboardMatchRow } from "./history";
 
 const players = ["alice", "bob", "carol"];
 const tournaments = [
-  { id: "ranked-cup", counts_as: "ranked" },
+  { id: "ranked-cup", counts_as: "ranked", trophy_key:"claymore", trophy_name:"The Claymore", starts_at:"2026-07-18T00:00:00Z" },
   { id: "friendly-cup", counts_as: "exhibition" },
 ];
 const fixtures = [
@@ -33,6 +33,7 @@ describe("leaderboard history", () => {
       { player_id: "bob", tournament_id: "ranked-cup", placement: 2 },
     ], tournaments, fixtures);
     expect(history.get("alice")?.trophies).toBe(1);
+    expect(history.get("alice")?.trophyAwards).toEqual([{key:"claymore",name:"The Claymore",year:2026}]);
     expect(history.get("bob")?.trophies).toBe(0);
   });
 
@@ -73,6 +74,7 @@ describe("leaderboard history", () => {
     const history = deriveLeaderboardHistory(players, ignored, [], tournaments, fixtures);
     expect(history.get("alice")).toEqual({
         trophies: 0,
+        trophyAwards: [],
         rankedMatches: { won: 0, lost: 0 },
         rankedSets: { won: 0, lost: 0 },
         tournamentMatches: { won: 0, lost: 0 },

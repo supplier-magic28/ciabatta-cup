@@ -9,7 +9,7 @@ import type { TournamentResult } from "./types";
 export async function loadTournamentBoard(tournamentId: string) {
   const supabase = await createClient();
   const [{ data: tournament }, { data: participants }, { data: fixtures }, { data: matches }, { data: players }] = await Promise.all([
-    supabase.from("tournaments").select("id, name, status, starts_at, timezone, location_name, court_id, courts, default_surface, cover_image_url, cover_frame_shape, cover_zoom, cover_offset_x, cover_offset_y, seat_count, schedule_locked_at, group_ruleset, playoff_ruleset, championship_path, draw_locked_at, completion_path").eq("id", tournamentId).single(),
+    supabase.from("tournaments").select("id, name, status, starts_at, timezone, location_name, court_id, courts, default_surface, cover_image_url, cover_frame_shape, cover_zoom, cover_offset_x, cover_offset_y, seat_count, schedule_locked_at, group_ruleset, playoff_ruleset, championship_path, draw_locked_at, completion_path, trophy_key, trophy_name").eq("id", tournamentId).single(),
     supabase.from("tournament_participants").select("player_id, seed").eq("tournament_id", tournamentId).order("seed"),
     supabase.from("fixtures").select("id, stage, round_number, slot_number, court_number, ruleset, player1_id, player2_id, skipped_at").eq("tournament_id", tournamentId).order("round_number").order("court_number"),
     supabase.from("matches").select("id, fixture_id, player1_id, player2_id, winner_id, status, match_sets(set_number, p1_games, p2_games, tiebreak_p1, tiebreak_p2)").eq("tournament_id", tournamentId),

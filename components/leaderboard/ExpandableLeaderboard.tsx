@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { LoafBadge } from "@/components/brand/LoafBadge";
 import { TrophyBadge } from "@/components/brand/TrophyBadge";
+import { ClaymoreCupIcon } from "@/components/brand/ClaymoreCupIcon";
 import { PlayerAvatar } from "@/components/players/PlayerAvatar";
 import type { LeaderboardHistory } from "@/lib/leaderboard/history";
 import { setAllExpanded, toggleExpanded } from "@/lib/leaderboard/expansion";
@@ -71,6 +72,7 @@ export function ExpandableLeaderboard({ players }: { players: LeaderboardPlayer[
                         {Array.from({ length: player.history.trophies }, (_, index) => (
                           <TrophyBadge key={index} size={21} className={player.isHolder ? "text-chartreuse" : "text-ink"} />
                         ))}
+                        {player.history.trophyAwards.filter(a=>a.key==="claymore").map((award,index)=><ClaymoreCupIcon key={`${award.year}-${index}`} size={20}/>)}
                       </div>
                     </div>
                   </Link>
@@ -97,6 +99,7 @@ export function ExpandableLeaderboard({ players }: { players: LeaderboardPlayer[
                 <div id={panelId} className={`grid gap-3 border-t-2 p-4 sm:grid-cols-2 ${player.isHolder ? "border-muted-dark" : "border-hairline"}`}>
                   {[
                     `${player.history.trophies} ranked ${player.history.trophies === 1 ? "trophy" : "trophies"}`,
+                    ...player.history.trophyAwards.map(award=>`${award.name} champion · ${award.year}`),
                     `${record(player.history.rankedMatches)} all-time ranked matches`,
                     `${record(player.history.rankedSets)} all-time ranked sets`,
                     `${record(player.history.tournamentMatches)} ranked tournament matches`,

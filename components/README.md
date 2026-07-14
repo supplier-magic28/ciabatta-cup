@@ -10,6 +10,8 @@ of Done (`CLAUDE.md`).
 **Brand**
 - `brand/LoafBadge` — the Ciabatta loaf (SVG), the current-holder trophy motif.
 - `brand/TrophyBadge` — compact earned-tournament trophy icon used in ladder rows.
+- `brand/ClaymoreCupIcon` — reusable sword, ball, and clay trophy mark used by
+  Claymore cup pages, invitations, and official winner history.
 - `brand/Wordmark` — "CIABATTA CUP" wordmark, `tone` light/dark.
 
 **UI primitives**
@@ -112,6 +114,10 @@ of Done (`CLAUDE.md`).
   immediate `Opening…` state and duplicate-activation lock.
 
 **Tournaments**
+- `tournament/CupInviteConsole` — organiser bench multi-invite and RSVP status
+  surface; responses remain separate from the final roster.
+- `tournament/CupInvitePanel` — invited-player commitment action with explicit
+  organiser final-field authority and stable pending feedback.
 - `tournament/NewTournamentForm` — partial cup creation with required schedule,
   optional 2–8 ordered seats, and recoverable cover upload.
 - `tournament/TournamentCoverComposer` — source-image frame, drag position,

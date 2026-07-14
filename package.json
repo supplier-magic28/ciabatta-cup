@@ -15,7 +15,7 @@
     "test:e2e": "node scripts/run-e2e.mjs",
     "test:performance": "playwright test --config=playwright.performance.config.ts",
     "db:start": "supabase start",
-    "db:test": "supabase test db supabase/tests/database/core_backend_hardening.test.sql supabase/tests/database/core_workflows.test.sql",
+    "db:test": "supabase test db supabase/tests/database/core_backend_hardening.test.sql supabase/tests/database/core_workflows.test.sql supabase/tests/database/20260718123000_configurable_cup_builder.test.sql supabase/tests/database/20260718126000_cup_trophies_invites.test.sql",
     "db:lint": "supabase db lint --level warning"
   },
   "dependencies": {

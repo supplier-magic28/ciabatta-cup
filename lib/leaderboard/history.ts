@@ -2,6 +2,7 @@ export type WinLossRecord = { won: number; lost: number };
 
 export type LeaderboardHistory = {
   trophies: number;
+  trophyAwards: Array<{key:string;name:string;year:number}>;
   rankedMatches: WinLossRecord;
   rankedSets: WinLossRecord;
   tournamentMatches: WinLossRecord;
@@ -26,7 +27,7 @@ export type LeaderboardPlacementRow = {
   placement: number;
 };
 
-export type LeaderboardTournamentRow = { id: string; counts_as: string };
+export type LeaderboardTournamentRow = { id: string; counts_as: string;trophy_key?:string|null;trophy_name?:string|null;starts_at?:string };
 export type LeaderboardFixtureRow = { id: string; ruleset: string };
 
 const emptyRecord = (): WinLossRecord => ({ won: 0, lost: 0 });
@@ -47,6 +48,7 @@ export function deriveLeaderboardHistory(
   const result = new Map(
     playerIds.map((playerId) => [playerId, {
       trophies: 0,
+      trophyAwards: [] as Array<{key:string;name:string;year:number}>,
       rankedMatches: emptyRecord(),
       rankedSets: emptyRecord(),
       tournamentMatches: emptyRecord(),
@@ -57,6 +59,7 @@ export function deriveLeaderboardHistory(
   const rankedTournamentIds = new Set(
     tournaments.filter((tournament) => tournament.counts_as === "ranked").map((tournament) => tournament.id),
   );
+  const tournamentById=new Map(tournaments.map(t=>[t.id,t]));
   const fullSetFixtureIds = new Set(
     fixtures.filter((fixture) => fixture.ruleset === "standard_set_tiebreak_6_all").map((fixture) => fixture.id),
   );
@@ -64,7 +67,7 @@ export function deriveLeaderboardHistory(
   for (const placement of placements) {
     if (placement.placement === 1 && rankedTournamentIds.has(placement.tournament_id)) {
       const history = result.get(placement.player_id);
-      if (history) history.trophies += 1;
+      if (history) {history.trophies += 1;const tournament=tournamentById.get(placement.tournament_id);if(tournament?.trophy_key&&tournament.trophy_name)history.trophyAwards.push({key:tournament.trophy_key,name:tournament.trophy_name,year:new Date(tournament.starts_at??0).getUTCFullYear()});}
     }
   }
 

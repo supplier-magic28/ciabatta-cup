@@ -1,0 +1,15 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+select plan(10);
+select has_column('public','tournaments','trophy_key','ordinary cups may own a trophy identity');
+select has_table('public','tournament_invites','RSVP invitations are separate facts');
+select has_column('public','notifications','tournament_id','Zeus invitations deep-link to cups');
+select has_function('public','send_tournament_invites_v1',array['uuid','uuid[]','timestamp with time zone'],'organiser invite boundary exists');
+select has_function('public','respond_to_tournament_invite_v1',array['uuid'],'player RSVP boundary exists');
+select ok(has_function_privilege('authenticated','public.respond_to_tournament_invite_v1(uuid)','execute'),'authenticated players can respond');
+select ok(not has_function_privilege('anon','public.respond_to_tournament_invite_v1(uuid)','execute'),'anonymous users cannot respond');
+select ok((select relrowsecurity from pg_class where oid='public.tournament_invites'::regclass),'invite RLS is enabled');
+select ok(exists(select 1 from pg_policies where tablename='tournament_invites' and policyname='tournament_invites_owner_read'),'invite reads are owner/admin scoped');
+select col_is_fk('public','tournament_invites','tournament_id','invites belong to ordinary tournaments');
+select * from finish();
+rollback;

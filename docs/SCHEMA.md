@@ -167,6 +167,7 @@ Once both rows exist, a database trigger advances a ranked result to
 | schedule_locked_at | timestamptz nullable | reversible pre-draw configuration gate |
 | championship_path | enum: standings, top_two_final, top_four_finals | locked path, separate from eventual completion fact |
 | cover_frame_shape / cover_zoom / cover_offset_x / cover_offset_y | crop metadata | editable presentation over the normalized source image |
+| trophy_key / trophy_name | text nullable pair | collectible identity owned by this ordinary cup |
 
 Tournament status is operational state. Progress and the champion are derived
 from linked immutable matches rather than stored on this row.
@@ -200,6 +201,14 @@ Rebuildable official placement awards derived after tournament completion
 Organisers atomically replace the complete ordered roster before draw lock or
 the first result. Active unique players must fit the 2–8 seats; permanent draw
 lock rejects empty seats and freezes the order.
+
+### `tournament_invites`
+
+Cup RSVP records are separate from the organiser-owned participant roster.
+Sent invitations may be opened, accepted, or expire at their response deadline.
+Acceptance records player intent but never consumes a seat or confirms the
+field; the organiser selects the roster and the permanent draw lock remains the
+only final confirmation. RSVP records survive permitted pre-lock changes.
 
 ### fixtures _(Phase 4 — implemented for round robin)_
 | field | type | notes |

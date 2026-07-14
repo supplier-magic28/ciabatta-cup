@@ -7,6 +7,13 @@ Database migrations for Ciabatta Cup. The authoritative data model is
 
 `migrations/` holds ordered SQL files applied in filename order.
 
+- `20260718125000_cup_trophy_invite_types.sql` adds the invite notification and
+  RSVP status enums in their own transaction.
+- `20260718126000_cup_trophies_and_invites.sql` adds reusable trophy identity to
+  ordinary cups, owner-private RSVP invitations, Zeus delivery, and guarded
+  organiser/player RPCs. Responses remain separate from the organiser-selected
+  roster; draw lock is still the only final-field boundary (ADR-0040).
+
 - `20260709000000_players_spine.sql` — **Phase 2 spine**: the `players` table,
   the `is_admin()` helper, RLS policies, and a privilege-escalation guard.
 - `20260709010000_handle_new_user.sql` — **Phase 2 auth**: `handle_new_user()`
