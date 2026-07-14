@@ -1,11 +1,22 @@
 # Ciabatta Cup Status
 
-**Last updated:** 2026-07-17
+**Last updated:** 2026-07-18
 
 This is the short operational handover. Durable intent belongs in
 `ARCHITECTURE.md`, the data model in `docs/SCHEMA.md`, and decisions in ADRs.
 
 ## Current capability
+
+- Core member, organiser, external, planned, confirmation, practice-review,
+  and notification mutations now have authenticated RPC boundaries. Creation
+  retries carry stable operation keys, all score paths share database validation,
+  and lifecycle graphs are database guarded after enforcement.
+- Points-affecting facts increment a cache version; stale rebuild snapshots are
+  rejected and retried once. A committed lifecycle remains successful when
+  cache/email work fails and returns an actionable recovery warning. Lifecycle
+  email attempts have a durable pending/sent/failed ledger.
+- Local Supabase configuration and 42 focused pgTAP workflow/security assertions
+  are committed alongside CI database testing and a read-only production health audit.
 
 - Android/Chrome can fetch the public web-app manifest and all home-screen icon
   variants without an authenticated manifest request; application pages remain protected.
@@ -134,6 +145,8 @@ after that password update succeeds.
 | `20260716120000_match_workflow_repair_types.sql` | Ready after reliable Realtime notifications |
 | `20260716121000_atomic_match_workflows.sql` | Ready immediately after workflow repair types |
 | `20260717120000_admin_match_logging.sql` | Ready immediately after atomic match workflows |
+| `20260718120000_core_backend_hardening.sql` | Additive; ready after admin match logging and before the application deploy |
+| `20260718121000_core_backend_enforcement.sql` | Apply only after the deployed RPC paths pass authenticated smoke tests |
 
 ## Current blockers
 
@@ -146,11 +159,12 @@ after that password update succeeds.
 
 ## Next product slice
 
-Apply the ready migrations in order (including admin match logging), deploy, run the admin rating rebuild once,
-and verify practice review, delayed planned-result entry, participant correction,
-organiser approval, Zeus navigation, court
-creation/merge, retro tagging, tournament defaults, Melbourne decay, and the
-qualifier placement totals in production.
+Run the existing read-only audit, apply the ADR-0036 additive migration, deploy,
+and verify ordinary, organiser, external, planned, correction, practice, and
+notification paths. Then apply the enforcement migration, run
+`ops/core_backend_health.sql`, and perform one version-guarded organiser rebuild.
+Also verify court creation/merge, retro tagging, tournament defaults, Melbourne
+decay, and qualifier placement totals in production.
 Append-only corrections, generalised setup, and mid-event withdrawals remain
 deferred.
 

@@ -83,6 +83,7 @@ partial index permits only one match fact per fixture (ADR-0016).
 | field | type | notes |
 |---|---|---|
 | id | uuid PK | |
+| operation_key | uuid nullable, unique when present | stable retry identity for RPC-created facts |
 | type | enum: ranked, exhibition | |
 | format | enum: one_set, best_of_3, pro_set_8, custom | custom carries free-form `format_note` |
 | format_note | text nullable | |
@@ -97,6 +98,7 @@ partial index permits only one match fact per fixture (ADR-0016).
 | court_id | FK courts nullable | canonical venue; legacy `location` remains populated |
 | surface | enum hard, clay, grass, synthetic nullable | metadata-only; may be tagged after approval |
 | location | text nullable | canonical court name or retained legacy free text |
+| admin_logged_by | FK players nullable | organiser responsible for a directly finalised member match |
 | created_at / updated_at | timestamptz | |
 
 **Match lifecycle**: `pending_confirmation` (opponent hasn't confirmed) → `pending_approval` (both confirmed; ranked only — exhibitions can auto-approve) → `approved` (points applied, stats count) | `queried` (admin flagged, back to submitter) | `rejected`.
@@ -285,6 +287,10 @@ keys make the fan-out retry-safe, including final `result_confirmed` messages.
 Changes remains restricted by owner-select RLS and the client also filters by
 the signed-in player's ID.
 
+Notification read/open changes use authenticated RPCs rather than participant
+service-role writes. Missing-metadata nudges are generated transactionally by
+Postgres when an eligible match becomes approved, with a weekly dedupe key.
+
 ADR-0033 replaces the original multi-write result handoff with authenticated,
 row-locking RPCs. Score entry starts after `planned_matches.scheduled_at`;
 participant submissions are stored in submitter perspective and normalised to
@@ -355,7 +361,7 @@ facts only. No current streak, best streak, or H2H aggregate is stored.
 ## Admin match logging and public projection (2026-07-17)
 
 `matches.admin_logged_by` identifies an organiser who used the guarded
-`admin_log_match_v1` RPC to record a match for any two active members. The RPC
+`admin_log_match_v2` RPC to record a match for any two active members. The RPC
 stores the score before sealing the match as `approved`; it creates no
 participant confirmations or approval-queue work. `submitted_by` remains
 player 1 for score orientation, while `admin_logged_by` is the audit authority.
@@ -373,3 +379,29 @@ non-ranked record and external opponent identities remain owner-private.
 `practice_sessions` stores an owner claim (`serves`, `wall_hits`, or `other`), 1–300 minutes, Melbourne-calendar practice date, optional 500-character note, and pending/approved/rejected review metadata. Owners insert/select their own pending facts; organisers select and terminally review all. Reviewed facts are immutable.
 
 `play_days` marks are tennis dates for streak and decay purposes but carry no point award. Decay begins at first tennis activity, charges −1 per missed Melbourne day plus stacked −10 per completed seven-day stretch and −30 per completed thirty-day stretch, and is floored at zero.
+
+## Core reliability boundaries (ADR-0036)
+
+`matches.operation_key` and `planned_matches.operation_key` provide stable,
+unique retry identities for creation RPCs. Ordinary, organiser, external, and
+planned result paths call `assert_standard_match_payload_v1`, which enforces
+sequential unique sets, score bounds, paired tie-breaks, an overall winner,
+declared-winner agreement, Melbourne played-date gating, and custom-format
+notes. Database triggers guard ordinary-match, planned-shell, and proposal
+status graphs; approved result facts remain terminal and immutable.
+
+`scoring_cache_state` is a singleton containing `fact_version`,
+`built_version`, and the last successful rebuild time. Statement triggers
+increment the fact version for points-affecting match, placement, practice, and
+play-day changes. `replace_rating_cache_with_reigns_v2` takes an advisory lock
+and refuses a snapshot built from a stale version.
+
+`lifecycle_email_deliveries` records each provider idempotency key, entity,
+recipient, pending/sent/failed status, attempt count, provider ID, and bounded
+safe error. It is service-role-only and diagnostic; email remains a synchronous
+non-blocking secondary effect after the lifecycle commits.
+
+The additive migration keeps old RPCs available for rolling deployment. The
+enforcement migration removes authenticated direct-write policies and revokes
+obsolete creation paths only after the application is deployed on the new
+RPCs.

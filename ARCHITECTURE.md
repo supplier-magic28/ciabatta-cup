@@ -103,7 +103,8 @@ At this scale, performance is a non-problem unless we do something pathological.
    route-shaped loading boundaries, without optimistically changing immutable
    facts.
 4. **Keep scoring swappable** — materialised ratings remain rebuildable from
-   raw matches, and approval does not report success until the rebuild finishes.
+   raw facts. A committed lifecycle reports success even if its versioned cache
+   rebuild fails, and returns an explicit organiser-recovery warning instead.
 
 Do not add caching, edge tricks, indexes, or background jobs speculatively. Add
 them only in response to a *measured* problem, recorded in an ADR. Browser

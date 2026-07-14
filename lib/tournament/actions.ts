@@ -14,7 +14,6 @@ import type { TournamentResult, TournamentRuleset } from "./types";
 import { deriveOfficialPlacements } from "./placements";
 import { loadTournamentBoard } from "./read";
 import { SURFACES } from "@/lib/courts/types";
-import { queueUntaggedNudges } from "@/lib/notifications/untagged";
 
 export type TournamentActionState =
   | { ok: true; message: string; tournamentId?: string }
@@ -560,13 +559,12 @@ export async function recordTournamentResult(
     p_duration_minutes: null,
   });
   if (error) return { ok: false, error: "Couldn't record this result. It may already be complete." };
-  if (recordedMatchId) await queueUntaggedNudges(recordedMatchId as string);
-
   try {
     await rebuildRatingCache();
-  } catch {
+  } catch (cacheError) {
+    console.error("Committed tournament result needs a derived-cache rebuild", { entityId:recordedMatchId, operation:"record_tournament_result", recovery:"Run the organiser rating rebuild.", error:cacheError });
     invalidateTournament(fixture.tournament_id);
-    return { ok: false, error: "Result recorded, but Elo could not rebuild. Use the ratings recovery action." };
+    return { ok: true, message: "Result recorded. The points cache needs the organiser recovery rebuild." };
   }
 
   invalidateTournament(fixture.tournament_id);

@@ -97,6 +97,7 @@ export function LogMatchForm({
   const [externalName, setExternalName] = useState("");
   const [saveExternal, setSaveExternal] = useState(true);
   const [pending, startTransition] = useTransition();
+  const [operationKey, setOperationKey] = useState(() => crypto.randomUUID());
 
   const isExternal = opponentId === EXTERNAL;
   const player1Name = organiserMode ? adminPlayers.find((player) => player.id === player1Id)?.name ?? "Player 1" : selfName;
@@ -110,6 +111,7 @@ export function LogMatchForm({
       opponentTiebreak: toTiebreak(s.opponentTiebreak),
     }));
     return {
+      operationKey,
       opponentId,
       type: type as MatchType,
       format: format as MatchFormat,
@@ -124,6 +126,7 @@ export function LogMatchForm({
 
   function buildExternal(): ExternalMatchSubmission {
     return {
+      operationKey,
       opponentName: externalName,
       saveOpponent: saveExternal,
       format: format as MatchFormat,
@@ -210,6 +213,7 @@ export function LogMatchForm({
               setWarning(null);
               setExternalName("");
               setSaveExternal(true);
+              setOperationKey(crypto.randomUUID());
             }}
             className="font-mono text-[12px] uppercase tracking-[1.5px] text-muted underline"
           >

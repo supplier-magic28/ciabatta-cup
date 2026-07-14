@@ -12,7 +12,25 @@ import { dateKeyInZone } from "@/lib/profile/streak";
  * reaching this function; the database RPC is executable by service_role only.
  */
 export async function rebuildRatingCache(): Promise<void> {
+  let staleError: Error | null = null;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      await rebuildAtCurrentVersion();
+      return;
+    } catch (error) {
+      if (!(error instanceof StaleScoringSnapshotError)) throw error;
+      staleError = error;
+    }
+  }
+  throw staleError ?? new Error("Couldn't rebuild the rating cache from a stable fact version.");
+}
+
+class StaleScoringSnapshotError extends Error {}
+
+async function rebuildAtCurrentVersion(): Promise<void> {
   const supabase = createAdminClient();
+  const before = await supabase.from("scoring_cache_state").select("fact_version").eq("singleton", true).single();
+  if (before.error || before.data?.fact_version == null) throw new Error("Couldn't read the scoring fact version.");
   const [playersResult, matchesResult, placementsResult, practicesResult, playDaysResult] = await Promise.all([
     supabase.from("players").select("id"),
     supabase
@@ -27,6 +45,12 @@ export async function rebuildRatingCache(): Promise<void> {
     throw new Error("Couldn't load match facts to rebuild ratings.");
   }
 
+  const after = await supabase.from("scoring_cache_state").select("fact_version").eq("singleton", true).single();
+  if (after.error || after.data?.fact_version == null) throw new Error("Couldn't verify the scoring fact version.");
+  if (before.data.fact_version !== after.data.fact_version) {
+    throw new StaleScoringSnapshotError("Scoring facts changed while the snapshot was loading.");
+  }
+
   const cache = buildRatingCache(
     (playersResult.data ?? []).map((player) => player.id),
     (matchesResult.data ?? []) as ScoringMatchRow[],
@@ -36,7 +60,7 @@ export async function rebuildRatingCache(): Promise<void> {
     dateKeyInZone(new Date()),
   );
 
-  const { error } = await supabase.rpc("replace_rating_cache_with_reigns", {
+  const { error } = await supabase.rpc("replace_rating_cache_with_reigns_v2", {
     p_history: cache.ratingHistory.map((entry) => ({
       match_id: entry.matchId,
       player_id: entry.playerId,
@@ -54,6 +78,7 @@ export async function rebuildRatingCache(): Promise<void> {
       started_at: reign.startedAt,
       ended_at: reign.endedAt,
     })),
+    p_source_version: before.data.fact_version,
   });
 
   if (error) {
@@ -63,6 +88,9 @@ export async function rebuildRatingCache(): Promise<void> {
       details: error.details,
       hint: error.hint,
     });
+    if (error.message.includes("stale scoring snapshot")) {
+      throw new StaleScoringSnapshotError(error.message);
+    }
     throw new Error(`Couldn't write the rebuilt rating cache: ${error.message}`);
   }
 }

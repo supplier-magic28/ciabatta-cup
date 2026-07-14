@@ -42,7 +42,8 @@ of Done (`CLAUDE.md`).
 - `layout/SiteHeader` — responsive three-area header with the wordmark,
   wrapping primary navigation, and a permanent top-right Zeus inbox action.
 - `practice/PracticeForm` — owner solo-practice claim form with activity, duration, date, notes, approval callout, and pending result state.
-- `practice/PracticeApprovalActions` — organiser approve +5/reject controls for pending practice claims.
+- `practice/PracticeApprovalActions` — organiser approve +5/reject controls for
+  pending practice claims, including committed-with-recovery warnings.
   tournaments, matches, admin tools, and sign-out.
 
 **Courts and surfaces**
@@ -73,10 +74,13 @@ of Done (`CLAUDE.md`).
 - `match/LogMatchForm` — the log-match wizard (design screen 03): 3 steps
   (matchup → type & format → per-set scores), shared pure validation, and either
   participant submission or audited admin any-two-player direct finalization.
+  It keeps one stable operation key across retries so repeated activation cannot
+  duplicate a committed fact.
 - `match/ConfirmMatchButton` — opponent-side confirm (calls `confirmMatch`); the
-  DB trigger advances the status once both players confirm.
+  DB trigger advances the status once both players confirm and the control can
+  distinguish committed success from a cache-rebuild warning.
 - `match/ApprovalActions` — admin Approve / Query / Reject for a `pending_approval`
-  match (calls the admin match actions).
+  match (calls the admin match actions and surfaces post-commit recovery warnings).
 - `match/RebuildRatingsButton` — admin recovery control that rebuilds ratings,
   history, and reign caches from immutable facts.
 

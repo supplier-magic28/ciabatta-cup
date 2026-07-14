@@ -5,14 +5,12 @@ const mocks = vi.hoisted(() => ({
   rebuildRatingCache: vi.fn(),
   revalidatePath: vi.fn(),
   createClient: vi.fn(),
-  queueUntaggedNudges: vi.fn(),
 }));
 
 vi.mock("@/lib/auth/session", () => ({ getSessionPlayer: mocks.getSessionPlayer }));
 vi.mock("@/lib/scoring/rebuild", () => ({ rebuildRatingCache: mocks.rebuildRatingCache }));
 vi.mock("@/lib/supabase/server", () => ({ createClient: mocks.createClient }));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
-vi.mock("@/lib/notifications/untagged", () => ({ queueUntaggedNudges: mocks.queueUntaggedNudges }));
 
 import { adminLogMatch, rebuildRatings } from "./actions";
 
@@ -22,7 +20,6 @@ describe("rebuildRatings", () => {
     mocks.rebuildRatingCache.mockReset();
     mocks.revalidatePath.mockReset();
     mocks.createClient.mockReset();
-    mocks.queueUntaggedNudges.mockReset();
   });
 
   it("rejects direct match logging for a non-admin", async () => {
@@ -39,9 +36,8 @@ describe("rebuildRatings", () => {
     mocks.createClient.mockResolvedValue({ rpc });
     mocks.rebuildRatingCache.mockRejectedValue(new Error("cache unavailable"));
     const result = await adminLogMatch({ player1Id:"a", player2Id:"b", type:"exhibition", format:"one_set", formatNote:"", playedDate:"2026-07-01", location:"Centre Court", sets:[{selfGames:6,opponentGames:4,selfTiebreak:null,opponentTiebreak:null}] });
-    expect(result).toEqual({ ok:true, matchId:"match-id", warning:"Match approved, but the derived points cache needs an admin rebuild." });
-    expect(rpc).toHaveBeenLastCalledWith("admin_log_match_v1", expect.objectContaining({ p_player1_id:"a", p_player2_id:"b", p_winner_player_id:"a" }));
-    expect(mocks.queueUntaggedNudges).toHaveBeenCalledWith("match-id");
+    expect(result).toEqual({ ok:true, matchId:"match-id", warning:"The result was saved, but the points cache needs an organiser rebuild." });
+    expect(rpc).toHaveBeenLastCalledWith("admin_log_match_v2", expect.objectContaining({ p_operation_key:expect.any(String), p_player1_id:"a", p_player2_id:"b", p_winner_player_id:"a" }));
   });
 
   it("rejects a non-admin before reaching the service-role rebuild", async () => {

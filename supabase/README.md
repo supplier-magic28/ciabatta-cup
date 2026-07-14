@@ -87,6 +87,15 @@ Database migrations for Ciabatta Cup. The authoritative data model is
 - `20260716121000_atomic_match_workflows.sql` must follow it. It installs the
   authenticated row-locking planned/ordinary workflow RPCs, complete receiver
   fan-out, and idempotent backfill for currently actionable work (ADR-0033).
+- `20260718120000_core_backend_hardening.sql` is the additive ADR-0036 rollout:
+  shared score validation, idempotent creation keys, RPC lifecycle boundaries,
+  scoring-fact versioning, guarded cache replacement, delivery diagnostics,
+  and the backend health surface. Apply it before the matching application
+  deploy while legacy RPCs remain available.
+- `20260718121000_core_backend_enforcement.sql` is the post-deploy enforcement
+  step. It installs lifecycle graph guards, removes participant direct-write
+  policies, and revokes obsolete creation RPCs. Apply it only after the new
+  application paths pass authenticated smoke tests.
 
 The tournament participant table is editable only before the first tournament
 result. The admin console's replacement action preserves the selected seed and
@@ -139,6 +148,30 @@ Apply migrations in filename order. Either:
 
 - **Supabase CLI:** `supabase db push` (requires `supabase link` to the project).
 - **Dashboard:** paste each file's SQL into the SQL Editor and run them in order.
+
+For ADR-0036 production rollout, use this exact sequence:
+
+1. Run `ops/planned_match_workflow_audit.sql` read-only.
+2. Apply `20260718120000_core_backend_hardening.sql`.
+3. Deploy the application and smoke-test ordinary, admin, external, planned,
+   correction, practice, and notification paths.
+4. Apply `20260718121000_core_backend_enforcement.sql`.
+5. Run `ops/core_backend_health.sql`, then use the organiser rating rebuild once.
+
+## Local database validation
+
+Docker and the Supabase CLI are committed development requirements. Start the
+local project, run the focused pgTAP contracts, and lint the database with:
+
+```bash
+npm run db:start
+npm run db:test
+npm run db:lint
+```
+
+`supabase/config.toml` defines the isolated local ports. The database tests live
+under `supabase/tests/database` and are also run by CI. Keep `.env.local` valid
+dotenv syntax because the CLI parses it during local commands.
 
 ## Password recovery
 

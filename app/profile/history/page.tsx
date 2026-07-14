@@ -15,12 +15,11 @@ export default async function ProfileHistoryPage({ searchParams }: { searchParam
   const params = await searchParams;
   const view = params.view === "tournaments" ? "tournaments" : "h2h";
   const supabase = await createClient();
-  const [playersResult, matchesResult, detailsResult, savedResult, ratingsResult, entriesResult, tournamentsResult, participantRowsResult, placementsResult, tournamentMatchesResult] = await Promise.all([
+  const [playersResult, matchesResult, detailsResult, savedResult, entriesResult, tournamentsResult, participantRowsResult, placementsResult, tournamentMatchesResult] = await Promise.all([
     supabase.from("players").select("id, first_name, last_name, email, nickname, use_nickname"),
     supabase.from("matches").select("id, type, status, played_at, tournament_id, player1_id, player2_id, winner_id, external_won, match_sets(set_number, p1_games, p2_games, tiebreak_p1, tiebreak_p2)").eq("status", "approved").or(`player1_id.eq.${player.id},player2_id.eq.${player.id}`).order("played_at", { ascending: false }),
     supabase.from("external_match_details").select("match_id, external_opponent_id, opponent_name"),
     supabase.from("external_opponents").select("id, display_name"),
-    supabase.from("rating_history").select("match_id, player_id, points_before, points_after").eq("player_id", player.id),
     supabase.from("tournament_participants").select("tournament_id").eq("player_id", player.id),
     supabase.from("tournaments").select("id, name, starts_at, location_name, cover_image_url"),
     supabase.from("tournament_participants").select("tournament_id, player_id"),
@@ -30,7 +29,6 @@ export default async function ProfileHistoryPage({ searchParams }: { searchParam
   const playerNames = new Map((playersResult.data ?? []).map((row) => [row.id, displayName({ firstName: row.first_name, lastName: row.last_name, email: row.email, nickname: row.nickname, useNickname: row.use_nickname })]));
   const details = new Map((detailsResult.data ?? []).map((row) => [row.match_id, row]));
   const savedIds = new Set((savedResult.data ?? []).map((row) => row.id));
-  const ratingByMatch = new Map((ratingsResult.data ?? []).map((row) => [row.match_id, row.points_after - row.points_before]));
   const matches: NormalizedHistoryMatch[] = (matchesResult.data ?? []).map((match) => {
     const external = match.type === "unranked_external";
     const detail = details.get(match.id);
@@ -48,7 +46,7 @@ export default async function ProfileHistoryPage({ searchParams }: { searchParam
       type: match.type as NormalizedHistoryMatch["type"],
       tournamentId: match.tournament_id,
       sets,
-      pointsDelta: external ? 10 : match.tournament_id ? null : (ratingByMatch.get(match.id) ?? null),
+      pointsDelta: match.tournament_id ? null : external || match.type === "exhibition" ? 10 : match.winner_id === player.id ? 30 : 15,
     };
   });
   const summaries = deriveH2HSummaries(matches, [

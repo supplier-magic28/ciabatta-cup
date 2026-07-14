@@ -65,6 +65,9 @@ inside the existing auth shell; the callback route is `/auth/confirm`.
 - Loading states must reserve the major geometry of their final route at mobile
   and desktop widths. Mutation controls acknowledge immediately but never imply
   that an immutable result or rating changed before server confirmation.
+- After server confirmation, action controls distinguish a transition failure
+  from committed success with an organiser-recovery warning for a stale points
+  cache or failed secondary delivery.
 - Notification actions acknowledge immediately with an Opening state and show
   an absolute Melbourne timestamp before navigating to their precise target.
 - Leaderboard profile actions prefetch their dynamic destination, display an

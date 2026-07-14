@@ -146,8 +146,8 @@ describe("recordTournamentResult", () => {
     mocks.createClient.mockResolvedValue(adminClient());
     mocks.rebuildRatingCache.mockRejectedValue(new Error("missing service key"));
     await expect(recordTournamentResult(undefined, resultForm())).resolves.toEqual({
-      ok: false,
-      error: "Result recorded, but Elo could not rebuild. Use the ratings recovery action.",
+      ok: true,
+      message: "Result recorded. The points cache needs the organiser recovery rebuild.",
     });
   });
 

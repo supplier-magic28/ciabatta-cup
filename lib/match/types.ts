@@ -27,6 +27,8 @@ export interface SetScore {
 
 /** The full payload the log-match form sends to the submit action. */
 export interface MatchSubmission {
+  /** Stable client-generated key used to make creation retries idempotent. */
+  operationKey?: string;
   /** The opponent (player2). The submitter is always player1. */
   opponentId: string;
   type: MatchType;
@@ -47,6 +49,7 @@ export interface AdminMatchSubmission extends Omit<MatchSubmission, "opponentId"
 }
 
 export interface ExternalMatchSubmission {
+  operationKey?: string;
   opponentName: string;
   saveOpponent: boolean;
   format: MatchFormat;

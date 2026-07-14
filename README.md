@@ -21,6 +21,17 @@ npm run dev
 
 Open `http://localhost:3000`.
 
+Docker-backed database validation uses the committed Supabase CLI project:
+
+```bash
+npm run db:start
+npm run db:test
+npm run db:lint
+```
+
+Keep `.env.local` valid dotenv syntax because the Supabase CLI parses it when
+starting the local stack.
+
 Create `.env.local` with:
 
 ```bash
@@ -57,6 +68,8 @@ npm run docs:check:test
 npm run build
 npm run test:performance
 npm run test:e2e
+npm run db:test
+npm run db:lint
 ```
 
 CI runs the same checks on every push and pull request. The documentation check

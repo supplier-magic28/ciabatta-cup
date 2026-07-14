@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { getSessionPlayer } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { rebuildRatingCache } from "@/lib/scoring/rebuild";
+import { rebuildScoringAfterCommit } from "@/lib/workflow/post-commit";
 import { validateAdminSubmission, validateExternalSubmission, validateSubmission } from "./submission";
 import type { AdminMatchSubmission, ExternalMatchSubmission, MatchSubmission } from "./types";
 import { formatScore } from "./score";
@@ -13,11 +13,10 @@ import { sendTournamentEmail } from "@/lib/tournament/email";
 import { renderRankedMatchLoggedEmail } from "./submission-email";
 import { displayName } from "@/lib/auth/displayName";
 import { sendLifecycleEmail } from "@/lib/planned/actions";
-import { queueUntaggedNudges } from "@/lib/notifications/untagged";
 
 export type SubmitResult = { ok: true; matchId: string; warning?: string } | { ok: false; error: string };
 
-export type MatchActionResult = { ok: true } | { ok: false; error: string };
+export type MatchActionResult = { ok: true; warning?: string } | { ok: false; error: string };
 
 const SAVE_FAILED = "Couldn't save the match — please try again.";
 
@@ -51,7 +50,7 @@ export async function submitMatch(input: MatchSubmission): Promise<SubmitResult>
   try { courtId = await resolveCourtId(supabase, match.location); }
   catch { return { ok: false, error: "Couldn't save that court." }; }
 
-  const {data:matchId,error:matchError}=await supabase.rpc("submit_match_v2",{p_opponent_id:match.opponentId,p_match_type:match.type,p_format:match.format,p_format_note:match.formatNote,p_winner_player_id:match.winnerId,p_played_at:match.playedAt,p_location:match.location,p_court_id:courtId,p_surface:match.surface,p_sets:match.sets.map(set=>({set_number:set.setNumber,p1_games:set.selfGames,p2_games:set.opponentGames,tiebreak_p1:set.selfTiebreak,tiebreak_p2:set.opponentTiebreak}))});
+  const {data:matchId,error:matchError}=await supabase.rpc("submit_match_v3",{p_operation_key:input.operationKey??crypto.randomUUID(),p_opponent_id:match.opponentId,p_match_type:match.type,p_format:match.format,p_format_note:match.formatNote,p_winner_player_id:match.winnerId,p_played_at:match.playedAt,p_location:match.location,p_court_id:courtId,p_surface:match.surface,p_sets:match.sets.map(set=>({set_number:set.setNumber,p1_games:set.selfGames,p2_games:set.opponentGames,tiebreak_p1:set.selfTiebreak,tiebreak_p2:set.opponentTiebreak}))});
   if(matchError||typeof matchId!=="string")return {ok:false,error:SAVE_FAILED};
 
   let warning: string | undefined;
@@ -65,8 +64,8 @@ export async function submitMatch(input: MatchSubmission): Promise<SubmitResult>
     const base = process.env.NEXT_PUBLIC_SITE_URL ?? "";
     try {
       await Promise.all([
-        sendTournamentEmail(player.email, renderRankedMatchLoggedEmail({ firstName: player.firstName ?? "Player", winnerName, loserName, score, matchDate: match.playedAt.slice(0, 10) }), `ranked-match/logged/${matchId}/${player.id}`),
-        opponent?.email ? sendTournamentEmail(opponent.email, renderRankedMatchLoggedEmail({ firstName: opponent.first_name ?? "Player", winnerName, loserName, score, matchDate: match.playedAt.slice(0, 10), confirmUrl: `${base}/matches` }), `ranked-match/logged/${matchId}/${match.opponentId}`) : Promise.resolve(),
+        sendTournamentEmail(player.email, renderRankedMatchLoggedEmail({ firstName: player.firstName ?? "Player", winnerName, loserName, score, matchDate: match.playedAt.slice(0, 10) }), `ranked-match/logged/${matchId}/${player.id}`, {kind:"ranked_match_logged",playerId:player.id,entityType:"match",entityId:matchId}),
+        opponent?.email ? sendTournamentEmail(opponent.email, renderRankedMatchLoggedEmail({ firstName: opponent.first_name ?? "Player", winnerName, loserName, score, matchDate: match.playedAt.slice(0, 10), confirmUrl: `${base}/matches` }), `ranked-match/logged/${matchId}/${match.opponentId}`, {kind:"ranked_match_logged",playerId:match.opponentId,entityType:"match",entityId:matchId}) : Promise.resolve(),
       ]);
     } catch { warning = "Match logged, but one or more result emails could not be sent."; }
   }
@@ -85,7 +84,8 @@ export async function adminLogMatch(input: AdminMatchSubmission): Promise<Submit
   let courtId: string | null;
   try { courtId = await resolveCourtId(supabase, match.location); }
   catch { return { ok: false, error: "Couldn't save that court." }; }
-  const { data: matchId, error } = await supabase.rpc("admin_log_match_v1", {
+  const { data: matchId, error } = await supabase.rpc("admin_log_match_v2", {
+    p_operation_key: input.operationKey ?? crypto.randomUUID(),
     p_player1_id: input.player1Id,
     p_player2_id: input.player2Id,
     p_match_type: match.type,
@@ -102,10 +102,7 @@ export async function adminLogMatch(input: AdminMatchSubmission): Promise<Submit
     })),
   });
   if (error || typeof matchId !== "string") return { ok: false, error: error?.message || SAVE_FAILED };
-  let warning: string | undefined;
-  try { await rebuildRatingCache(); }
-  catch { warning = "Match approved, but the derived points cache needs an admin rebuild."; }
-  await queueUntaggedNudges(matchId);
+  const warning = await rebuildScoringAfterCommit(matchId, "admin_log_match");
   revalidatePath("/matches");
   revalidatePath("/admin/approvals");
   revalidateRatingSurfaces();
@@ -122,7 +119,8 @@ export async function submitExternalMatch(input: ExternalMatchSubmission): Promi
   let courtId: string | null;
   try { courtId = await resolveCourtId(supabase, match.location); }
   catch { return { ok: false, error: "Couldn't save that court." }; }
-  const { data: matchId, error } = await supabase.rpc("log_external_match", {
+  const { data: matchId, error } = await supabase.rpc("log_external_match_v2", {
+    p_operation_key: input.operationKey ?? crypto.randomUUID(),
     p_opponent_name: match.opponentName,
     p_save_opponent: match.saveOpponent,
     p_format: match.format,
@@ -130,27 +128,15 @@ export async function submitExternalMatch(input: ExternalMatchSubmission): Promi
     p_external_won: match.externalWon,
     p_played_at: match.playedAt,
     p_location: match.location,
+    p_court_id: courtId,
+    p_surface: match.surface,
     p_sets: match.sets.map((set) => ({
       set_number: set.setNumber, p1_games: set.selfGames, p2_games: set.opponentGames,
       tiebreak_p1: set.selfTiebreak, tiebreak_p2: set.opponentTiebreak,
     })),
   });
   if (error || typeof matchId !== "string") return { ok: false, error: SAVE_FAILED };
-  if (courtId || match.surface) {
-    const { error: metadataError } = await createAdminClient().from("matches").update({ court_id: courtId, surface: match.surface, location: match.location }).eq("id", matchId);
-    if (metadataError) return { ok: false, error: "Match logged, but its court metadata could not be saved." };
-  }
-
-  try {
-    await rebuildRatingCache();
-  } catch {
-    revalidatePath("/matches");
-    revalidateRatingSurfaces();
-    return { ok: false, error: "Match was logged, but ratings could not be rebuilt. Ask an admin to rebuild ratings." };
-  }
-  await queueUntaggedNudges(matchId);
-
-  let warning: string | undefined;
+  let warning = await rebuildScoringAfterCommit(matchId, "log_external_match");
   try {
     const score = formatScore(match.sets.map((set) => ({
       p1Games: set.selfGames, p2Games: set.opponentGames,
@@ -159,9 +145,9 @@ export async function submitExternalMatch(input: ExternalMatchSubmission): Promi
     await sendTournamentEmail(player.email, renderExternalMatchEmail({
       firstName: player.firstName ?? "Player", opponentName: match.opponentName,
       score, won: !match.externalWon,
-    }), `external-match/${matchId}/${player.id}`);
+    }), `external-match/${matchId}/${player.id}`, {kind:"external_match_logged",playerId:player.id,entityType:"match",entityId:matchId});
   } catch {
-    warning = "Match logged and +10 points applied, but the result email could not be sent.";
+    warning = [warning, "The match was saved, but its result email could not be sent."].filter(Boolean).join(" ");
   }
 
   revalidatePath("/matches");
@@ -170,9 +156,9 @@ export async function submitExternalMatch(input: ExternalMatchSubmission): Promi
 }
 
 export async function deleteExternalMatch(
-  _previous: { error?: string } | undefined,
+  _previous: { error?: string; warning?: string } | undefined,
   formData: FormData,
-): Promise<{ error?: string } | undefined> {
+): Promise<{ error?: string; warning?: string } | undefined> {
   const player = await getSessionPlayer();
   if (!player) return { error: "You need to be signed in." };
   const matchId = String(formData.get("matchId") ?? "");
@@ -180,16 +166,10 @@ export async function deleteExternalMatch(
   const supabase = await createClient();
   const { data: deleted, error } = await supabase.rpc("delete_own_external_match", { p_match_id: matchId });
   if (error || deleted !== true) return { error: "Couldn't delete this match. It may not belong to you." };
-  try {
-    await rebuildRatingCache();
-  } catch {
-    revalidatePath("/matches");
-    revalidateRatingSurfaces();
-    return { error: "Match deleted, but ratings need an admin rebuild." };
-  }
+  const warning = await rebuildScoringAfterCommit(matchId, "delete_external_match");
   revalidatePath("/matches");
   revalidateRatingSurfaces();
-  return undefined;
+  return warning ? { warning } : undefined;
 }
 
 /**
@@ -204,25 +184,21 @@ export async function confirmMatch(matchId: string): Promise<MatchActionResult> 
   if (!player) return { ok: false, error: "You need to be signed in." };
 
   const supabase = await createClient();
-  const { error } = await supabase
-    .from("match_confirmations")
-    .insert({ match_id: matchId, player_id: player.id });
+  const { data: status, error } = await supabase.rpc("confirm_match_v1", { p_match_id: matchId });
 
   if (error) {
     // RLS denial, already-confirmed (PK), or no-longer-pending.
     return { ok: false, error: "Couldn't confirm this match — it may already be confirmed." };
   }
 
-  const { data: advanced } = await supabase.from("matches").select("type, status").eq("id", matchId).single();
-  if (advanced?.type === "exhibition" && advanced.status === "approved") {
-    try { await rebuildRatingCache(); }
-    catch { return { ok: false, error: "Match confirmed, but points need an admin rebuild." }; }
+  let warning: string | undefined;
+  if (status === "approved") {
+    warning = await rebuildScoringAfterCommit(matchId, "confirm_match");
     revalidateRatingSurfaces();
-    await queueUntaggedNudges(matchId);
   }
 
   revalidatePath("/matches");
-  return { ok: true };
+  return { ok: true, warning };
 }
 
 export async function resubmitQueriedMatch(matchId:string,input:MatchSubmission):Promise<MatchActionResult>{
@@ -232,7 +208,7 @@ export async function resubmitQueriedMatch(matchId:string,input:MatchSubmission)
   const opponentId=match.player1_id===player.id?match.player2_id:match.player1_id;const checked=validateSubmission({...input,opponentId},player.id);if(!checked.ok)return checked;
   let courtId:string|null=null;try{courtId=await resolveCourtId(db,checked.value.location);}catch{return {ok:false,error:"Couldn't save that court."};}
   const v=checked.value;const firstIsSelf=match.player1_id===player.id;const sets=v.sets.map(s=>({set_number:s.setNumber,p1_games:firstIsSelf?s.selfGames:s.opponentGames,p2_games:firstIsSelf?s.opponentGames:s.selfGames,tiebreak_p1:firstIsSelf?s.selfTiebreak:s.opponentTiebreak,tiebreak_p2:firstIsSelf?s.opponentTiebreak:s.selfTiebreak}));
-  const {error}=await db.rpc("resubmit_queried_match_v2",{p_match_id:matchId,p_match_type:v.type,p_format:v.format,p_format_note:v.formatNote,p_winner_player_id:v.winnerId,p_played_at:v.playedAt,p_location:v.location,p_court_id:courtId,p_surface:v.surface,p_sets:sets});
+  const {error}=await db.rpc("resubmit_queried_match_v3",{p_match_id:matchId,p_match_type:v.type,p_format:v.format,p_format_note:v.formatNote,p_winner_player_id:v.winnerId,p_played_at:v.playedAt,p_location:v.location,p_court_id:courtId,p_surface:v.surface,p_sets:sets});
   if(error)return {ok:false,error:error.message||"Couldn't resubmit this result."};revalidatePath("/matches");return {ok:true};
 }
 
@@ -259,35 +235,23 @@ async function adminSetStatus(
     .single();
 
   if (!match) return { ok: false, error: "Match not found." };
-  if (match.status !== "pending_approval") {
+  if (match.status !== "pending_approval" && match.status !== to) {
     return { ok: false, error: "This match isn't awaiting approval." };
   }
 
   const { error } = await supabase.rpc("review_match_v2", { p_match_id: matchId, p_decision: to });
   if (error) return { ok: false, error: "Couldn't update this match — please try again." };
 
+  let warning: string | undefined;
   if (to === "approved") {
-    try {
-      // A late approval can alter every later Elo step, so rebuild from all
-      // immutable facts instead of trying to apply one incremental delta.
-      await rebuildRatingCache();
-    } catch {
-      revalidatePath("/admin/approvals");
-      revalidatePath("/matches");
-      revalidateRatingSurfaces();
-      return {
-        ok: false,
-        error: "Match was approved, but ratings could not be rebuilt. Check the server configuration.",
-      };
-    }
+    warning = await rebuildScoringAfterCommit(matchId, "review_match");
     if (match.planned_match_id) await sendLifecycleEmail(match.planned_match_id, "confirmed", matchId);
-    await queueUntaggedNudges(matchId);
   }
 
   revalidatePath("/admin/approvals");
   revalidatePath("/matches");
   revalidateRatingSurfaces();
-  return { ok: true };
+  return { ok: true, warning };
 }
 
 function revalidateRatingSurfaces() {

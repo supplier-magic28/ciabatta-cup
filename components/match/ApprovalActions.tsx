@@ -25,6 +25,7 @@ export function ApprovalActions({ matchId }: { matchId: string }) {
       try {
         const result = await action(matchId);
         if (!result.ok) setError(result.error);
+        else if (result.warning) setError(result.warning);
       } finally {
         setPendingAction(null);
       }
