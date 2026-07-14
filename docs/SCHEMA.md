@@ -380,6 +380,14 @@ non-ranked record and external opponent identities remain owner-private.
 
 `play_days` marks are tennis dates for streak and decay purposes but carry no point award. Decay begins at first tennis activity, charges −1 per missed Melbourne day plus stacked −10 per completed seven-day stretch and −30 per completed thirty-day stretch, and is floored at zero.
 
+The activity replay also returns a transient source-aware ledger (ADR-0038):
+ranked participation/win, exhibition, Non-Ciabatta, approved practice,
+tournament placement, and all three decay categories. Daily summaries record
+awards, decay, applied zero-floor movement, and resulting points. It is not a
+database table: calendar, leaderboard, profiles, history, and cache rebuilding
+consume the same projection. Cup fixtures never earn ordinary awards in
+addition to placement points.
+
 ## Core reliability boundaries (ADR-0036)
 
 `matches.operation_key` and `planned_matches.operation_key` provide stable,

@@ -49,6 +49,7 @@ export interface RatingCache {
   decayWatches: Map<string, DecayWatch>;
   eloRatings: Map<string, number>;
   activityTimelines: Map<string, import("./activityPoints").ActivityPointEvent[]>;
+  activityLedgers: Map<string, import("./activityPoints").ActivityLedgerEntry[]>;
 }
 
 /** Map database naming to the lossless input contract of `computeRankings`. */
@@ -133,6 +134,7 @@ export function buildRatingCache(playerIds: string[], rows: ScoringMatchRow[], a
     decayWatches: activity.watches,
     eloRatings: new Map(computed.rankings.map((ranking) => [ranking.playerId, ranking.rating])),
     activityTimelines: activity.timelines,
+    activityLedgers: activity.ledgers,
   };
 }
 

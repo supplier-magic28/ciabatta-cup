@@ -3,7 +3,7 @@ import { signOut } from "@/lib/auth/actions";
 import { Wordmark } from "@/components/brand/Wordmark";
 import { ZeusInboxAction } from "@/components/notifications/ZeusInboxButton";
 
-export function SiteHeader({ role, active }: { role: "player" | "admin"; active?: "leaderboard" | "tournaments" | "profile" | "points" | "zeus" }) {
+export function SiteHeader({ role, active }: { role: "player" | "admin"; active?: "leaderboard" | "tournaments" | "profile" | "points" | "calendar" | "zeus" }) {
   const linkClass = "font-mono text-[10px] uppercase tracking-[1.5px]";
   return (
     <header className="mb-7 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-4 gap-y-3 border-b-2 border-ink pb-4 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center">
@@ -19,6 +19,7 @@ export function SiteHeader({ role, active }: { role: "player" | "admin"; active?
           Cups
         </Link>
         <Link href="/matches" className={`${linkClass} text-ink`}>Matches</Link>
+        <Link href="/calendar" className={`${linkClass} ${active === "calendar" ? "text-ink underline decoration-green decoration-2 underline-offset-4" : "text-green"}`}>Calendar</Link>
         {role === "admin" && (
           <>
             <Link href="/admin/approvals" className={`${linkClass} text-crust`}>Approvals</Link>

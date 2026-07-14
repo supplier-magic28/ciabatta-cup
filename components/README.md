@@ -32,6 +32,11 @@ of Done (`CLAUDE.md`).
 - `loading/PageSkeletons` — route-shaped compositions for leaderboard, auth,
   compact lists, forms, profiles, tournament lists, and tournament boards.
 
+**Calendar**
+- `calendar/CalendarExperience` - responsive personal calendar composition with
+  canonical-ledger scorecard, next-match rail, month grid, chronological list,
+  URL-preserved controls, and day/event details.
+
 **Email rendering**
 - `lib/email/components` - non-React, email-client-safe shell, header/footer,
   button, pill, detail-card, and Zeus-quote primitives shared by tournament and

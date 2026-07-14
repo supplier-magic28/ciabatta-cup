@@ -63,6 +63,12 @@ moves strictly ahead (ADR-0035). These seams are kept pure and heavily tested.
 Cache materialisation is rebuilt after approval or tournament completion; read
 surfaces derive the ladder through the same adapter.
 
+The replay also emits a source-aware per-player activity ledger (ADR-0038).
+Leaderboard, profile history, versioned cache rebuilds, and the authenticated
+calendar consume it for awards, decay, applied zero-floor movement, and totals.
+Presentation routes may slice the ledger but never copy scoring constants or
+persist another score.
+
 **Data fetching** defaults to Server Components (App Router default). Independent
 reads begin together, and relational data needed by one read model is embedded
 in that query instead of fetched in a dependent wave. App Router loading

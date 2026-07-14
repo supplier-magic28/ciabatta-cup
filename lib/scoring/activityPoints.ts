@@ -5,9 +5,38 @@ import { dateKeyInZone, shiftDateKey } from "@/lib/profile/streak";
 export type ActivityMatch = { id: string; player1_id: string; player2_id: string | null; winner_id: string | null; type: "ranked" | "exhibition" | "unranked_external"; status: string; played_at: string; tournament_id: string | null };
 export type PracticeFact = { id: string; player_id: string; practiced_on: string; status: string };
 export type PlayDayFact = { player_id: string; played_on: string };
-export type PlacementFact = { player_id: string; points: number; awarded_at: string };
-export type ActivityPointEvent = { date: string; points: number; delta: number; awards: number; decay: number };
-export type ActivityPointsResult = { points: Map<string, number>; watches: Map<string, DecayWatch>; timelines: Map<string, ActivityPointEvent[]> };
+export type PlacementFact = { player_id: string; points: number; awarded_at: string; tournament_id?: string };
+export type ActivityLedgerKind =
+  | "ranked_play"
+  | "ranked_win"
+  | "exhibition"
+  | "external"
+  | "practice"
+  | "placement"
+  | "decay_daily"
+  | "decay_7"
+  | "decay_30";
+export type ActivityLedgerEntry = {
+  date: string;
+  kind: ActivityLedgerKind;
+  sourceId: string;
+  delta: number;
+};
+export type ActivityPointEvent = {
+  date: string;
+  pointsBefore: number;
+  points: number;
+  delta: number;
+  appliedDelta: number;
+  awards: number;
+  decay: number;
+};
+export type ActivityPointsResult = {
+  points: Map<string, number>;
+  watches: Map<string, DecayWatch>;
+  timelines: Map<string, ActivityPointEvent[]>;
+  ledgers: Map<string, ActivityLedgerEntry[]>;
+};
 
 const factDay = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : dateKeyInZone(value);
 const daysBetween = (from: string, to: string): number => Math.max(0, Math.round((Date.parse(`${to}T12:00:00Z`) - Date.parse(`${from}T12:00:00Z`)) / 86_400_000));
@@ -16,58 +45,74 @@ const daysBetween = (from: string, to: string): number => Math.max(0, Math.round
 export function computeActivityPoints(playerIds: readonly string[], matches: readonly ActivityMatch[], placements: readonly PlacementFact[], practices: readonly PracticeFact[], playDays: readonly PlayDayFact[], asOfDate: string): ActivityPointsResult {
   const roster = new Set(playerIds);
   const tennisDays = new Map(playerIds.map((id) => [id, new Set<string>()]));
-  const awards = new Map(playerIds.map((id) => [id, new Map<string, number>()]));
+  const ledgerFacts = new Map(playerIds.map((id) => [id, new Map<string, ActivityLedgerEntry[]>()]));
   const played = (id: string | null, date: string) => { if (id && roster.has(id)) tennisDays.get(id)!.add(factDay(date)); };
-  const award = (id: string | null, date: string, points: number) => {
+  const award = (id: string | null, date: string, points: number, kind: ActivityLedgerKind, sourceId: string) => {
     if (!id || !roster.has(id)) return;
-    const day = factDay(date); const byDay = awards.get(id)!;
-    byDay.set(day, (byDay.get(day) ?? 0) + points);
+    const day = factDay(date); const byDay = ledgerFacts.get(id)!;
+    const entries = byDay.get(day) ?? [];
+    entries.push({ date: day, kind, sourceId, delta: points });
+    byDay.set(day, entries);
   };
 
   for (const match of matches) {
     if (match.status !== "rejected") { played(match.player1_id, match.played_at); played(match.player2_id, match.played_at); }
     if (match.status !== "approved") continue;
     if (match.type === "ranked" && match.tournament_id == null) {
-      award(match.player1_id, match.played_at, RANKED_PLAY_POINTS);
-      award(match.player2_id, match.played_at, RANKED_PLAY_POINTS);
-      award(match.winner_id, match.played_at, RANKED_WIN_BONUS);
-    } else if (match.type === "exhibition") {
-      award(match.player1_id, match.played_at, UNRANKED_FLAT_POINTS);
-      award(match.player2_id, match.played_at, UNRANKED_FLAT_POINTS);
-    } else if (match.type === "unranked_external") award(match.player1_id, match.played_at, UNRANKED_FLAT_POINTS);
+      award(match.player1_id, match.played_at, RANKED_PLAY_POINTS, "ranked_play", match.id);
+      award(match.player2_id, match.played_at, RANKED_PLAY_POINTS, "ranked_play", match.id);
+      award(match.winner_id, match.played_at, RANKED_WIN_BONUS, "ranked_win", match.id);
+    } else if (match.type === "exhibition" && match.tournament_id == null) {
+      award(match.player1_id, match.played_at, UNRANKED_FLAT_POINTS, "exhibition", match.id);
+      award(match.player2_id, match.played_at, UNRANKED_FLAT_POINTS, "exhibition", match.id);
+    } else if (match.type === "unranked_external") award(match.player1_id, match.played_at, UNRANKED_FLAT_POINTS, "external", match.id);
   }
-  for (const placement of placements) award(placement.player_id, placement.awarded_at, placement.points);
+  for (const placement of placements) award(placement.player_id, placement.awarded_at, placement.points, "placement", placement.tournament_id ?? `${placement.player_id}:${factDay(placement.awarded_at)}`);
   for (const practice of practices) if (practice.status === "approved") {
     played(practice.player_id, practice.practiced_on);
-    award(practice.player_id, practice.practiced_on, PRACTICE_POINTS);
+    award(practice.player_id, practice.practiced_on, PRACTICE_POINTS, "practice", practice.id);
   }
   for (const mark of playDays) played(mark.player_id, mark.played_on);
 
   const points = new Map<string, number>();
   const timelines = new Map<string, ActivityPointEvent[]>();
+  const ledgers = new Map<string, ActivityLedgerEntry[]>();
   const watches = new Map<string, DecayWatch>();
   for (const playerId of playerIds) {
     const days = tennisDays.get(playerId)!;
-    const awardDays = awards.get(playerId)!;
+    const factsByDay = ledgerFacts.get(playerId)!;
     const firstTennis = [...days].filter((date) => date <= asOfDate).sort()[0] ?? null;
-    const firstEvent = [...days, ...awardDays.keys()].filter((date) => date <= asOfDate).sort()[0] ?? null;
+    const firstEvent = [...days, ...factsByDay.keys()].filter((date) => date <= asOfDate).sort()[0] ?? null;
     let raw = 0; let drought = 0;
     const timeline: ActivityPointEvent[] = [];
+    const ledger: ActivityLedgerEntry[] = [];
     if (firstEvent) for (let date = firstEvent; date <= asOfDate; date = shiftDateKey(date, 1)) {
-      const dayAwards = awardDays.get(date) ?? 0;
+      const dayFacts = factsByDay.get(date) ?? [];
+      const dayAwards = dayFacts.reduce((total, entry) => total + entry.delta, 0);
       let dayDecay = 0;
+      const decayEntries: ActivityLedgerEntry[] = [];
       if (firstTennis && date >= firstTennis) {
         if (days.has(date)) drought = 0;
         else {
           drought += 1;
           dayDecay = DECAY_PER_DAY;
-          if (drought % 7 === 0) dayDecay += DROUGHT_7_PENALTY;
-          if (drought % 30 === 0) dayDecay += DROUGHT_30_PENALTY;
+          decayEntries.push({ date, kind: "decay_daily", sourceId: date, delta: -DECAY_PER_DAY });
+          if (drought % 7 === 0) {
+            dayDecay += DROUGHT_7_PENALTY;
+            decayEntries.push({ date, kind: "decay_7", sourceId: date, delta: -DROUGHT_7_PENALTY });
+          }
+          if (drought % 30 === 0) {
+            dayDecay += DROUGHT_30_PENALTY;
+            decayEntries.push({ date, kind: "decay_30", sourceId: date, delta: -DROUGHT_30_PENALTY });
+          }
         }
       }
       if (dayAwards || dayDecay) {
+        const pointsBefore = Math.max(RATING_FLOOR, raw);
         raw += dayAwards - dayDecay;
-        timeline.push({ date, points: Math.max(RATING_FLOOR, raw), delta: dayAwards - dayDecay, awards: dayAwards, decay: dayDecay });
+        const pointsAfter = Math.max(RATING_FLOOR, raw);
+        timeline.push({ date, pointsBefore, points: pointsAfter, delta: dayAwards - dayDecay, appliedDelta: pointsAfter - pointsBefore, awards: dayAwards, decay: dayDecay });
+        ledger.push(...dayFacts, ...decayEntries);
       }
     }
     const ordered = [...days].filter((date) => date <= asOfDate).sort();
@@ -76,9 +121,10 @@ export function computeActivityPoints(playerIds: readonly string[], matches: rea
     const currentDecay = currentDrought * DECAY_PER_DAY + Math.floor(currentDrought / 7) * DROUGHT_7_PENALTY + Math.floor(currentDrought / 30) * DROUGHT_30_PENALTY;
     points.set(playerId, Math.max(RATING_FLOOR, raw));
     timelines.set(playerId, timeline);
+    ledgers.set(playerId, ledger);
     watches.set(playerId, { daysSinceLastTennis: currentDrought, decayedSoFar: currentDecay, daysUntil7DayFine: currentDrought % 7 === 0 && currentDrought > 0 ? 7 : 7 - currentDrought % 7, daysUntil30DayFine: currentDrought % 30 === 0 && currentDrought > 0 ? 30 : 30 - currentDrought % 30, playedToday: days.has(asOfDate) });
   }
-  return { points, watches, timelines };
+  return { points, watches, timelines, ledgers };
 }
 
 /**

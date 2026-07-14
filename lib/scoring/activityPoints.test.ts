@@ -34,9 +34,39 @@ describe("activity points", () => {
       [],
       "2026-07-08",
     );
-    expect(result.timelines.get("a")?.[0]).toEqual({ date:"2026-07-01", points:55, delta:55, awards:55, decay:0 });
-    expect(result.timelines.get("a")?.at(-1)).toEqual({ date:"2026-07-08", points:38, delta:-11, awards:0, decay:11 });
+    expect(result.timelines.get("a")?.[0]).toEqual({ date:"2026-07-01", pointsBefore:0, points:55, delta:55, appliedDelta:55, awards:55, decay:0 });
+    expect(result.timelines.get("a")?.at(-1)).toEqual({ date:"2026-07-08", pointsBefore:49, points:38, delta:-11, appliedDelta:-11, awards:0, decay:11 });
+    expect(result.ledgers.get("a")).toEqual(expect.arrayContaining([
+      { date:"2026-07-01", kind:"ranked_play", sourceId:"m1", delta:15 },
+      { date:"2026-07-01", kind:"ranked_win", sourceId:"m1", delta:15 },
+      { date:"2026-07-01", kind:"placement", sourceId:"a:2026-07-01", delta:20 },
+      { date:"2026-07-01", kind:"practice", sourceId:"p", delta:5 },
+      { date:"2026-07-08", kind:"decay_daily", sourceId:"2026-07-08", delta:-1 },
+      { date:"2026-07-08", kind:"decay_7", sourceId:"2026-07-08", delta:-10 },
+    ]));
     expect(result.points.get("a")).toBe(38);
+  });
+  it("records exhibition, external, and thirty-day decay sources without duplicating constants", () => {
+    const result = computeActivityPoints(
+      ["a", "b"],
+      [match({ type:"exhibition" }), match({ id:"external", type:"unranked_external", player2_id:null })],
+      [], [], [], "2026-07-31",
+    );
+    expect(result.ledgers.get("a")).toEqual(expect.arrayContaining([
+      { date:"2026-07-01", kind:"exhibition", sourceId:"m1", delta:10 },
+      { date:"2026-07-01", kind:"external", sourceId:"external", delta:10 },
+      { date:"2026-07-31", kind:"decay_30", sourceId:"2026-07-31", delta:-30 },
+    ]));
+  });
+  it("does not duplicate cup fixtures as ordinary exhibition awards", () => {
+    const result = computeActivityPoints(
+      ["a", "b"],
+      [match({ id:"cup-fixture", type:"exhibition", tournament_id:"cup-1" })],
+      [{ player_id:"a", points:100, awarded_at:"2026-07-01", tournament_id:"cup-1" }],
+      [], [], "2026-07-01",
+    );
+    expect(result.ledgers.get("a")).toEqual([{ date:"2026-07-01", kind:"placement", sourceId:"cup-1", delta:100 }]);
+    expect(result.ledgers.get("b")).toEqual([]);
   });
   it("replays a backdated approval on its played day and clamps visible history at zero", () => {
     const result = computeActivityPoints(["a"], [match({ player2_id:null, type:"unranked_external", played_at:"2026-07-01T23:30:00Z" })], [], [], [], "2026-08-01");
@@ -45,15 +75,16 @@ describe("activity points", () => {
   });
 
   it("keeps the incumbent Ciabatta holder on a tie and changes only on a strict lead", () => {
+    const event = (date:string, pointsBefore:number, points:number):ActivityPointEvent => ({ date,pointsBefore,points,delta:points-pointsBefore,appliedDelta:points-pointsBefore,awards:Math.max(0,points-pointsBefore),decay:Math.max(0,pointsBefore-points) });
     const timelines = new Map<string, ActivityPointEvent[]>([
       ["a", [
-        { date:"2026-07-05", points:30, delta:30, awards:30, decay:0 },
-        { date:"2026-07-06", points:29, delta:-1, awards:0, decay:1 },
-        { date:"2026-07-07", points:28, delta:-1, awards:0, decay:1 },
+        event("2026-07-05",0,30),
+        event("2026-07-06",30,29),
+        event("2026-07-07",29,28),
       ]],
       ["b", [
-        { date:"2026-07-06", points:29, delta:29, awards:29, decay:0 },
-        { date:"2026-07-07", points:40, delta:11, awards:11, decay:0 },
+        event("2026-07-06",0,29),
+        event("2026-07-07",29,40),
       ]],
     ]);
 

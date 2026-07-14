@@ -7,6 +7,13 @@ This is the short operational handover. Durable intent belongs in
 
 ## Current capability
 
+- Players have a responsive `/calendar` with month grid and chronological list,
+  day/event drill-down, validated 1-30 day ranges, cup aggregation, approved
+  matches/practice, owner-private Non-Ciabatta names, and proposed/locked plans.
+  Its scorecard slices the same source-aware activity ledger used by the ladder,
+  profiles, points history, and versioned cache rebuild; no calendar scoring
+  constants or stored total were introduced.
+
 - Organisers have an in-app `/admin/health` control panel for scoring drift,
   lifecycle integrity, required database infrastructure, and durable email
   delivery diagnostics. Failed or fifteen-minute-stale reconstructable emails
@@ -159,8 +166,8 @@ after that password update succeeds.
 
 ## Next product slice
 
-Apply `20260718122000_admin_health_recovery.sql`, deploy the health route, and
-verify it reports green against production. Exercise the next genuine ranked
+Deploy and smoke-test the personal calendar at mobile and desktop widths, then
+exercise the next genuine ranked
 submission, opponent confirmation, organiser approval, notification/email,
 automatic versioned rebuild, and exact leaderboard/profile agreement. Also
 verify court creation/merge, retro tagging, tournament defaults, Melbourne

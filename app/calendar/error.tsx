@@ -1,0 +1,3 @@
+"use client";
+import { Button } from "@/components/ui/Button";
+export default function CalendarError({ reset }: { reset: () => void }) { return <main className="mx-auto max-w-lg p-6"><section className="border-2 border-ink bg-surface p-6"><p className="font-mono text-[10px] uppercase tracking-[2px] text-rust">Calendar unavailable</p><h1 className="mt-2 font-heading text-2xl font-bold">We couldn&apos;t assemble your tennis month.</h1><p className="my-4 text-muted">Your match facts are safe. Try loading the calendar again.</p><Button type="button" onClick={reset}>Try again</Button></section></main>; }

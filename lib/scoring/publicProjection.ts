@@ -1,11 +1,13 @@
 import "server-only";
 
+import { cache } from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { dateKeyInZone } from "@/lib/profile/streak";
 import { buildRatingCache, normalizeTournamentPlacementDates, type ScoringMatchRow, type TournamentPlacementWithEvent } from "./materialization";
 
 /** Load only the facts needed for the public, role-independent points projection. */
-export async function loadPublicLadderProjection(playerIds: string[]) {
+const loadProjection = cache(async (playerIdsKey: string, asOfDate: string) => {
+  const playerIds = playerIdsKey ? playerIdsKey.split(",") : [];
   const db = createAdminClient();
   const [matches, placements, practices, playDays] = await Promise.all([
     db.from("matches").select("id,player1_id,player2_id,winner_id,type,status,played_at,tournament_id"),
@@ -22,8 +24,13 @@ export async function loadPublicLadderProjection(playerIds: string[]) {
     placement: number;
   }>);
   return {
-    cache: buildRatingCache(playerIds, matchRows, placementRows, practices.data ?? [], playDays.data ?? [], dateKeyInZone(new Date())),
+    cache: buildRatingCache(playerIds, matchRows, placementRows, practices.data ?? [], playDays.data ?? [], asOfDate),
     matches: matchRows,
     placements: placementRows,
+    asOfDate,
   };
+});
+
+export async function loadPublicLadderProjection(playerIds: string[], asOfDate = dateKeyInZone(new Date())) {
+  return loadProjection([...new Set(playerIds)].sort().join(","), asOfDate);
 }

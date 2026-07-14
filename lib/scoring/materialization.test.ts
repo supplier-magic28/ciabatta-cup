@@ -63,6 +63,11 @@ describe("rating cache materialization", () => {
     expect(cache.reigns).toEqual([
       { playerId: "alice", startedAt: "2026-07-01T00:00:00.000Z", endedAt: null },
     ]);
+    for (const ranking of cache.rankings) {
+      const timeline = cache.activityTimelines.get(ranking.playerId) ?? [];
+      expect(timeline.at(-1)?.points ?? 0).toBe(ranking.rating);
+      expect(cache.activityLedgers.get(ranking.playerId)?.reduce((sum, entry) => sum + entry.delta, 0) ?? 0).toBeGreaterThanOrEqual(ranking.rating);
+    }
   });
 
   it("adds tournament awards cumulatively to zero-based ordinary Elo", () => {
