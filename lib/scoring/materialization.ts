@@ -8,7 +8,7 @@ import type {
   PlayerRating,
   RatingHistoryEntry,
 } from "./types";
-import { computeActivityPoints, type PlayDayFact, type PracticeFact } from "./activityPoints";
+import { computeActivityPoints, deriveActivityReigns, type PlayDayFact, type PracticeFact } from "./activityPoints";
 import type { DecayWatch } from "./types";
 
 /** The subset of a `matches` row the pure scoring engine needs. */
@@ -27,6 +27,18 @@ export interface TournamentPlacementRow {
   player_id: string;
   points: number;
   awarded_at: string;
+}
+
+export type TournamentPlacementWithEvent = TournamentPlacementRow & {
+  tournaments?: { starts_at: string } | Array<{ starts_at: string }> | null;
+};
+
+/** Use the event date for historical replay, including legacy late-created awards. */
+export function normalizeTournamentPlacementDates<T extends TournamentPlacementWithEvent>(rows: T[]): Array<Omit<T, "tournaments">> {
+  return rows.map(({ tournaments, ...row }) => {
+    const tournament = Array.isArray(tournaments) ? tournaments[0] : tournaments;
+    return { ...row, awarded_at: tournament?.starts_at ?? row.awarded_at };
+  });
 }
 
 export interface RatingCache {
@@ -68,6 +80,8 @@ export function buildRatingCache(playerIds: string[], rows: ScoringMatchRow[], a
   const roster = [...new Set(playerIds)];
 
   const activity = computeActivityPoints(playerIds, rows, awards, practices, playDays, asOfDate);
+  const reigns = deriveActivityReigns(roster, activity.timelines);
+  const holderId = reigns.at(-1)?.playerId ?? null;
   const rankings = roster
     .map((playerId) =>
       computedByPlayer.get(playerId) ?? {
@@ -82,20 +96,9 @@ export function buildRatingCache(playerIds: string[], rows: ScoringMatchRow[], a
     .map((ranking) => {
       return { ...ranking, rating: activity.points.get(ranking.playerId) ?? 0 };
     })
-    .sort((a, b) => b.rating - a.rating || a.playerId.localeCompare(b.playerId))
+    .sort((a, b) => b.rating - a.rating
+      || (a.playerId === holderId ? -1 : b.playerId === holderId ? 1 : a.playerId.localeCompare(b.playerId)))
     .map((ranking, index) => ({ ...ranking, rank: index + 1 }));
-
-  const reigns = computed.reigns.map((reign) => ({ ...reign }));
-  const holderId = rankings.find((ranking) => ranking.rating > 0)?.playerId;
-  const currentHolder = reigns.at(-1);
-  if (holderId && currentHolder?.playerId !== holderId) {
-    const awardedAt = [
-      ...awards.map((award) => award.awarded_at),
-      ...rows.filter((row) => row.type === "unranked_external" && row.status === "approved").map((row) => row.played_at),
-    ].sort().at(-1) ?? new Date(0).toISOString();
-    if (currentHolder) currentHolder.endedAt = awardedAt;
-    reigns.push({ playerId: holderId, startedAt: awardedAt, endedAt: null });
-  }
   const externalHistory: RatingHistoryEntry[] = [];
   const externalApplied = new Map<string, number>();
   const rankByPlayer = new Map(rankings.map((ranking) => [ranking.playerId, ranking.rank]));

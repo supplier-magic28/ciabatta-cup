@@ -123,7 +123,7 @@ async function prepareTournamentPlacements(tournamentId: string) {
     matches: rows,
     sets: rows.flatMap((match) => match.match_sets ?? []),
   });
-  const awardedAt = new Date().toISOString();
+  const awardedAt = board.tournament.starts_at;
   const { error: placementError } = await supabase.from("tournament_placements").upsert(
     placements.map((placement) => ({
       tournament_id: tournamentId,

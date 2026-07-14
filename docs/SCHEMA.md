@@ -234,10 +234,12 @@ whole-table replacement uses an explicit `where true` predicate so hosted
 safe-update enforcement accepts the operation without weakening that guard.
 
 ### ciabatta_reigns _(Phase 3e — implemented)_
-Rebuildable materialisation of #1 holder periods. The first row is created by
-the first approved ranked result; an open row (`ended_at` null) is the current
-holder. A new holder closes the old reign at the deciding match time.
-| id uuid PK, player_id FK, started_at, ended_at nullable | derived by the pure Elo replay; never authoritative over match facts |
+Rebuildable materialisation of public activity-points #1 holder periods
+(ADR-0035). The first positive leader opens the first row; an open row
+(`ended_at` null) is the current holder. The incumbent keeps the Ciabatta on an
+equal-points tie and a new row begins only when another player moves strictly
+ahead. Tournament placement points are replayed on the tournament date.
+| id uuid PK, player_id FK, started_at, ended_at nullable | derived by the pure Melbourne-day activity-points replay; never authoritative over source facts |
 
 ### activity_log _(Phase 8 — minimally implemented)_
 | id, actor_id FK players nullable, verb text, match_id FK nullable, metadata jsonb, created_at | audit seam; currently records `match_surface_tagged` old/new metadata |

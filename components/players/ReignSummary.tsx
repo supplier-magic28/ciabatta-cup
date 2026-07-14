@@ -2,6 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { LoafBadge } from "@/components/brand/LoafBadge";
+import { dateKeyInZone } from "@/lib/profile/streak";
+
+export function heldMelbourneCalendarDays(startedAt: string, now = new Date()): number {
+  const start = dateKeyInZone(startedAt);
+  const today = dateKeyInZone(now);
+  return Math.max(0, Math.round((Date.parse(`${today}T12:00:00Z`) - Date.parse(`${start}T12:00:00Z`)) / 86_400_000));
+}
 
 /** Live Ciabatta-holder summary; duration is calculated after client hydration. */
 export function ReignSummary({ startedAt, reignNumber }: { startedAt: string; reignNumber: number }) {
@@ -9,7 +16,7 @@ export function ReignSummary({ startedAt, reignNumber }: { startedAt: string; re
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      setHeldDays(Math.max(0, Math.floor((Date.now() - new Date(startedAt).valueOf()) / 86_400_000)));
+      setHeldDays(heldMelbourneCalendarDays(startedAt));
     }, 0);
     return () => window.clearTimeout(timer);
   }, [startedAt]);

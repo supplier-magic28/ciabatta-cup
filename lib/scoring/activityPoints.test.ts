@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeActivityPoints } from "./activityPoints";
+import { computeActivityPoints, deriveActivityReigns, type ActivityPointEvent } from "./activityPoints";
 
 const match = (overrides: Partial<Parameters<typeof computeActivityPoints>[1][number]> = {}) => ({ id: "m1", player1_id: "a", player2_id: "b", winner_id: "a", type: "ranked" as const, status: "approved", played_at: "2026-07-01T02:00:00Z", tournament_id: null, ...overrides });
 
@@ -42,5 +42,28 @@ describe("activity points", () => {
     const result = computeActivityPoints(["a"], [match({ player2_id:null, type:"unranked_external", played_at:"2026-07-01T23:30:00Z" })], [], [], [], "2026-08-01");
     expect(result.timelines.get("a")?.[0]).toMatchObject({ date:"2026-07-02", points:10, awards:10 });
     expect(result.timelines.get("a")?.at(-1)?.points).toBe(0);
+  });
+
+  it("keeps the incumbent Ciabatta holder on a tie and changes only on a strict lead", () => {
+    const timelines = new Map<string, ActivityPointEvent[]>([
+      ["a", [
+        { date:"2026-07-05", points:30, delta:30, awards:30, decay:0 },
+        { date:"2026-07-06", points:29, delta:-1, awards:0, decay:1 },
+        { date:"2026-07-07", points:28, delta:-1, awards:0, decay:1 },
+      ]],
+      ["b", [
+        { date:"2026-07-06", points:29, delta:29, awards:29, decay:0 },
+        { date:"2026-07-07", points:40, delta:11, awards:11, decay:0 },
+      ]],
+    ]);
+
+    expect(deriveActivityReigns(["a", "b"], timelines)).toEqual([
+      { playerId:"a", startedAt:"2026-07-05T00:00:00.000Z", endedAt:"2026-07-07T00:00:00.000Z" },
+      { playerId:"b", startedAt:"2026-07-07T00:00:00.000Z", endedAt:null },
+    ]);
+  });
+
+  it("creates no Ciabatta reign while every player remains on zero", () => {
+    expect(deriveActivityReigns(["a", "b"], new Map())).toEqual([]);
   });
 });

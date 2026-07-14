@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { buildRatingCache, type ScoringMatchRow } from "./materialization";
+import { buildRatingCache, normalizeTournamentPlacementDates, type ScoringMatchRow, type TournamentPlacementWithEvent } from "./materialization";
 import { dateKeyInZone } from "@/lib/profile/streak";
 
 /**
@@ -18,7 +18,7 @@ export async function rebuildRatingCache(): Promise<void> {
     supabase
       .from("matches")
       .select("id, player1_id, player2_id, winner_id, type, status, played_at, tournament_id"),
-    supabase.from("tournament_placements").select("player_id, points, awarded_at"),
+    supabase.from("tournament_placements").select("player_id, points, awarded_at, tournaments(starts_at)"),
     supabase.from("practice_sessions").select("id, player_id, practiced_on, status"),
     supabase.from("play_days").select("player_id, played_on"),
   ]);
@@ -30,7 +30,7 @@ export async function rebuildRatingCache(): Promise<void> {
   const cache = buildRatingCache(
     (playersResult.data ?? []).map((player) => player.id),
     (matchesResult.data ?? []) as ScoringMatchRow[],
-    placementsResult.data ?? [],
+    normalizeTournamentPlacementDates((placementsResult.data ?? []) as TournamentPlacementWithEvent[]),
     practicesResult.data ?? [],
     playDaysResult.data ?? [],
     dateKeyInZone(new Date()),

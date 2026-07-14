@@ -32,7 +32,9 @@ Database migrations for Ciabatta Cup. The authoritative data model is
   `players.rating_points` (ADR-0011).
 - `20260710040000_ciabatta_reigns.sql` adds the rebuildable holder-history cache
   and a compatible three-payload replacement RPC that refreshes ratings,
-  history, and reigns together (ADR-0012).
+  history, and reigns together (ADR-0012). ADR-0035 later defines those rows as
+  the canonical Melbourne-day activity-ladder lead, with incumbent retention
+  on ties.
 - `20260710050000_fix_invited_profile_status_cast.sql` fixes Auth invite
   creation by explicitly casting the `handle_new_user()` status branch to the
   `player_status` enum.

@@ -56,10 +56,12 @@ migrating history and keeps ranked and exhibition records available as filtered
 views of the same facts.
 
 **Scoring is isolated and pure** in `lib/scoring/`. `computeRankings(matches)`
-derives ordinary-match Elo; `buildRatingCache` combines that result with
-rebuildable tournament placement awards. These seams are kept pure and heavily
-tested. Cache materialisation is rebuilt after approval or tournament
-completion; read surfaces derive the ladder through the same adapter.
+derives ordinary-match Elo; `buildRatingCache` separately replays canonical
+activity points, their timeline, and activity-ladder Ciabatta reigns. An
+incumbent remains holder on equal points and changes only when another player
+moves strictly ahead (ADR-0035). These seams are kept pure and heavily tested.
+Cache materialisation is rebuilt after approval or tournament completion; read
+surfaces derive the ladder through the same adapter.
 
 **Data fetching** defaults to Server Components (App Router default). Independent
 reads begin together, and relational data needed by one read model is embedded

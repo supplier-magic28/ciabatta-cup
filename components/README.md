@@ -87,7 +87,8 @@ of Done (`CLAUDE.md`).
   the server refuses self-deletion and any player referenced by a match.
 - `players/PlayerAvatar` — Supabase Storage avatar with deterministic initials
   fallback; used by leaderboard and profiles.
-- `players/ReignSummary` — hydrated current-holder duration and reign count.
+- `players/ReignSummary` — hydrated current-holder duration measured by
+  Melbourne calendar days, plus reign count.
 - `leaderboard/PlayerProfileButton` — prefetched profile navigation with an
   immediate `Opening…` state and duplicate-activation lock.
 

@@ -1,5 +1,5 @@
 import { DECAY_PER_DAY, DROUGHT_30_PENALTY, DROUGHT_7_PENALTY, PRACTICE_POINTS, RANKED_PLAY_POINTS, RANKED_WIN_BONUS, RATING_FLOOR, UNRANKED_FLAT_POINTS } from "./constants";
-import type { DecayWatch } from "./types";
+import type { CiabattaReign, DecayWatch } from "./types";
 import { dateKeyInZone, shiftDateKey } from "@/lib/profile/streak";
 
 export type ActivityMatch = { id: string; player1_id: string; player2_id: string | null; winner_id: string | null; type: "ranked" | "exhibition" | "unranked_external"; status: string; played_at: string; tournament_id: string | null };
@@ -79,4 +79,48 @@ export function computeActivityPoints(playerIds: readonly string[], matches: rea
     watches.set(playerId, { daysSinceLastTennis: currentDrought, decayedSoFar: currentDecay, daysUntil7DayFine: currentDrought % 7 === 0 && currentDrought > 0 ? 7 : 7 - currentDrought % 7, daysUntil30DayFine: currentDrought % 30 === 0 && currentDrought > 0 ? 30 : 30 - currentDrought % 30, playedToday: days.has(asOfDate) });
   }
   return { points, watches, timelines };
+}
+
+/**
+ * Rebuild Ciabatta ownership from the same daily activity-point history shown
+ * publicly. The incumbent keeps the title on a tie; only a strictly higher
+ * total starts a new reign.
+ */
+export function deriveActivityReigns(
+  playerIds: readonly string[],
+  timelines: ReadonlyMap<string, readonly ActivityPointEvent[]>,
+): CiabattaReign[] {
+  const points = new Map(playerIds.map((playerId) => [playerId, 0]));
+  const eventsByDate = new Map<string, Array<{ playerId: string; points: number }>>();
+  for (const playerId of playerIds) {
+    for (const event of timelines.get(playerId) ?? []) {
+      const events = eventsByDate.get(event.date) ?? [];
+      events.push({ playerId, points: event.points });
+      eventsByDate.set(event.date, events);
+    }
+  }
+
+  const reigns: CiabattaReign[] = [];
+  let holderId: string | null = null;
+  for (const date of [...eventsByDate.keys()].sort()) {
+    for (const event of eventsByDate.get(date) ?? []) points.set(event.playerId, event.points);
+    const highest = Math.max(0, ...points.values());
+    if (highest <= 0) continue;
+
+    const incumbent: string | null = holderId;
+    const holderPoints: number = incumbent === null ? -1 : (points.get(incumbent) ?? 0);
+    if (incumbent !== null && holderPoints === highest) continue;
+    const challenger: string | undefined = [...points.entries()]
+      .filter(([playerId, total]) => playerId !== incumbent && total === highest && total > holderPoints)
+      .map(([playerId]) => playerId)
+      .sort((a, b) => a.localeCompare(b))[0];
+    if (!challenger) continue;
+
+    const changedAt = `${date}T00:00:00.000Z`;
+    const current = reigns.at(-1);
+    if (current) current.endedAt = changedAt;
+    reigns.push({ playerId: challenger, startedAt: changedAt, endedAt: null });
+    holderId = challenger;
+  }
+  return reigns;
 }

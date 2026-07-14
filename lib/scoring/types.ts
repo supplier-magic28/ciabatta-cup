@@ -83,11 +83,11 @@ export interface RatingHistoryEntry {
   playedAt: string;
 }
 
-/** A continuous period in which a player held the #1 ranked position. */
+/** A continuous period in which a player led the public activity-points ladder. */
 export interface CiabattaReign {
   /** Player holding the Ciabatta for this period. */
   playerId: string;
-  /** ISO-8601 time of the ranked result that established the holder. */
+  /** ISO-8601 Melbourne-day boundary when the player moved strictly ahead. */
   startedAt: string;
   /** ISO-8601 time the next holder took over; null for the current reign. */
   endedAt: string | null;
@@ -99,7 +99,7 @@ export interface ScoringResult {
   rankings: PlayerRating[];
   /** Two entries per ranked+approved match, in chronological application order. */
   ratingHistory: RatingHistoryEntry[];
-  /** Rebuildable #1-holder periods, beginning with the first scored match. */
+  /** Rebuildable #1-holder periods, beginning with the first positive leader. */
   reigns: CiabattaReign[];
 }
 

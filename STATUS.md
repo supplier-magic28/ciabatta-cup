@@ -16,6 +16,10 @@ This is the short operational handover. Durable intent belongs in
   projection and Melbourne as-of date, including a complete award/decay timeline.
   Expanded history and profiles share ranked, set, tournament, exhibition, and
   aggregate Non-Ciabatta records.
+- The Ciabatta now follows that same public activity-points ladder: the incumbent
+  keeps it on ties and a new reign starts only when another player moves strictly
+  ahead. Tournament points use the event date and held duration uses Melbourne
+  calendar days.
 - Match logging is no longer a global navigation tab; Matches owns every visible
   entry point, and leaderboard profile navigation acknowledges clicks immediately.
 

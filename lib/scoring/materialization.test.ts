@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildRatingCache, toScoringMatches, type ScoringMatchRow } from "./materialization";
+import { buildRatingCache, normalizeTournamentPlacementDates, toScoringMatches, type ScoringMatchRow } from "./materialization";
 
 const rows: ScoringMatchRow[] = [
   {
@@ -42,7 +42,7 @@ describe("rating cache materialization", () => {
     ]);
     expect(cache.ratingHistory).toEqual([]);
     expect(cache.reigns).toEqual([
-      { playerId: "alice", startedAt: "2026-07-11T04:00:00Z", endedAt: null },
+      { playerId: "alice", startedAt: "2026-07-11T00:00:00.000Z", endedAt: null },
     ]);
   });
 
@@ -61,7 +61,7 @@ describe("rating cache materialization", () => {
     ]);
     expect(cache.ratingHistory).toHaveLength(2);
     expect(cache.reigns).toEqual([
-      { playerId: "alice", startedAt: "2026-07-01T10:00:00Z", endedAt: null },
+      { playerId: "alice", startedAt: "2026-07-01T00:00:00.000Z", endedAt: null },
     ]);
   });
 
@@ -98,5 +98,37 @@ describe("rating cache materialization", () => {
     buildRatingCache(playerIds, rows);
 
     expect({ playerIds, rows }).toEqual(snapshot);
+  });
+
+  it("replays legacy tournament placements on the tournament date", () => {
+    expect(normalizeTournamentPlacementDates([{
+      tournament_id:"cup-1",
+      player_id:"alice",
+      placement:1,
+      points:100,
+      awarded_at:"2026-07-17T01:00:00Z",
+      tournaments:{ starts_at:"2026-07-11T00:00:00Z" },
+    }])).toEqual([{
+      tournament_id:"cup-1",
+      player_id:"alice",
+      placement:1,
+      points:100,
+      awarded_at:"2026-07-11T00:00:00Z",
+    }]);
+  });
+
+  it("keeps the activity-points incumbent ranked first when current totals tie", () => {
+    const cache = buildRatingCache(["alice", "bob"], [
+      { ...rows[0], id:"b-first", player1_id:"bob", player2_id:"alice", winner_id:"bob", played_at:"2026-07-01T10:00:00Z" },
+      { ...rows[0], id:"a-catches", played_at:"2026-07-02T10:00:00Z" },
+    ], [], [], [], "2026-07-02");
+
+    expect(cache.rankings.map(({ playerId, rating }) => ({ playerId, rating }))).toEqual([
+      { playerId:"bob", rating:45 },
+      { playerId:"alice", rating:45 },
+    ]);
+    expect(cache.reigns).toEqual([
+      { playerId:"bob", startedAt:"2026-07-01T00:00:00.000Z", endedAt:null },
+    ]);
   });
 });
