@@ -62,7 +62,10 @@ export default async function ApprovalsPage({ searchParams }: { searchParams: Pr
       <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-heading text-2xl font-bold text-ink">Approvals</h1>
-          <RebuildRatingsButton />
+          <div className="mt-2 flex flex-wrap items-center gap-4">
+            <RebuildRatingsButton />
+            <Link href="/admin/health" className="border-b-2 border-green font-mono text-[10px] uppercase tracking-[1px] text-green">System health</Link>
+          </div>
         </div>
         <BackLink href={PARENT_ROUTES.ladder}>Ladder</BackLink>
       </header>

@@ -405,3 +405,18 @@ The additive migration keeps old RPCs available for rolling deployment. The
 enforcement migration removes authenticated direct-write policies and revokes
 obsolete creation paths only after the application is deployed on the new
 RPCs.
+
+## Organiser health and recovery (ADR-0037)
+
+`core_backend_health_v1()` is an authenticated organiser-only, read-only JSON
+projection over cache versions, lifecycle inconsistencies, actionable email
+deliveries, required triggers, and notification Realtime publication. The SQL
+Editor may call the same function in its trusted postgres context. The payload
+contains entity identifiers and bounded delivery errors but excludes email
+addresses, practice notes, and external-opponent identities.
+
+Failed and fifteen-minute-stale `lifecycle_email_deliveries` rows can be retried
+from `/admin/health` only for known reconstructable kinds. The server reloads
+canonical entity and recipient facts and reuses the row's idempotency key; no
+message body or destination is stored in the ledger or accepted from the
+browser. Unknown delivery kinds remain visible for manual recovery.

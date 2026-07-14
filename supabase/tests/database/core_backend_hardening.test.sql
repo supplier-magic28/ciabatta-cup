@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(21);
+select plan(27);
 
 select has_column('public','matches','operation_key','matches carry idempotency keys');
 select has_column('public','planned_matches','operation_key','planned shells carry idempotency keys');
@@ -50,6 +50,29 @@ select ok(has_table_privilege('authenticated','public.matches','select'),'authen
 select ok(not exists(select 1 from pg_policies where schemaname='public' and tablename='matches' and policyname='matches_insert_participant'),'direct member match inserts are retired');
 select ok(exists(select 1 from pg_trigger where tgname='guard_match_status_graph' and not tgisinternal),'match graph guard is installed');
 select ok(exists(select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='notifications'),'notification realtime publication remains enabled');
+
+select has_function('public','core_backend_health_v1',array[]::text[],'organiser health RPC exists');
+select ok(has_function_privilege('authenticated','public.core_backend_health_v1()','execute'),'authenticated role can reach the guarded health RPC');
+select ok(not has_function_privilege('anon','public.core_backend_health_v1()','execute'),'anonymous role cannot inspect health');
+
+insert into auth.users(id,email,raw_user_meta_data) values
+  ('30000000-0000-0000-0000-000000000001','health-player@test.invalid','{"first_name":"Health","last_name":"Player"}'),
+  ('30000000-0000-0000-0000-000000000002','health-admin@test.invalid','{"first_name":"Health","last_name":"Admin"}');
+update public.players set role='admin' where id='30000000-0000-0000-0000-000000000002';
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub','30000000-0000-0000-0000-000000000001',true);
+select throws_ok(
+  'select public.core_backend_health_v1()',
+  'only organisers may inspect backend health',
+  'ordinary players cannot inspect health'
+);
+select set_config('request.jwt.claim.sub','30000000-0000-0000-0000-000000000002',true);
+select lives_ok('select public.core_backend_health_v1()','organisers can inspect health');
+select ok(
+  (public.core_backend_health_v1()->'infrastructure'->>'notificationsRealtime')::boolean,
+  'health snapshot reports notification Realtime'
+);
 
 select * from finish();
 rollback;

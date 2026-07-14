@@ -56,6 +56,10 @@ Migrations are committed under `supabase/migrations/` and must be applied in
 filename order. Use `supabase db push` after linking the project, or run the SQL
 files in the Supabase SQL Editor. The current migration inventory, invite setup,
 and first-admin bootstrap instructions live in [supabase/README.md](supabase/README.md).
+After the health migration is applied, organisers can inspect cache drift,
+lifecycle integrity, infrastructure contracts, and failed email recovery from
+`/admin/health`; the equivalent one-row operator report remains at
+`supabase/ops/core_backend_health.sql`.
 
 ## Validation
 

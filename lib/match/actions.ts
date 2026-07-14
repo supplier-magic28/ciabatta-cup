@@ -105,6 +105,7 @@ export async function adminLogMatch(input: AdminMatchSubmission): Promise<Submit
   const warning = await rebuildScoringAfterCommit(matchId, "admin_log_match");
   revalidatePath("/matches");
   revalidatePath("/admin/approvals");
+  revalidatePath("/admin/health");
   revalidateRatingSurfaces();
   return { ok: true, matchId, warning };
 }

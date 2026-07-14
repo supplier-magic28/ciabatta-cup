@@ -84,6 +84,12 @@ of Done (`CLAUDE.md`).
 - `match/RebuildRatingsButton` — admin recovery control that rebuilds ratings,
   history, and reign caches from immutable facts.
 
+**Admin health**
+- `health/HealthRefreshButton` — organiser-only refresh control with immediate
+  checking feedback for the backend health snapshot.
+- `health/RetryDeliveryButton` — guarded one-recipient retry for a failed or
+  stale reconstructable lifecycle email, preserving its provider idempotency key.
+
 **Players (admin)**
 - `players/InvitePlayerForm` — admin invite form (design screen 08): name + email
   → `inviteUser` server action (`useActionState`).

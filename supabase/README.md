@@ -96,6 +96,9 @@ Database migrations for Ciabatta Cup. The authoritative data model is
   step. It installs lifecycle graph guards, removes participant direct-write
   policies, and revokes obsolete creation RPCs. Apply it only after the new
   application paths pass authenticated smoke tests.
+- `20260718122000_admin_health_recovery.sql` adds the privacy-safe organiser
+  health snapshot used by `/admin/health`. It follows enforcement and must be
+  applied before deploying that route (ADR-0037).
 
 The tournament participant table is editable only before the first tournament
 result. The admin console's replacement action preserves the selected seed and
@@ -157,6 +160,12 @@ For ADR-0036 production rollout, use this exact sequence:
    correction, practice, and notification paths.
 4. Apply `20260718121000_core_backend_enforcement.sql`.
 5. Run `ops/core_backend_health.sql`, then use the organiser rating rebuild once.
+
+After ADR-0036 is verified, apply
+`20260718122000_admin_health_recovery.sql` before deploying `/admin/health`.
+The route mirrors the consolidated SQL report and adds guarded cache and email
+recovery controls. A failed or fifteen-minute-stale email can be retried only
+when its canonical entity facts can reconstruct the original delivery.
 
 ## Local database validation
 

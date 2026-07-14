@@ -7,6 +7,11 @@ This is the short operational handover. Durable intent belongs in
 
 ## Current capability
 
+- Organisers have an in-app `/admin/health` control panel for scoring drift,
+  lifecycle integrity, required database infrastructure, and durable email
+  delivery diagnostics. Failed or fifteen-minute-stale reconstructable emails
+  can be retried for exactly one recipient with the original provider
+  idempotency key; legacy kinds remain visible for manual recovery.
 - Core member, organiser, external, planned, confirmation, practice-review,
   and notification mutations now have authenticated RPC boundaries. Creation
   retries carry stable operation keys, all score paths share database validation,
@@ -136,34 +141,29 @@ after that password update succeeds.
 | `20260710130000_tournament_placement_awards.sql` | Applied to production (operator verified four qualifier placements) |
 | `20260710140000_safe_rating_cache_rebuild.sql` | Applied to production (operator reported) |
 | `20260712090000_external_match_type.sql` through `20260712110000_delete_own_external_matches.sql` | Applied to production (operator verified logging, email, history, and deletion) |
-| `20260712120000_profile_play_days.sql` | Ready to apply |
-| `20260713120000_ladder_points_practice.sql` | Ready to apply after profile play days |
-| `20260714120000_planned_matches_notifications.sql` | Ready to apply after activity-points migrations |
-| `20260715120000_courts_surfaces_zeus_inbox.sql` | Ready after planned matches |
-| `20260715121000_seed_untagged_notifications.sql` | Ready immediately after courts/surfaces |
-| `20260715122000_reliable_realtime_notifications.sql` | Ready immediately after the notification seed |
-| `20260716120000_match_workflow_repair_types.sql` | Ready after reliable Realtime notifications |
-| `20260716121000_atomic_match_workflows.sql` | Ready immediately after workflow repair types |
-| `20260717120000_admin_match_logging.sql` | Ready immediately after atomic match workflows |
-| `20260718120000_core_backend_hardening.sql` | Additive; ready after admin match logging and before the application deploy |
-| `20260718121000_core_backend_enforcement.sql` | Apply only after the deployed RPC paths pass authenticated smoke tests |
+| `20260712120000` through `20260717120000` | Applied to production (operator exercised points, plans, inbox, correction, and admin logging surfaces) |
+| `20260718120000_core_backend_hardening.sql` | Applied to production (operator reported) |
+| `20260718121000_core_backend_enforcement.sql` | Applied; guard triggers independently verified present |
+| `20260718122000_admin_health_recovery.sql` | Ready after enforcement and before the admin health route deploy |
 
 ## Current blockers
 
 - The production invite, email delivery, acceptance, activation, and new-player
   display have been exercised successfully.
 - The credentialed ranked submission, opponent confirmation, admin approval,
-  cache rebuild, leaderboard, and profile production loop remains unverified.
+  notification/email, leaderboard, and profile production loop remains
+  unverified. The initial version-guarded organiser rebuild completed with
+  `fact_version = built_version`, zero drift, and a populated rebuild time.
 - Migration `20260710140000` resolved production's safe-update rejection for
   intentional rating-cache replacement.
 
 ## Next product slice
 
-Run the existing read-only audit, apply the ADR-0036 additive migration, deploy,
-and verify ordinary, organiser, external, planned, correction, practice, and
-notification paths. Then apply the enforcement migration, run
-`ops/core_backend_health.sql`, and perform one version-guarded organiser rebuild.
-Also verify court creation/merge, retro tagging, tournament defaults, Melbourne
+Apply `20260718122000_admin_health_recovery.sql`, deploy the health route, and
+verify it reports green against production. Exercise the next genuine ranked
+submission, opponent confirmation, organiser approval, notification/email,
+automatic versioned rebuild, and exact leaderboard/profile agreement. Also
+verify court creation/merge, retro tagging, tournament defaults, Melbourne
 decay, and qualifier placement totals in production.
 Append-only corrections, generalised setup, and mid-event withdrawals remain
 deferred.
