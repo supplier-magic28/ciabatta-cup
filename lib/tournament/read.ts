@@ -9,7 +9,7 @@ import type { TournamentResult } from "./types";
 export async function loadTournamentBoard(tournamentId: string) {
   const supabase = await createClient();
   const [{ data: tournament }, { data: participants }, { data: fixtures }, { data: matches }, { data: players }] = await Promise.all([
-    supabase.from("tournaments").select("id, name, status, starts_at, timezone, location_name, courts, cover_image_url, draw_locked_at, completion_path").eq("id", tournamentId).single(),
+    supabase.from("tournaments").select("id, name, status, starts_at, timezone, location_name, court_id, courts, default_surface, cover_image_url, cover_frame_shape, cover_zoom, cover_offset_x, cover_offset_y, seat_count, schedule_locked_at, group_ruleset, playoff_ruleset, championship_path, draw_locked_at, completion_path").eq("id", tournamentId).single(),
     supabase.from("tournament_participants").select("player_id, seed").eq("tournament_id", tournamentId).order("seed"),
     supabase.from("fixtures").select("id, stage, round_number, slot_number, court_number, ruleset, player1_id, player2_id, skipped_at").eq("tournament_id", tournamentId).order("round_number").order("court_number"),
     supabase.from("matches").select("id, fixture_id, player1_id, player2_id, winner_id, status, match_sets(set_number, p1_games, p2_games, tiebreak_p1, tiebreak_p2)").eq("tournament_id", tournamentId),
@@ -23,8 +23,9 @@ export async function loadTournamentBoard(tournamentId: string) {
   const groupFixtureIds = new Set((fixtures ?? []).filter((fixture) => fixture.stage === "group").map((fixture) => fixture.id));
   const groupResults: TournamentResult[] = approved.flatMap((match) => {
     if (!match.fixture_id || !groupFixtureIds.has(match.fixture_id) || !match.winner_id) return [];
-    const score = setsByMatch.get(match.id)?.[0];
-    return score ? [{
+    const sets = setsByMatch.get(match.id)??[];
+    const score = sets.reduce((total,set)=>({p1_games:total.p1_games+set.p1_games,p2_games:total.p2_games+set.p2_games}),{p1_games:0,p2_games:0});
+    return sets.length ? [{
       fixtureId: match.fixture_id,
       player1Id: match.player1_id,
       player2Id: match.player2_id,
@@ -68,13 +69,14 @@ export async function loadActiveTournamentPlayers() {
   const supabase = await createClient();
   const { data } = await supabase
     .from("players")
-    .select("id, first_name, last_name, email, nickname, use_nickname")
+    .select("id, first_name, last_name, email, nickname, use_nickname, avatar_url")
     .eq("status", "active")
     .order("first_name")
     .order("last_name");
 
   return (data ?? []).map((player) => ({
     id: player.id,
+    avatarUrl: player.avatar_url,
     name: displayName({ firstName: player.first_name, lastName: player.last_name, email: player.email, nickname: player.nickname, useNickname: player.use_nickname }),
   }));
 }

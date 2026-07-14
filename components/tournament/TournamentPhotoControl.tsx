@@ -2,20 +2,22 @@
 /* eslint-disable @next/next/no-img-element -- local blob previews must render before upload. */
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import Cropper, { type Area } from "react-easy-crop";
+import Cropper from "react-easy-crop";
 import { Button } from "@/components/ui/Button";
 import { CropZoomControl } from "@/components/ui/CropZoomControl";
 import { updateTournamentPhoto } from "@/lib/tournament/actions";
-import { createTournamentCoverFile, isAllowedTournamentPhoto, type CropAreaPixels } from "@/lib/tournament/crop";
+import { isAllowedTournamentPhoto } from "@/lib/tournament/crop";
 
 export function TournamentPhotoControl({
   tournamentId,
   photoUrl,
   canEdit,
+  frameShape="wide",cropZoom=1,cropOffsetX=0,cropOffsetY=0,
 }: {
   tournamentId: string;
   photoUrl: string | null;
   canEdit: boolean;
+  frameShape?:"wide"|"square"|"three_two";cropZoom?:number;cropOffsetX?:number;cropOffsetY?:number;
 }) {
   const [state, submit, pending] = useActionState(updateTournamentPhoto, undefined);
   const [preview, setPreview] = useState(photoUrl);
@@ -23,9 +25,10 @@ export function TournamentPhotoControl({
   const [removePhoto, setRemovePhoto] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [source, setSource] = useState<string | null>(null);
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [cropArea, setCropArea] = useState<CropAreaPixels | null>(null);
+  const [sourceFile,setSourceFile]=useState<File|null>(null);
+  const [crop, setCrop] = useState({ x: cropOffsetX, y: cropOffsetY });
+  const [zoom, setZoom] = useState(cropZoom);
+  const [shape,setShape]=useState(frameShape);
   const input = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -47,30 +50,21 @@ export function TournamentPhotoControl({
     setError(null);
     if (source) URL.revokeObjectURL(source);
     setSource(URL.createObjectURL(file));
+    setSourceFile(file);
     setCrop({ x: 0, y: 0 });
     setZoom(1);
-    setCropArea(null);
   }
 
   async function confirmCrop() {
-    if (!source || !cropArea) return;
-    try {
-      const file = await createTournamentCoverFile(source, cropArea);
-      if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
-      setPhoto(file);
-      setPreview(URL.createObjectURL(file));
-      URL.revokeObjectURL(source);
-      setSource(null);
-      setRemovePhoto(false);
-      setError(null);
-    } catch {
-      setError("That picture could not be prepared. Please choose another image.");
-    }
+    if (!source || !sourceFile) return;
+    if (preview?.startsWith("blob:")&&preview!==source) URL.revokeObjectURL(preview);
+    setPhoto(sourceFile);setPreview(URL.createObjectURL(sourceFile));setSource(null);setSourceFile(null);setRemovePhoto(false);setError(null);
   }
 
   function cancelCrop() {
     if (source) URL.revokeObjectURL(source);
     setSource(null);
+    setSourceFile(null);
   }
 
   function remove() {
@@ -88,7 +82,7 @@ export function TournamentPhotoControl({
   return (
     <div className="relative overflow-hidden border-2 border-cream/60 bg-ink/20">
       {preview ? (
-        <img src={preview} alt="Tournament cover" className="aspect-[16/7] w-full object-cover opacity-90" />
+        <div className={`overflow-hidden ${shape==="square"?"aspect-square":shape==="three_two"?"aspect-[3/2]":"aspect-[16/7]"}`}><img src={preview} alt="Tournament cover" className="h-full w-full object-cover opacity-90" style={{transform:`translate(${crop.x/2}%,${crop.y/2}%) scale(${zoom})`}} /></div>
       ) : (
         <div className="flex aspect-[16/7] items-center justify-center bg-ink/20 px-4 text-center font-mono text-[10px] uppercase tracking-[1.5px] text-green-muted">
           No event photo yet
@@ -98,6 +92,7 @@ export function TournamentPhotoControl({
         <form action={save} className="absolute inset-x-3 bottom-3 flex flex-wrap gap-2">
           <input type="hidden" name="tournamentId" value={tournamentId} />
           <input type="hidden" name="removePhoto" value={removePhoto ? "true" : "false"} />
+          <input type="hidden" name="coverFrameShape" value={shape}/><input type="hidden" name="coverZoom" value={zoom}/><input type="hidden" name="coverOffsetX" value={crop.x}/><input type="hidden" name="coverOffsetY" value={crop.y}/>
           <input
             ref={input}
             type="file"
@@ -133,14 +128,14 @@ export function TournamentPhotoControl({
                 image={source}
                 crop={crop}
                 zoom={zoom}
-                aspect={16 / 7}
+                aspect={shape==="square"?1:shape==="three_two"?3/2:16/7}
                 cropShape="rect"
                 showGrid={false}
                 onCropChange={setCrop}
-                onCropComplete={(_area, pixels: Area) => setCropArea(pixels)}
                 onZoomChange={setZoom}
               />
             </div>
+            <div className="mt-3 flex gap-2">{([['wide','Wide'],['square','Square'],['three_two','3:2']] as const).map(([value,label])=><button key={value} type="button" onClick={()=>setShape(value)} className={`border-2 border-ink px-3 py-2 font-mono text-[9px] uppercase ${shape===value?'bg-ink text-cream':'bg-surface'}`}>{label}</button>)}</div>
             <CropZoomControl zoom={zoom} onChange={setZoom} />
             <div className="mt-4 flex flex-wrap justify-end gap-3">
               <Button type="button" onClick={cancelCrop} className="!w-auto bg-surface text-ink">Cancel</Button>

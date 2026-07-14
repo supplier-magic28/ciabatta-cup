@@ -36,6 +36,7 @@ export type CalendarEvent = {
   score: string | null;
   metadataMissing: boolean;
   coverImageUrl: string | null;
+  coverCrop?:{frameShape:"wide"|"square"|"three_two";zoom:number;offsetX:number;offsetY:number}|null;
   participants: CalendarPerson[];
   outcome: CalendarOutcome;
   placement?: number | null;

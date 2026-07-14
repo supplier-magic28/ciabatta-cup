@@ -2,10 +2,11 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { TournamentAdminActions } from "@/components/tournament/TournamentAdminActions";
 import { TournamentBoard } from "@/components/tournament/TournamentBoard";
-import { TournamentParticipantEditor } from "@/components/tournament/TournamentParticipantEditor";
 import { TournamentLifecycleActions } from "@/components/tournament/TournamentLifecycleActions";
+import {TournamentLeadupConsole} from "@/components/tournament/TournamentLeadupConsole";
+import {TournamentPhotoControl} from "@/components/tournament/TournamentPhotoControl";
 import { getSessionPlayer } from "@/lib/auth/session";
-import { planFinalStage } from "@/lib/tournament/logic";
+import { boundaryDecider } from "@/lib/tournament/logic";
 import { loadActiveTournamentPlayers, loadTournamentBoard } from "@/lib/tournament/read";
 import { BackLink } from "@/components/ui/BackLink";
 import { PARENT_ROUTES } from "@/lib/navigation/parents";
@@ -24,23 +25,30 @@ export default async function ManageTournamentPage({ params }: { params: Promise
   const canGenerate = board.fixtures.length === 0;
   const groupFixtures = board.fixtures.filter((fixture) => fixture.stage === "group");
   const groupComplete = groupFixtures.length > 0 && groupFixtures.every((fixture) => board.matchByFixture.has(fixture.id));
-  const stagePlan = groupComplete ? planFinalStage(board.standings) : null;
+  const neededDecider = groupComplete ? boundaryDecider(board.standings,board.tournament.championship_path) : null;
   const deciderFixture = board.fixtures.find((fixture) => fixture.stage === "tiebreak");
   const deciderComplete = Boolean(deciderFixture && board.matchByFixture.has(deciderFixture.id));
   const finalFixtures = board.fixtures.filter((fixture) => fixture.stage === "final" || fixture.stage === "playoff");
+  const semifinalFixtures=board.fixtures.filter((fixture)=>fixture.stage==="semifinal");
   const finalResultCount = finalFixtures.filter((fixture) => board.matchByFixture.has(fixture.id)).length;
-  const canCompleteFromStandings = groupComplete
-    && (stagePlan?.kind !== "decider" || deciderComplete)
+  const canCompleteFromStandings = board.tournament.championship_path==="standings"&&groupComplete
+    && (!neededDecider || deciderComplete)
     && finalResultCount === 0;
   let advanceLabel = "Complete group matches first";
   let advanceDisabled = true;
-  if (groupComplete && stagePlan?.kind === "decider" && !deciderFixture) {
+  if (groupComplete && neededDecider && !deciderFixture) {
     advanceLabel = "Create qualification decider";
     advanceDisabled = false;
-  } else if (groupComplete && stagePlan?.kind === "decider" && !deciderComplete) {
+  } else if (groupComplete && neededDecider && !deciderComplete) {
     advanceLabel = "Complete decider first";
+  } else if(groupComplete&&board.tournament.championship_path==="standings"){
+    advanceLabel="Complete from standings";advanceDisabled=false;
+  } else if(groupComplete&&board.tournament.championship_path==="top_four_finals"&&semifinalFixtures.length===0){
+    advanceLabel="Create semifinals";advanceDisabled=false;
+  } else if(semifinalFixtures.length>0&&semifinalFixtures.some((fixture)=>!board.matchByFixture.has(fixture.id))){
+    advanceLabel="Complete semifinals first";
   } else if (groupComplete && finalFixtures.length === 0) {
-    advanceLabel = "Continue to finals";
+    advanceLabel = "Create championship matches";
     advanceDisabled = false;
   } else if (finalFixtures.length > 0 && finalResultCount === finalFixtures.length) {
     advanceLabel = "Complete tournament";
@@ -48,9 +56,6 @@ export default async function ManageTournamentPage({ params }: { params: Promise
   } else if (finalFixtures.length > 0) {
     advanceLabel = "Complete final stage first";
   }
-  const canEditParticipants = board.completedResults === 0
-    && !board.tournament.draw_locked_at
-    && (board.tournament.status === "draft" || board.tournament.status === "scheduled");
   const participants = board.participants.map((participant) => ({
     id: participant.player_id,
     seed: participant.seed,
@@ -72,6 +77,14 @@ export default async function ManageTournamentPage({ params }: { params: Promise
         </div>
       </header>
 
+      <TournamentPhotoControl tournamentId={tournamentId} photoUrl={board.tournament.cover_image_url} canEdit frameShape={board.tournament.cover_frame_shape} cropZoom={Number(board.tournament.cover_zoom)} cropOffsetX={Number(board.tournament.cover_offset_x)} cropOffsetY={Number(board.tournament.cover_offset_y)}/>
+
+      {!board.tournament.draw_locked_at&&<TournamentLeadupConsole
+        tournament={board.tournament}
+        participants={participants.map((participant)=>({id:participant.id,seed:participant.seed}))}
+        players={activePlayers}
+      />}
+
       <section className="mb-7 grid gap-4 border-2 border-ink bg-row p-4 sm:grid-cols-[1fr_280px] sm:items-center">
         <div>
           <p className="font-heading text-lg font-bold">{board.participants.length} players · {board.tournament.courts} courts</p>
@@ -79,7 +92,7 @@ export default async function ManageTournamentPage({ params }: { params: Promise
             {board.participants.map((participant) => `${participant.seed}. ${board.playerById.get(participant.player_id)?.name ?? "Player"}`).join(" · ")}
           </p>
         </div>
-        {board.tournament.status !== "completed" && (
+        {board.tournament.status !== "completed" && board.tournament.draw_locked_at && (
           <TournamentAdminActions
             tournamentId={tournamentId}
             canGenerate={canGenerate}
@@ -90,26 +103,16 @@ export default async function ManageTournamentPage({ params }: { params: Promise
         )}
       </section>
 
-      {!canGenerate && (
-        <TournamentLifecycleActions
+      <TournamentLifecycleActions
           tournamentId={tournamentId}
           drawLocked={Boolean(board.tournament.draw_locked_at)}
           tournamentCompleted={board.tournament.status === "completed"}
         />
-      )}
-
-      {canEditParticipants && (
-        <TournamentParticipantEditor
-          tournamentId={tournamentId}
-          participants={participants}
-          activePlayers={activePlayers}
-        />
-      )}
 
       {canGenerate ? (
         <div className="border-2 border-dashed border-muted bg-surface p-10 text-center">
-          <p className="font-heading text-lg font-bold">Ready to make the draw</p>
-          <p className="mt-2 font-body text-sm text-muted">Generation locks the seed order into three rounds across both courts.</p>
+          <p className="font-heading text-lg font-bold">Draw preview waits for the permanent lock</p>
+          <p className="mt-2 font-body text-sm text-muted">Complete the checklist above. Locking atomically generates every round-robin pairing.</p>
         </div>
       ) : <TournamentBoard board={board} admin />}
     </main>

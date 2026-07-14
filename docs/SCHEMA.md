@@ -156,13 +156,17 @@ Once both rows exist, a database trigger advances a ranked result to
 | location_name | text | event venue |
 | court_id | FK courts nullable | structured venue identity |
 | default_surface | surface nullable | stamped onto each tournament result fact |
-| group_ruleset / playoff_ruleset | enum: short_first_to_3, standard_set_tiebreak_6_all | exact validation contract for generated fixtures |
+| group_ruleset / playoff_ruleset | enum: short_first_to_3, standard_set_tiebreak_6_all, pro_set_8, best_of_3_standard | independent contracts stamped onto fixtures |
 | rules_note | text nullable | human event summary; not used for scoring |
 | created_by | FK players | admin |
 | created_at / updated_at | timestamptz | |
 | cover_image_url | text nullable | optional public cover photo stored in the `tournament-images` bucket |
 | draw_locked_at | timestamptz nullable | irreversible director confirmation that freezes participants and the group draw |
 | completion_path | enum nullable: round_robin, final_stage | explicit source of final placements; null until completion and on legacy rows |
+| seat_count | int 2–8 | configured capacity; all seats must be filled at draw lock |
+| schedule_locked_at | timestamptz nullable | reversible pre-draw configuration gate |
+| championship_path | enum: standings, top_two_final, top_four_finals | locked path, separate from eventual completion fact |
+| cover_frame_shape / cover_zoom / cover_offset_x / cover_offset_y | crop metadata | editable presentation over the normalized source image |
 
 Tournament status is operational state. Progress and the champion are derived
 from linked immutable matches rather than stored on this row.
@@ -186,17 +190,16 @@ Rebuildable official placement awards derived after tournament completion
 | Column | Type | Notes |
 |---|---|---|
 | tournament_id / player_id | composite PK | one placement per tournament player |
-| placement | int 1–4 | unique within the tournament |
-| points | int | fixed mapping: 100 / 50 / 20 / 10 |
+| placement | int 1–8 | unique within the tournament |
+| points | int | 100 / 50 / 20 / 10 for positions 1–4, zero thereafter |
 | awarded_at | timestamptz | rating/reign event timestamp |
 
 ### tournament_participants _(Phase 4 — implemented)_
 | tournament_id FK, player_id FK, seed int, entered_at | composite identity; seed is unique within a tournament and drives deterministic generation |
 
-Admins may replace a participant before the first linked match result. The
-replacement preserves the seed and redraws the pre-play fixtures. The existing
-participant lock trigger rejects all participant changes once a tournament has
-any match, protecting the immutable result history.
+Organisers atomically replace the complete ordered roster before draw lock or
+the first result. Active unique players must fit the 2–8 seats; permanent draw
+lock rejects empty seats and freezes the order.
 
 ### fixtures _(Phase 4 — implemented for round robin)_
 | field | type | notes |

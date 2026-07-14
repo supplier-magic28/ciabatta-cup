@@ -1,9 +1,9 @@
-export const PLACEMENT_POINTS = { 1: 100, 2: 50, 3: 20, 4: 10 } as const;
+export const PLACEMENT_POINTS: Readonly<Record<number, number>> = { 1: 100, 2: 50, 3: 20, 4: 10, 5: 0, 6: 0, 7: 0, 8: 0 };
 
-type Placement = 1 | 2 | 3 | 4;
+type Placement = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 type Fixture = { id: string; stage: string; round_number: number };
 type Match = { id: string; fixture_id: string | null; player1_id: string; player2_id: string; winner_id: string | null; status: string; played_at: string };
-type SetRow = { match_id: string; p1_games: number; p2_games: number; tiebreak_p1: number | null; tiebreak_p2: number | null };
+type SetRow = { match_id: string; set_number?:number; p1_games: number; p2_games: number; tiebreak_p1: number | null; tiebreak_p2: number | null };
 
 export type OfficialPlacement = {
   playerId: string;
@@ -38,16 +38,16 @@ export function deriveOfficialPlacements(input: {
     const playoff = input.fixtures.find((fixture) => fixture.stage === "playoff");
     const finalMatch = final ? byFixture.get(final.id) : null;
     const playoffMatch = playoff ? byFixture.get(playoff.id) : null;
-    if (!finalMatch?.winner_id || !playoffMatch?.winner_id) throw new Error("Both final-stage results are required.");
-    playerIds = [
+    if (!finalMatch?.winner_id) throw new Error("The final result is required.");
+    const podium = [
       finalMatch.winner_id,
       finalMatch.winner_id === finalMatch.player1_id ? finalMatch.player2_id : finalMatch.player1_id,
-      playoffMatch.winner_id,
-      playoffMatch.winner_id === playoffMatch.player1_id ? playoffMatch.player2_id : playoffMatch.player1_id,
     ];
+    if(playoffMatch?.winner_id) podium.push(playoffMatch.winner_id,playoffMatch.winner_id === playoffMatch.player1_id ? playoffMatch.player2_id : playoffMatch.player1_id);
+    playerIds = [...podium, ...input.standings.map((standing) => standing.playerId).filter((playerId) => !podium.includes(playerId))];
   }
-  if (playerIds.length !== 4 || new Set(playerIds).size !== 4) throw new Error("Four unique placements are required.");
-  const setByMatch = new Map(input.sets.map((set) => [set.match_id, set]));
+  if (playerIds.length < 2 || playerIds.length > 8 || new Set(playerIds).size !== playerIds.length) throw new Error("Two to eight unique placements are required.");
+  const setsByMatch=new Map<string,SetRow[]>();for(const set of input.sets){const rows=setsByMatch.get(set.match_id)??[];rows.push(set);setsByMatch.set(set.match_id,rows)}
   const chronological = approved.slice().sort((a, b) => a.played_at.localeCompare(b.played_at) || a.id.localeCompare(b.id));
   return playerIds.map((playerId, index) => {
     const placement = (index + 1) as Placement;
@@ -57,11 +57,11 @@ export function deriveOfficialPlacements(input: {
       points: PLACEMENT_POINTS[placement],
       matches: chronological.flatMap((match) => {
         if (match.player1_id !== playerId && match.player2_id !== playerId) return [];
-        const set = setByMatch.get(match.id);
-        if (!set) return [];
+        const sets = (setsByMatch.get(match.id)??[]).sort((a,b)=>(a.set_number??0)-(b.set_number??0));
+        if (!sets.length) return [];
         return [{
           opponentId: match.player1_id === playerId ? match.player2_id : match.player1_id,
-          score: scoreForPlayer(match, set, playerId),
+          score: sets.map((set)=>scoreForPlayer(match, set, playerId)).join(" "),
           won: match.winner_id === playerId,
         }];
       }),

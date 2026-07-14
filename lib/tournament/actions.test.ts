@@ -159,7 +159,7 @@ describe("recordTournamentResult", () => {
       ok: true,
       message: "Result approved and Elo rebuilt.",
     });
-    expect(client.rpc).toHaveBeenCalledWith("record_tournament_result", expect.objectContaining({
+    expect(client.rpc).toHaveBeenCalledWith("record_tournament_result_v2", expect.objectContaining({
       p_fixture_id: "fixture-1",
       p_winner_id: "player-1",
     }));
@@ -230,12 +230,14 @@ describe("lockTournamentDraw", () => {
 
   it("does not send email when the database refuses the lock", async () => {
     mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin" });
-    const client = { rpc: vi.fn().mockResolvedValue({ error: new Error("no fixtures") }) };
+    const tournamentQuery=chain({id:"tournament-1",courts:2});
+    const participantQuery=chain([{player_id:"player-1",seed:1},{player_id:"player-2",seed:2}]);
+    const client = { from:vi.fn((table:string)=>({select:()=>table==="tournaments"?tournamentQuery:participantQuery})),rpc: vi.fn().mockResolvedValue({ error: new Error("checklist") }) };
     mocks.createClient.mockResolvedValue(client);
     await expect(lockTournamentDraw(undefined, replacementForm())).resolves.toEqual({
       ok: false, error: "Couldn't lock the draw. Generate and review it first.",
     });
-    expect(client.rpc).toHaveBeenCalledWith("lock_tournament_draw", { p_tournament_id: "tournament-1" });
+    expect(client.rpc).toHaveBeenCalledWith("lock_tournament_draw_v2", expect.objectContaining({ p_tournament_id: "tournament-1",p_group_fixtures:expect.any(Array) }));
   });
 });
 
@@ -265,7 +267,7 @@ describe("completeTournamentFromStandings", () => {
     await expect(completeTournamentFromStandings(undefined, replacementForm())).resolves.toEqual({
       ok: true, message: "Tournament complete. The round-robin standings are final.",
     });
-    expect(client.rpc).toHaveBeenCalledWith("complete_tournament_from_standings", { p_tournament_id: "tournament-1" });
+    expect(client.rpc).toHaveBeenCalledWith("complete_tournament_from_standings_v2", { p_tournament_id: "tournament-1" });
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/tournaments/tournament-1");
   });
 
@@ -273,7 +275,7 @@ describe("completeTournamentFromStandings", () => {
     mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin" });
     mocks.createClient.mockResolvedValue({ rpc: vi.fn().mockResolvedValue({ error: { message: "complete the qualification decider first" } }) });
     await expect(completeTournamentFromStandings(undefined, replacementForm())).resolves.toEqual({
-      ok: false, error: "Complete the qualification decider first.",
+      ok: false, error: "Complete the championship decider first.",
     });
   });
 });

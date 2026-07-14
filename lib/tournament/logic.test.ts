@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { deriveTournamentStandings, generateRoundRobin, planFinalStage, resolveDecider, resolveRoundRobinPlacements } from "./logic";
+import { applyBoundaryDecider, boundaryDecider, deriveTournamentStandings, generateRoundRobin, planFinalStage, planTopFourSemifinals, resolveDecider, resolveRoundRobinPlacements } from "./logic";
 
 describe("generateRoundRobin", () => {
   it("matches the four-player qualifier draw exactly", () => {
@@ -26,6 +26,31 @@ describe("generateRoundRobin", () => {
     const players = ["A", "B", "C", "D"] as const;
     generateRoundRobin(players, 2);
     expect(players).toEqual(["A", "B", "C", "D"]);
+  });
+});
+
+describe("configurable championship paths", () => {
+  const standings = [
+    { playerId:"a",seed:1,played:5,won:5,lost:0,gamesWon:15,gamesLost:2,gameDifference:13 },
+    { playerId:"b",seed:2,played:5,won:3,lost:2,gamesWon:12,gamesLost:8,gameDifference:4 },
+    { playerId:"c",seed:3,played:5,won:3,lost:2,gamesWon:10,gamesLost:9,gameDifference:1 },
+    { playerId:"d",seed:4,played:5,won:2,lost:3,gamesWon:8,gamesLost:11,gameDifference:-3 },
+    { playerId:"e",seed:5,played:5,won:2,lost:3,gamesWon:7,gamesLost:12,gameDifference:-5 },
+    { playerId:"f",seed:6,played:5,won:0,lost:5,gamesWon:2,gamesLost:15,gameDifference:-13 },
+  ];
+
+  it("selects the two players immediately across each tied cutoff", () => {
+    expect(boundaryDecider(standings,"top_two_final")).toEqual(["b","c"]);
+    expect(boundaryDecider(standings,"top_four_finals")).toEqual(["d","e"]);
+    expect(boundaryDecider(standings,"standings")).toBeNull();
+  });
+
+  it("uses an on-court winner to swap only the qualification boundary", () => {
+    expect(applyBoundaryDecider(standings,"top_four_finals","e").map((row)=>row.playerId)).toEqual(["a","b","c","e","d","f"]);
+  });
+
+  it("seeds top-four semifinals first-v-fourth and second-v-third", () => {
+    expect(planTopFourSemifinals(standings)).toEqual({semifinal1:["a","d"],semifinal2:["b","c"]});
   });
 });
 

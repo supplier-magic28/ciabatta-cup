@@ -99,16 +99,21 @@ Database migrations for Ciabatta Cup. The authoritative data model is
 - `20260718122000_admin_health_recovery.sql` adds the privacy-safe organiser
   health snapshot used by `/admin/health`. It follows enforcement and must be
   applied before deploying that route (ADR-0037).
+- `20260718122500_configurable_cup_enums.sql` commits new rulesets separately;
+  `20260718123000_configurable_cup_builder.sql` adds 2–8 seats, crop state,
+  schedule/configuration/roster RPCs, atomic N-player draw lock, multi-set
+  validation, 1–N placements, and expanded health (ADR-0039).
+- `20260718124000_configurable_cup_builder_enforcement.sql` revokes the old
+  one-set result and draw-lock RPCs only after the application smoke test.
 
-The tournament participant table is editable only before the first tournament
-result. The admin console's replacement action preserves the selected seed and
-regenerates the complete pre-play draw; the database participant-lock trigger
-rejects the same operation after play begins.
+The ordered 2–8 seat roster is replaceable atomically before draw lock or the
+first result. Schedule lock is reversible before permanent draw lock, which
+requires a full field and cover and freezes schedule, roster, formats, and path.
 
 Tournament cover photos use the public `tournament-images` bucket. Only admins
 may write or delete objects there; players receive read-only public images on
-the tournament list and detail pages. The browser crops and resizes accepted
-source images to a 1280 x 560 WebP before upload.
+the tournament list and detail pages. New cups retain a normalized source plus
+frame shape, 100–250% zoom, and offsets so presentation remains editable.
 
 The player, match, confirmation, rating-history, reign, tournament, participant,
 fixture, court, notification, and minimal metadata-audit tables exist in

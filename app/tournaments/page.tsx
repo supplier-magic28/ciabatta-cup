@@ -17,7 +17,7 @@ export default async function TournamentsPage() {
   const player = await getSessionPlayer();
   if (!player) redirect("/sign-in");
   const supabase = await createClient();
-  const { data } = await supabase.from("tournaments").select("id, name, status, starts_at, timezone, location_name, courts, cover_image_url").order("starts_at", { ascending: false });
+  const { data } = await supabase.from("tournaments").select("id, name, status, starts_at, timezone, location_name, courts, cover_image_url, cover_frame_shape, cover_zoom, cover_offset_x, cover_offset_y").order("starts_at", { ascending: false });
   const tournaments = data ?? [];
 
   return (
@@ -38,7 +38,7 @@ export default async function TournamentsPage() {
         <div className="grid gap-4 sm:grid-cols-2">
           {tournaments.map((tournament) => (
             <Link key={tournament.id} href={`/tournaments/${tournament.id}`} className="border-2 border-ink bg-surface p-5 shadow-[4px_4px_0_var(--color-ink)] transition-transform active:translate-x-1 active:translate-y-1 active:shadow-none">
-              {tournament.cover_image_url && <Image src={tournament.cover_image_url} alt="" width={640} height={220} className="mb-5 aspect-[16/6] w-full object-cover" />}
+              {tournament.cover_image_url && <div className={`mb-5 overflow-hidden ${tournament.cover_frame_shape==="square"?"aspect-square":tournament.cover_frame_shape==="three_two"?"aspect-[3/2]":"aspect-[16/6]"}`}><Image src={tournament.cover_image_url} alt="" width={640} height={420} className="h-full w-full object-cover" style={{transform:`translate(${Number(tournament.cover_offset_x)/2}%,${Number(tournament.cover_offset_y)/2}%) scale(${Number(tournament.cover_zoom)})`}} /></div>}
               <div className="flex items-start justify-between gap-3">
                 <h2 className="font-heading text-xl font-bold">{tournament.name}</h2>
                 <span className={`font-mono text-[9px] uppercase tracking-[1.5px] ${STATUS_STYLE[tournament.status] ?? "text-muted"}`}>{tournament.status}</span>

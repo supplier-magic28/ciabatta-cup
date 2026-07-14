@@ -112,8 +112,12 @@ of Done (`CLAUDE.md`).
   immediate `Opening…` state and duplicate-activation lock.
 
 **Tournaments**
-- `tournament/NewTournamentForm` — director setup for event details, courts,
-  and four ordered participant seeds.
+- `tournament/NewTournamentForm` — partial cup creation with required schedule,
+  optional 2–8 ordered seats, and recoverable cover upload.
+- `tournament/TournamentCoverComposer` — source-image frame, drag position,
+  and 100–250% zoom editor used before cup creation.
+- `tournament/TournamentLeadupConsole` — schedule lock, independent formats,
+  championship path, ordered 2–8 roster, and permanent-lock checklist.
 - `tournament/TournamentLifecycleActions` — irreversible draw lock plus
   retry-safe locked-in, game-day, and completed-placement email controls.
 - `tournament/TournamentAdminActions` — fixture generation plus confirmed,
@@ -122,8 +126,8 @@ of Done (`CLAUDE.md`).
   preserves a seed and regenerates the complete round-robin draw.
 - `tournament/TournamentBoard` — shared standings and round/court schedule used
   by the player and director views, including preserved skipped fixtures.
-- `tournament/TournamentResultForm` — two-step admin score review and atomic
-  approval for a scheduled fixture.
+- `tournament/TournamentResultForm` — two-step admin review for short,
+  standard, pro-set, and best-of-three fixtures with atomic approval.
 - `tournament/TournamentPhotoControl` — admin-only tournament cover upload,
   16:7 crop/resize, replacement, and removal control mounted in the event hero
   tile.

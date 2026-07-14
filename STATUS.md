@@ -7,6 +7,13 @@ This is the short operational handover. Durable intent belongs in
 
 ## Current capability
 
+- Organisers can create a cup before its field or cover is ready, configure two
+  to eight ordered seats, lock/unlock the schedule, select independent group and
+  downstream formats plus one of three championship paths, and permanently lock
+  an atomic N-player round robin after the cover/full-field checklist. Result
+  entry supports first-to-three, standard set, pro-set, and true best-of-three
+  scores; completion persists every participant's place with unchanged awards.
+
 - Players have a responsive `/calendar` with month grid and chronological list,
   image-rich day/event drill-down, explicit outcomes, a range-independent latest
   five history, validated 1-30 day ranges, cup aggregation, approved
@@ -112,10 +119,9 @@ This is the short operational handover. Durable intent belongs in
   combine all non-rejected match days with owner-only manual Melbourne-day
   marks; History provides gated H2H detail, a complete result ledger, and
   entered-tournament cards.
-- Admins can create a four-player round-robin tournament, seed its participants,
-  replace a pre-play participant while preserving their seed, regenerate the
-  deterministic court schedule, record immutable results directly, and either
-  complete from standings or continue through a decider and full final stage.
+- Admins can run deterministic 2–8 player round robins, settle qualification
+  boundaries on court, and finish from standings, a top-two final, or top-four
+  semifinals/final while every recorded result remains immutable.
 - Authenticated players can follow tournament details, live standings, fixtures,
   results, progress, cover photos, and the derived champion from `/tournaments`.
 - Admins can add, crop, resize, replace, or remove a tournament cover photo from
@@ -155,6 +161,7 @@ after that password update succeeds.
 | `20260718120000_core_backend_hardening.sql` | Applied to production (operator reported) |
 | `20260718121000_core_backend_enforcement.sql` | Applied; guard triggers independently verified present |
 | `20260718122000_admin_health_recovery.sql` | Ready after enforcement and before the admin health route deploy |
+| `20260718122500` through `20260718124000` configurable cup rollout | Local reset, 66 pgTAP checks, and database lint verified; additive migrations precede the application deploy and enforcement runs last |
 
 ## Current blockers
 

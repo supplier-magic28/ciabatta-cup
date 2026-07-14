@@ -1,9 +1,50 @@
 import type {
+  TournamentChampionshipPath,
   FinalStagePlan,
   RoundRobinRound,
   TournamentResult,
   TournamentStanding,
 } from "./types";
+
+export function qualificationCutoff(path: TournamentChampionshipPath, playerCount: number): number {
+  if (path === "standings") return 1;
+  if (path === "top_two_final") return Math.min(2, playerCount);
+  if (playerCount < 4) throw new Error("Top-four finals require at least four players.");
+  return 4;
+}
+
+/** The two players immediately across a wins-tied qualification boundary. */
+export function boundaryDecider(
+  standings: readonly TournamentStanding[],
+  path: TournamentChampionshipPath,
+): readonly [string, string] | null {
+  const cutoff = qualificationCutoff(path, standings.length);
+  if (cutoff >= standings.length || standings[cutoff - 1].won !== standings[cutoff].won) return null;
+  return [standings[cutoff - 1].playerId, standings[cutoff].playerId];
+}
+
+export function applyBoundaryDecider(
+  standings: readonly TournamentStanding[],
+  path: TournamentChampionshipPath,
+  winnerId: string,
+): TournamentStanding[] {
+  const pair = boundaryDecider(standings, path);
+  if (!pair || !pair.includes(winnerId)) throw new Error("The boundary decider winner must be a participant.");
+  if (pair[0] === winnerId) return [...standings];
+  const next = [...standings];
+  const first = next.findIndex((row) => row.playerId === pair[0]);
+  const second = next.findIndex((row) => row.playerId === pair[1]);
+  [next[first], next[second]] = [next[second], next[first]];
+  return next;
+}
+
+export function planTopFourSemifinals(standings: readonly TournamentStanding[]) {
+  if (standings.length < 4) throw new Error("Top-four finals require at least four players.");
+  return {
+    semifinal1: [standings[0].playerId, standings[3].playerId] as const,
+    semifinal2: [standings[1].playerId, standings[2].playerId] as const,
+  };
+}
 
 /** Deterministic circle-method draw. Participant order is the seed order. */
 export function generateRoundRobin(participantIds: readonly string[], courts: number): RoundRobinRound[] {

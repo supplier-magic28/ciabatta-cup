@@ -31,14 +31,14 @@ export default async function TournamentPage({ params }: { params: Promise<{ tou
             </p>
             {player.role === "admin" && <Link href={`/admin/tournaments/${tournament.id}`} className="mt-5 inline-block border-2 border-cream px-3 py-2 text-center font-mono text-[10px] uppercase tracking-[1px]">Admin view</Link>}
           </div>
-          <TournamentPhotoControl tournamentId={tournament.id} photoUrl={tournament.cover_image_url} canEdit={player.role === "admin"} />
+          <TournamentPhotoControl tournamentId={tournament.id} photoUrl={tournament.cover_image_url} canEdit={player.role === "admin"} frameShape={tournament.cover_frame_shape} cropZoom={Number(tournament.cover_zoom)} cropOffsetX={Number(tournament.cover_offset_x)} cropOffsetY={Number(tournament.cover_offset_y)}/>
         </div>
         {championId && <p className="mt-5 border-t border-green-muted pt-4 font-heading text-xl font-bold text-chartreuse">Champion: {playerById.get(championId)?.name ?? "Winner"}</p>}
       </section>
       <TournamentBoard board={board} />
       <section className="mt-8 border-l-4 border-crust bg-row p-4">
         <p className="font-mono text-[10px] uppercase tracking-[1.5px] text-crust">Format</p>
-        <p className="mt-1 font-body text-sm leading-6">Round robin and qualification deciders are first to 3 games. After group play, the director can make the standings final or continue to a full-set final and third-place match. Full sets use a tie-break at 6-6.</p>
+        <p className="mt-1 font-body text-sm leading-6">Group play uses {tournament.group_ruleset.replaceAll("_"," ")}. Downstream matches use {tournament.playoff_ruleset.replaceAll("_"," ")}. Championship path: {tournament.championship_path.replaceAll("_"," ")}.</p>
       </section>
     </main>
   );

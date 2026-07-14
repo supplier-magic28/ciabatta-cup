@@ -88,7 +88,7 @@ describe("updateTournamentPhoto", () => {
       ok: true,
       message: "Tournament photo removed.",
     });
-    expect(client.update).toHaveBeenCalledWith({ cover_image_url: null });
+    expect(client.update).toHaveBeenCalledWith(expect.objectContaining({ cover_image_url: null }));
     expect(client.storageApi.remove).toHaveBeenCalledWith(["tournament-1/old.webp"]);
   });
 });

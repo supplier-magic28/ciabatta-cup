@@ -10,6 +10,7 @@ replace the raw handoff artifacts.
   `design-reference/design_handoff_ciabatta_cup/`.
 - Personal tennis calendar handoff: `design-reference/calendar design.zip`
   (the supplied reference bundle; production implementation is `/calendar`).
+- Configurable cup-builder handoff: `design-reference/tournament build update.zip`.
 - Non-Ciabatta feature and email handoff:
   `design-reference/design_handoff_non_ciabatta/`.
 - Profile tabs, streak, H2H, and tournament-history handoff:
@@ -36,7 +37,7 @@ pattern changes, update this guide and the component inventory in the same task.
 | 04 Tournaments | `/tournaments`, `/tournaments/[tournamentId]` | Implemented | Event cards, optional cropped cover photos, live standings, qualification state, round/court schedule, results, final rules, champion, and responsive loading boards are live. Self-entry and multi-structure filtering remain deferred. |
 | 05 Sign in | `/sign-in`, `/sign-up`, `/accept-invite` | Implemented | Sign-in, signup, and invite password setup use the token-driven auth shell with stable pending controls and a matching form skeleton. |
 | 06 Admin dashboard | `/admin/approvals`, `/admin/players`, `/admin/health` | Partial | Approval queue, roster, per-action pending feedback, loading queues, and green/amber/red backend health with guarded recovery controls exist as focused routes; general activity feed is pending. |
-| 07 Manage tournament | `/admin/tournaments/new`, `/admin/tournaments/[tournamentId]` | Partial | Four-player setup, participant replacement, deterministic fixtures, draw locking, lifecycle and placement-recap emails, reviewed result entry, optional standings completion, deciders, finals, and stable pending states are live. Knockout preview and mid-event roster changes are deferred. |
+| 07 Manage tournament | `/admin/tournaments/new`, `/admin/tournaments/[tournamentId]` | Implemented | Photo-first partial creation, 2–8 ordered seats, reversible schedule lock, independent formats, three championship paths, permanent atomic draw lock, multi-set scoring, deciders, finals, and recovery-aware email controls are live. Withdrawals and post-lock substitutions remain deferred. |
 | 08 Manage players | `/admin/players` | Partial | Invite, roster status, safe deletion of unused players, and stable pending/loading states are live; edit, deactivate, resend, and revoke flows are pending. |
 | My tennis calendar | `/calendar` | Implemented | Responsive grid/list, image-rich day and event drill-down, range-independent recent history, explicit outcomes, URL-preserved instant client controls, cup aggregation, private Non-Ciabatta facts, upcoming plans, and a canonical-ledger scorecard are live. |
 | Password recovery | `/forgot-password`, `/update-password` | Implemented | Recovery email request, PKCE callback, replacement password form, invited-profile activation, and stable pending feedback are live. |

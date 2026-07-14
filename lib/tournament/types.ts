@@ -1,4 +1,18 @@
-export type TournamentRuleset = "short_first_to_3" | "standard_set_tiebreak_6_all";
+export type TournamentRuleset =
+  | "short_first_to_3"
+  | "standard_set_tiebreak_6_all"
+  | "pro_set_8"
+  | "best_of_3_standard";
+
+export type TournamentFrameShape = "wide" | "square" | "three_two";
+export type TournamentChampionshipPath = "standings" | "top_two_final" | "top_four_finals";
+
+export interface TournamentCropState {
+  frameShape: TournamentFrameShape;
+  zoom: number;
+  offsetX: number;
+  offsetY: number;
+}
 
 export interface RoundRobinFixture {
   roundNumber: number;
@@ -55,5 +69,5 @@ export interface TournamentSetInput {
 }
 
 export type TournamentScoreValidation =
-  | { ok: true; winnerId: string; set: TournamentSetInput }
+  | { ok: true; winnerId: string; set: TournamentSetInput; sets: TournamentSetInput[] }
   | { ok: false; error: string };
