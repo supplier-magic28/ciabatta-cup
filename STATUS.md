@@ -7,6 +7,8 @@ This is the short operational handover. Durable intent belongs in
 
 ## Current capability
 
+- Android/Chrome can fetch the public web-app manifest and all home-screen icon
+  variants without an authenticated manifest request; application pages remain protected.
 - Organisers can log and immediately approve a result between any two active
   members from the Matches workflow. The immutable fact records the organiser,
   skips participant confirmation and approval work, and notifies both players.
