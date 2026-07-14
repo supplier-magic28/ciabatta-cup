@@ -115,7 +115,8 @@ of Done (`CLAUDE.md`).
 - `tournament/NewTournamentForm` — partial cup creation with required schedule,
   optional 2–8 ordered seats, and recoverable cover upload.
 - `tournament/TournamentCoverComposer` — source-image frame, drag position,
-  and 100–250% zoom editor used before cup creation.
+  and 100–250% zoom editor used before cup creation. It retains the full frame
+  while normalizing uploads to a bounded WebP before the Server Action runs.
 - `tournament/TournamentLeadupConsole` — schedule lock, independent formats,
   championship path, ordered 2–8 roster, and permanent-lock checklist.
 - `tournament/TournamentLifecycleActions` — irreversible draw lock plus
@@ -130,7 +131,8 @@ of Done (`CLAUDE.md`).
   standard, pro-set, and best-of-three fixtures with atomic approval.
 - `tournament/TournamentPhotoControl` — admin-only tournament cover upload,
   16:7 crop/resize, replacement, and removal control mounted in the event hero
-  tile.
+  tile; replacement sources use the same bounded upload preparation as
+  creation.
 
 **Profile**
 - `profile/ProfileTabs` — routed Settings, Streak, and History segmented tabs.

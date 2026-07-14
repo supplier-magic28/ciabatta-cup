@@ -13,6 +13,8 @@ This is the short operational handover. Durable intent belongs in
   an atomic N-player round robin after the cover/full-field checklist. Result
   entry supports first-to-three, standard set, pro-set, and true best-of-three
   scores; completion persists every participant's place with unchanged awards.
+  Cover originals are normalized in the browser before submission so large
+  phone photos remain editable without exceeding production action limits.
 
 - Players have a responsive `/calendar` with month grid and chronological list,
   image-rich day/event drill-down, explicit outcomes, a range-independent latest

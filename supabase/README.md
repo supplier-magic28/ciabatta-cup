@@ -113,7 +113,10 @@ requires a full field and cover and freezes schedule, roster, formats, and path.
 Tournament cover photos use the public `tournament-images` bucket. Only admins
 may write or delete objects there; players receive read-only public images on
 the tournament list and detail pages. New cups retain a normalized source plus
-frame shape, 100–250% zoom, and offsets so presentation remains editable.
+frame shape, 100–250% zoom, and offsets so presentation remains editable. The
+browser reduces the complete source to a maximum 2048px edge and 1.5 MB WebP
+before submission; the 3 MB Server Action allowance leaves room for multipart
+fields while staying below the hosting request limit.
 
 The player, match, confirmation, rating-history, reign, tournament, participant,
 fixture, court, notification, and minimal metadata-audit tables exist in

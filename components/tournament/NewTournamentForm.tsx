@@ -17,6 +17,8 @@ export function NewTournamentForm({ players, courts: courtOptions }: { players: 
   const [location, setLocation] = useState("Northcote Tennis Club");
   const [courtId, setCourtId] = useState("");
   const [surface, setSurface] = useState<Surface | "">("");
+  const [preparedPhoto,setPreparedPhoto]=useState<File|null>(null);
+  const [preparingPhoto,setPreparingPhoto]=useState(false);
   const [seatCount,setSeatCount]=useState(4);
   const selectClass = "w-full rounded-[8px] border-2 border-ink bg-surface px-4 py-3 font-body text-[15px] text-ink outline-none focus:ring-2 focus:ring-green";
 
@@ -24,11 +26,12 @@ export function NewTournamentForm({ players, courts: courtOptions }: { players: 
     <form
       action={(formData) => {
         formData.set("timezoneOffset", String(new Date().getTimezoneOffset()));
+        if(preparedPhoto)formData.set("photo",preparedPhoto);
         action(formData);
       }}
       className="flex flex-col gap-4"
     >
-      <TournamentCoverComposer/>
+      <TournamentCoverComposer onPrepared={setPreparedPhoto} onPreparingChange={setPreparingPhoto}/>
       <Field label="Tournament name" name="name" placeholder="Name this cup" required />
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Start" name="startsAtLocal" type="datetime-local" defaultValue="2026-07-11T10:30" required />
@@ -66,7 +69,9 @@ export function NewTournamentForm({ players, courts: courtOptions }: { players: 
           Review tournament
         </Link></>
       ) : (
-        <Button type="submit" loading={pending} loadingLabel="Creating tournament...">Create tournament</Button>
+        <Button type="submit" disabled={preparingPhoto} loading={pending} loadingLabel="Creating tournament...">
+          {preparingPhoto ? "Preparing photo..." : "Create tournament"}
+        </Button>
       )}
     </form>
   );

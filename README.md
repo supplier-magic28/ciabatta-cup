@@ -50,6 +50,10 @@ locked-in and game-day tournament emails.
 `NEXT_PUBLIC_SITE_URL` is the canonical origin used in invitation links; the
 production value is `https://ciabatta-cup.app`.
 
+Tournament photo submissions are prepared in the browser and sent through a
+3 MB Server Action allowance. Keep this bounded pipeline in place: raising the
+application limit alone can still exceed the hosting platform request limit.
+
 ## Database operations
 
 Migrations are committed under `supabase/migrations/` and must be applied in

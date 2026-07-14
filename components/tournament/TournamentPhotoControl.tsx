@@ -6,7 +6,7 @@ import Cropper from "react-easy-crop";
 import { Button } from "@/components/ui/Button";
 import { CropZoomControl } from "@/components/ui/CropZoomControl";
 import { updateTournamentPhoto } from "@/lib/tournament/actions";
-import { isAllowedTournamentPhoto } from "@/lib/tournament/crop";
+import { createTournamentSourceFile, isAllowedTournamentPhoto } from "@/lib/tournament/crop";
 
 export function TournamentPhotoControl({
   tournamentId,
@@ -41,18 +41,23 @@ export function TournamentPhotoControl({
     return () => URL.revokeObjectURL(preview);
   }, [preview]);
 
-  function choosePhoto(file: File | undefined) {
+  async function choosePhoto(file: File | undefined) {
     if (!file) return;
     if (!isAllowedTournamentPhoto(file)) {
       setError("Choose a JPEG, PNG, or WebP photo under 5 MB.");
       return;
     }
     setError(null);
-    if (source) URL.revokeObjectURL(source);
-    setSource(URL.createObjectURL(file));
-    setSourceFile(file);
-    setCrop({ x: 0, y: 0 });
-    setZoom(1);
+    try {
+      const prepared = await createTournamentSourceFile(file);
+      if (source) URL.revokeObjectURL(source);
+      setSource(URL.createObjectURL(prepared));
+      setSourceFile(prepared);
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "That photo could not be prepared.");
+    }
   }
 
   async function confirmCrop() {
