@@ -71,7 +71,8 @@ of Done (`CLAUDE.md`).
   accessible per-player history toggles and one expand/collapse-all control.
 
 **Auth**
-- `auth/SignInForm` — email + password sign-in (client, `useActionState`).
+- `auth/SignInForm` — email + password sign-in (client, `useActionState`) with
+  a validated internal return path for protected deep links.
 - `auth/SignUpForm` — create-account (name + email + password).
 - `auth/AcceptInviteForm` — invite-only password setup before profile
   activation (client, `useActionState`).

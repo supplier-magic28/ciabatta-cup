@@ -11,7 +11,8 @@ This is the short operational handover. Durable intent belongs in
   invite flow sends frame-faithful email plus a Zeus inbox notification,
   records player RSVPs without consuming roster seats, leaves final field
   authority with the organiser, and awards the winner a permanent leaderboard
-  badge derived from the official placement fact.
+  badge derived from the official placement fact. Email deep links preserve the
+  precise invited cup through sign-in.
 
 - Organisers can create a cup before its field or cover is ready, configure two
   to eight ordered seats, lock/unlock the schedule, select independent group and

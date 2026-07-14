@@ -5,11 +5,12 @@ import { signIn } from "@/lib/auth/actions";
 import { Field } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 
-export function SignInForm() {
+export function SignInForm({ nextPath = "/" }: { nextPath?: string }) {
   const [state, formAction, pending] = useActionState(signIn, undefined);
 
   return (
     <form action={formAction} className="flex flex-col gap-3">
+      <input type="hidden" name="next" value={nextPath} />
       <Field
         label="Email"
         name="email"

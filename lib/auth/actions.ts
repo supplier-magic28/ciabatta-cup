@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { safeRedirectPath } from "./redirect";
 
 export type AuthState = { error: string } | undefined;
 
@@ -24,7 +25,7 @@ export async function signIn(
     return { error: error.message };
   }
 
-  redirect("/");
+  redirect(safeRedirectPath(formData.get("next")));
 }
 
 /**

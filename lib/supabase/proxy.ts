@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { safeRedirectPath } from "@/lib/auth/redirect";
 
 /** Paths reachable while signed out. Everything else requires a session. */
 const PUBLIC_PREFIXES = ["/sign-in", "/sign-up", "/forgot-password", "/auth"];
@@ -28,8 +29,8 @@ export async function updateSession(request: NextRequest) {
   // while still failing closed for every protected route.
   if (process.env.E2E_SMOKE_MODE === "1" || !url || !publishableKey) {
     if (isPublic(pathname)) return NextResponse.next({ request });
-    const signInUrl = request.nextUrl.clone();
-    signInUrl.pathname = "/sign-in";
+    const signInUrl = new URL("/sign-in", request.url);
+    signInUrl.searchParams.set("next", `${request.nextUrl.pathname}${request.nextUrl.search}`);
     return NextResponse.redirect(signInUrl);
   }
 
@@ -62,15 +63,13 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user && !isPublic(pathname)) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/sign-in";
-    return NextResponse.redirect(url);
+    const signInUrl = new URL("/sign-in", request.url);
+    signInUrl.searchParams.set("next", `${request.nextUrl.pathname}${request.nextUrl.search}`);
+    return NextResponse.redirect(signInUrl);
   }
 
   if (user && (pathname === "/sign-in" || pathname === "/sign-up")) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/";
-    return NextResponse.redirect(url);
+    return NextResponse.redirect(new URL(safeRedirectPath(request.nextUrl.searchParams.get("next")), request.url));
   }
 
   return supabaseResponse;
