@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { completeCalendarEvent, deriveCalendarOutcome, deriveCalendarScorecard, recentHistoricEvents } from "./model";
+import { completeCalendarEvent, deriveCalendarOutcome, deriveCalendarScorecard, includeTournamentOnCalendar, recentHistoricEvents } from "./model";
 import type { CalendarEvent } from "./types";
 
 const event = (overrides: Partial<CalendarEvent>): CalendarEvent => ({ key: "ranked:m1", kind: "ranked", sourceId: "m1", date: "2026-07-10", startsAt: "2026-07-10T10:00:00Z", title: "vs Ada", subtitle: "Ranked", href: "/matches", status: "past", points: 30, won: true, surface: "hard", court: "Court 1", location: "Club", score: "6-3", metadataMissing: false, coverImageUrl:null, participants:[], outcome:{label:"You won",detail:"6-3",tone:"win"}, ...overrides });
@@ -25,6 +25,13 @@ describe("canonical calendar scorecard", () => {
 });
 
 describe("calendar event presentation", () => {
+  it("includes organiser-owned drafts without exposing them to unrelated players", () => {
+    expect(includeTournamentOnCalendar({ status:"draft", createdBy:"admin", isParticipant:false }, "admin")).toBe(true);
+    expect(includeTournamentOnCalendar({ status:"draft", createdBy:"admin", isParticipant:true }, "player")).toBe(true);
+    expect(includeTournamentOnCalendar({ status:"draft", createdBy:"admin", isParticipant:false }, "player")).toBe(false);
+    expect(includeTournamentOnCalendar({ status:"cancelled", createdBy:"admin", isParticipant:true }, "player")).toBe(false);
+  });
+
   it("preserves cover and participant identities while normalizing the outcome", () => {
     const draft = eventDraft(event({
       kind: "cup",
@@ -49,6 +56,7 @@ describe("calendar event presentation", () => {
     expect(recentHistoricEvents(rows,false,2).map((row)=>row.sourceId)).toEqual(["2","1"]);
   });
   it("derives explicit match, cup, practice, and planned outcomes", () => {
+    expect(deriveCalendarOutcome({kind:"cup",status:"future",cupStatus:"draft",subtitle:"Cup"})).toEqual({label:"Draft cup",detail:"Field not locked",tone:"future"});
     expect(deriveCalendarOutcome({kind:"ranked",status:"past",won:false,score:"3-6",subtitle:"Ranked"})).toMatchObject({label:"You lost",tone:"loss"});
     expect(deriveCalendarOutcome({kind:"cup",status:"past",placement:2,record:{won:2,lost:1},subtitle:"Cup"})).toEqual({label:"2nd place",detail:"2-1 fixtures",tone:"neutral"});
     expect(deriveCalendarOutcome({kind:"practice",status:"past",subtitle:"45 minutes"})).toMatchObject({label:"Completed"});

@@ -1,5 +1,13 @@
 import type { ActivityLedgerEntry, ActivityPointEvent } from "@/lib/scoring/activityPoints";
-import type { CalendarEvent, CalendarEventKind, CalendarOutcome, CalendarScorecard } from "./types";
+import type { CalendarCupStatus, CalendarEvent, CalendarEventKind, CalendarOutcome, CalendarScorecard } from "./types";
+
+export function includeTournamentOnCalendar(input: {
+  status: CalendarCupStatus;
+  createdBy: string;
+  isParticipant: boolean;
+}, playerId: string) {
+  return input.status !== "cancelled" && (input.isParticipant || input.createdBy === playerId);
+}
 
 export const eventsInRange = (events: readonly CalendarEvent[], from: string, to: string, showExternal = true) =>
   events.filter((event) => event.date >= from && event.date <= to && (showExternal || event.kind !== "external"));
@@ -31,6 +39,7 @@ export function deriveCalendarOutcome(input: {
   score?: string | null;
   placement?: number | null;
   record?: { won: number; lost: number };
+  cupStatus?: CalendarCupStatus;
   subtitle: string;
 }): CalendarOutcome {
   if (input.kind === "planned") return input.status === "awaiting_reply"
@@ -38,6 +47,7 @@ export function deriveCalendarOutcome(input: {
     : { label: "Locked in", detail: input.subtitle, tone: "future" };
   if (input.kind === "practice") return { label: "Completed", detail: input.subtitle, tone: "neutral" };
   if (input.kind === "cup") {
+    if (input.cupStatus === "draft") return { label: "Draft cup", detail: "Field not locked", tone: "future" };
     const detail = input.record ? `${input.record.won}-${input.record.lost} fixtures` : input.subtitle;
     if (input.status === "future") return { label: "Upcoming cup", detail, tone: "future" };
     if (input.placement === 1) return { label: "Cup winner", detail, tone: "win" };

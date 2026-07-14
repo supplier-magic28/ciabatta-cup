@@ -19,7 +19,8 @@ This is the short operational handover. Durable intent belongs in
 - Players have a responsive `/calendar` with month grid and chronological list,
   image-rich day/event drill-down, explicit outcomes, a range-independent latest
   five history, validated 1-30 day ranges, cup aggregation, approved
-  matches/practice, owner-private Non-Ciabatta names, and proposed/locked plans.
+  matches/practice, organiser-owned dated cup drafts, owner-private
+  Non-Ciabatta names, and proposed/locked plans.
   Calendar-only controls update immediately over the loaded event set while
   keeping shareable query state and browser back/forward behaviour.
   Its scorecard slices the same source-aware activity ledger used by the ladder,

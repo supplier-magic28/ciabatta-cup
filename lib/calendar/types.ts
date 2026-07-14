@@ -4,6 +4,7 @@ export type CalendarEventKind = "ranked" | "exhibition" | "external" | "cup" | "
 export type CalendarView = "grid" | "list";
 export type CalendarScreen = "calendar" | "day" | "event";
 export type CalendarPreset = "7d" | "14d" | "30d" | "custom";
+export type CalendarCupStatus = "draft" | "scheduled" | "live" | "completed" | "cancelled";
 
 export type CalendarPerson = {
   id: string | null;
@@ -41,6 +42,7 @@ export type CalendarEvent = {
   outcome: CalendarOutcome;
   placement?: number | null;
   record?: { won: number; lost: number };
+  cupStatus?: CalendarCupStatus;
 };
 
 export type CalendarUrlState = {

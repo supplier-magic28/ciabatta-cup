@@ -6,7 +6,7 @@ import { formatScore } from "@/lib/match/score";
 import { dateKeyInZone } from "@/lib/profile/streak";
 import { loadPublicLadderProjection } from "@/lib/scoring/publicProjection";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { completeCalendarEvent } from "./model";
+import { completeCalendarEvent, includeTournamentOnCalendar } from "./model";
 import type { CalendarData, CalendarEvent, CalendarPerson } from "./types";
 
 type Relation<T> = T | T[] | null;
@@ -22,7 +22,7 @@ export async function loadPersonalCalendar(session: SessionPlayer, today = dateK
     db.from("practice_sessions").select("id,player_id,activity,minutes,practiced_on,status").eq("player_id", session.id).eq("status", "approved"),
     db.from("planned_matches").select("id,created_by,opponent_player_id,opponent_external_id,scheduled_at,location,court_id,status,courts(name),external_opponents(display_name)").or(`created_by.eq.${session.id},opponent_player_id.eq.${session.id}`).in("status", ["proposed", "locked_in"]),
     db.from("tournament_participants").select("tournament_id").eq("player_id", session.id),
-    db.from("tournaments").select("id,name,status,starts_at,location_name,court_id,default_surface,cover_image_url,cover_frame_shape,cover_zoom,cover_offset_x,cover_offset_y,courts(name)"),
+    db.from("tournaments").select("id,name,status,starts_at,location_name,court_id,default_surface,cover_image_url,cover_frame_shape,cover_zoom,cover_offset_x,cover_offset_y,created_by,courts(name)"),
     db.from("tournament_placements").select("tournament_id,player_id,placement,points").eq("player_id", session.id),
     db.from("matches").select("id,tournament_id,player1_id,player2_id,winner_id,status").eq("status", "approved").not("tournament_id", "is", null),
   ]);
@@ -82,11 +82,15 @@ export async function loadPersonalCalendar(session: SessionPlayer, today = dateK
 
   const entered = new Set((entriesResult.data ?? []).map((row) => row.tournament_id));
   const placementByTournament = new Map((placementsResult.data ?? []).map((row) => [row.tournament_id, row]));
-  for (const tournament of (tournamentsResult.data ?? []).filter((row) => entered.has(row.id))) {
+  for (const tournament of (tournamentsResult.data ?? []).filter((row) => includeTournamentOnCalendar({
+    status: row.status,
+    createdBy: row.created_by,
+    isParticipant: entered.has(row.id),
+  }, session.id))) {
     const fixtures = (tournamentMatchesResult.data ?? []).filter((match) => match.tournament_id === tournament.id && (match.player1_id === session.id || match.player2_id === session.id));
     const won = fixtures.filter((match) => match.winner_id === session.id).length;
     const placement = placementByTournament.get(tournament.id);
-    events.push(completeCalendarEvent({ key: `cup:${tournament.id}`, kind: "cup", sourceId: tournament.id, date: dateKeyInZone(tournament.starts_at), startsAt: tournament.starts_at, title: tournament.name, subtitle: `${won}-${fixtures.length - won} fixtures · ${ordinal(placement?.placement ?? null)}`, href: `/tournaments/${tournament.id}`, status: tournament.status === "completed" || dateKeyInZone(tournament.starts_at) < today ? "past" : "future", points: pointsBySource.get(tournament.id) ?? placement?.points ?? 0, won: placement?.placement === 1 ? true : null, surface: tournament.default_surface, court: one(tournament.courts)?.name ?? null, location: tournament.location_name, score: null, metadataMissing: false, coverImageUrl: tournament.cover_image_url, coverCrop:{frameShape:tournament.cover_frame_shape,zoom:Number(tournament.cover_zoom),offsetX:Number(tournament.cover_offset_x),offsetY:Number(tournament.cover_offset_y)}, participants: [], placement: placement?.placement ?? null, record: { won, lost: fixtures.length - won } }));
+    events.push(completeCalendarEvent({ key: `cup:${tournament.id}`, kind: "cup", sourceId: tournament.id, date: dateKeyInZone(tournament.starts_at), startsAt: tournament.starts_at, title: tournament.name, subtitle: `${won}-${fixtures.length - won} fixtures · ${ordinal(placement?.placement ?? null)}`, href: tournament.created_by === session.id ? `/admin/tournaments/${tournament.id}` : `/tournaments/${tournament.id}`, status: tournament.status === "draft" ? "future" : tournament.status === "completed" || dateKeyInZone(tournament.starts_at) < today ? "past" : "future", points: pointsBySource.get(tournament.id) ?? placement?.points ?? 0, won: placement?.placement === 1 ? true : null, surface: tournament.default_surface, court: one(tournament.courts)?.name ?? null, location: tournament.location_name, score: null, metadataMissing: false, coverImageUrl: tournament.cover_image_url, coverCrop:{frameShape:tournament.cover_frame_shape,zoom:Number(tournament.cover_zoom),offsetX:Number(tournament.cover_offset_x),offsetY:Number(tournament.cover_offset_y)}, participants: [], placement: placement?.placement ?? null, record: { won, lost: fixtures.length - won }, cupStatus: tournament.status }));
   }
 
   events.sort((a, b) => a.startsAt.localeCompare(b.startsAt) || a.key.localeCompare(b.key));
