@@ -38,7 +38,7 @@ pattern changes, update this guide and the component inventory in the same task.
 | 06 Admin dashboard | `/admin/approvals`, `/admin/players`, `/admin/health` | Partial | Approval queue, roster, per-action pending feedback, loading queues, and green/amber/red backend health with guarded recovery controls exist as focused routes; general activity feed is pending. |
 | 07 Manage tournament | `/admin/tournaments/new`, `/admin/tournaments/[tournamentId]` | Partial | Four-player setup, participant replacement, deterministic fixtures, draw locking, lifecycle and placement-recap emails, reviewed result entry, optional standings completion, deciders, finals, and stable pending states are live. Knockout preview and mid-event roster changes are deferred. |
 | 08 Manage players | `/admin/players` | Partial | Invite, roster status, safe deletion of unused players, and stable pending/loading states are live; edit, deactivate, resend, and revoke flows are pending. |
-| My tennis calendar | `/calendar` | Implemented | Responsive grid/list, day and event drill-down, URL-preserved ranges/settings, cup aggregation, private Non-Ciabatta facts, upcoming plans, and a canonical-ledger scorecard are live. |
+| My tennis calendar | `/calendar` | Implemented | Responsive grid/list, image-rich day and event drill-down, range-independent recent history, explicit outcomes, URL-preserved instant client controls, cup aggregation, private Non-Ciabatta facts, upcoming plans, and a canonical-ledger scorecard are live. |
 | Password recovery | `/forgot-password`, `/update-password` | Implemented | Recovery email request, PKCE callback, replacement password form, invited-profile activation, and stable pending feedback are live. |
 | Profile settings | `/profile` | Implemented | Self-owned nickname preference, circular avatar crop/upload/remove, stable pending feedback, and responsive loading are live. |
 | Profile streak | `/profile/streak` | Implemented | Melbourne-day 7/30 tracker, current/best streak, manual today mark, and route-shaped loading are live. |
@@ -77,9 +77,13 @@ inside the existing auth shell; the callback route is `/auth/confirm`.
   immediate `Opening…` state, and hand off to the profile-shaped loading route.
 # Calendar projection
 
-Calendar controls preserve validated URL state. Current rank and total never
-vary with range or visibility filters; window awards, decay, and net movement
-are canonical ledger slices rather than copied point rules.
+Calendar controls preserve validated URL state while grid/list, month, range,
+filter, day, and event transitions update immediately over the fixed
+server-loaded event set and remain compatible with browser back/forward.
+Current rank and total never vary with range or visibility filters; window
+awards, decay, and net movement are canonical ledger slices rather than copied
+point rules. Cup covers and paired player identities are shared across recent
+history, list, day, and event-detail surfaces; the month grid stays compact.
 
 # Ladder points and solo practice addition
 

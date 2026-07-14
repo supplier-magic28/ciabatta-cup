@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calendarHref, clampCalendarRange, monthGrid, parseCalendarState, presetRange } from "./range";
+import { calendarHref, clampCalendarRange, monthGrid, parseCalendarState, presetRange, transitionCalendarState } from "./range";
 
 describe("calendar range", () => {
   it("defaults to the last 30 inclusive Melbourne dates", () => expect(presetRange("2026-07-14", "30d")).toEqual({ from: "2026-06-15", to: "2026-07-14" }));
@@ -9,5 +9,10 @@ describe("calendar range", () => {
   it("preserves validated view settings in drill-down links", () => {
     const state = parseCalendarState({ view:"list", weekStart:"sun", external:"0" }, "2026-07-14");
     expect(calendarHref(state, { screen:"event", event:"cup:one", back:"list" })).toContain("view=list&month=2026-07&screen=event&event=cup%3Aone&back=list&weekStart=sun&external=0");
+  });
+  it("applies instant calendar transitions without retaining stale drill-down state", () => {
+    const state = parseCalendarState({screen:"event",event:"cup:one",day:"2026-07-11",view:"list",weekStart:"sun",external:"0"},"2026-07-14");
+    expect(transitionCalendarState(state,{screen:"calendar",view:"grid"})).toMatchObject({screen:"calendar",view:"grid",day:null,event:null,weekStart:"sun",showExternal:false});
+    expect(transitionCalendarState(state,{screen:"day",day:"2026-07-12"})).toMatchObject({screen:"day",day:"2026-07-12",event:null});
   });
 });

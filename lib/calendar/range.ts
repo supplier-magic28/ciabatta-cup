@@ -45,7 +45,7 @@ export function parseCalendarState(params: Record<string, string | string[] | un
 }
 
 export function calendarHref(state: CalendarUrlState, changes: Partial<CalendarUrlState>) {
-  const next = { ...state, ...changes };
+  const next = transitionCalendarState(state, changes);
   const query = new URLSearchParams();
   if (next.preset !== "30d") query.set("preset", next.preset);
   if (next.preset === "custom") { query.set("from", next.from); query.set("to", next.to); }
@@ -58,6 +58,13 @@ export function calendarHref(state: CalendarUrlState, changes: Partial<CalendarU
   if (next.weekStart !== "mon") query.set("weekStart", next.weekStart);
   if (!next.showExternal) query.set("external", "0");
   return `/calendar?${query.toString()}`;
+}
+
+export function transitionCalendarState(state: CalendarUrlState, changes: Partial<CalendarUrlState>): CalendarUrlState {
+  const next = { ...state, ...changes };
+  if (changes.screen === "calendar") return { ...next, day: null, event: null, back: "calendar" };
+  if (changes.screen === "day") return { ...next, event: null };
+  return next;
 }
 
 export function monthGrid(month: string, weekStart: "mon" | "sun") {

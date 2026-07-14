@@ -34,8 +34,12 @@ of Done (`CLAUDE.md`).
 
 **Calendar**
 - `calendar/CalendarExperience` - responsive personal calendar composition with
-  canonical-ledger scorecard, next-match rail, month grid, chronological list,
-  URL-preserved controls, and day/event details.
+  canonical-ledger scorecard, range-independent recent history, next-match rail,
+  month grid, chronological list, URL-preserved instant client controls, and
+  day/event details.
+- `calendar/CalendarEventVisual` - shared cup-cover, paired-player-avatar,
+  external-opponent shell, and compact-practice imagery used by calendar
+  history, list, day, and event-detail surfaces.
 
 **Email rendering**
 - `lib/email/components` - non-React, email-client-safe shell, header/footer,
@@ -138,6 +142,11 @@ of Done (`CLAUDE.md`).
 
 Planned next (from ARCHITECTURE.md): `Card`, `RankBadge`, `StatBlock`.
 # Test inventory
+
+- `calendar/CalendarEventVisual.test` - cup imagery plus paired member and
+  neutral external-opponent visual contract coverage.
+- `calendar/CalendarExperience.navigation.test` - instant History API and
+  browser back/forward contract coverage without Next router navigation.
 
 ## Planned matches
 

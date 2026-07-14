@@ -5,6 +5,19 @@ export type CalendarView = "grid" | "list";
 export type CalendarScreen = "calendar" | "day" | "event";
 export type CalendarPreset = "7d" | "14d" | "30d" | "custom";
 
+export type CalendarPerson = {
+  id: string | null;
+  name: string;
+  avatarUrl: string | null;
+  external: boolean;
+};
+
+export type CalendarOutcome = {
+  label: string;
+  detail: string;
+  tone: "win" | "loss" | "neutral" | "future";
+};
+
 export type CalendarEvent = {
   key: string;
   kind: CalendarEventKind;
@@ -22,6 +35,9 @@ export type CalendarEvent = {
   location: string | null;
   score: string | null;
   metadataMissing: boolean;
+  coverImageUrl: string | null;
+  participants: CalendarPerson[];
+  outcome: CalendarOutcome;
   placement?: number | null;
   record?: { won: number; lost: number };
 };

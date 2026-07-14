@@ -1,5 +1,5 @@
 import type { ActivityLedgerEntry, ActivityPointEvent } from "@/lib/scoring/activityPoints";
-import type { CalendarEvent, CalendarScorecard } from "./types";
+import type { CalendarEvent, CalendarEventKind, CalendarOutcome, CalendarScorecard } from "./types";
 
 export const eventsInRange = (events: readonly CalendarEvent[], from: string, to: string, showExternal = true) =>
   events.filter((event) => event.date >= from && event.date <= to && (showExternal || event.kind !== "external"));
@@ -12,6 +12,45 @@ export function groupCalendarEvents(events: readonly CalendarEvent[]) {
     groups.set(event.date, rows);
   }
   return groups;
+}
+
+export function recentHistoricEvents(events: readonly CalendarEvent[], showExternal: boolean, limit = 5) {
+  return events
+    .filter((event) => event.status === "past" && event.kind !== "planned" && (showExternal || event.kind !== "external"))
+    .slice()
+    .sort((a, b) => b.startsAt.localeCompare(a.startsAt) || b.key.localeCompare(a.key))
+    .slice(0, limit);
+}
+
+const placementLabel = (placement: number) => `${placement}${placement % 10 === 1 && placement !== 11 ? "st" : placement % 10 === 2 && placement !== 12 ? "nd" : placement % 10 === 3 && placement !== 13 ? "rd" : "th"} place`;
+
+export function deriveCalendarOutcome(input: {
+  kind: CalendarEventKind;
+  status: CalendarEvent["status"];
+  won?: boolean | null;
+  score?: string | null;
+  placement?: number | null;
+  record?: { won: number; lost: number };
+  subtitle: string;
+}): CalendarOutcome {
+  if (input.kind === "planned") return input.status === "awaiting_reply"
+    ? { label: "Awaiting reply", detail: input.subtitle, tone: "future" }
+    : { label: "Locked in", detail: input.subtitle, tone: "future" };
+  if (input.kind === "practice") return { label: "Completed", detail: input.subtitle, tone: "neutral" };
+  if (input.kind === "cup") {
+    const detail = input.record ? `${input.record.won}-${input.record.lost} fixtures` : input.subtitle;
+    if (input.status === "future") return { label: "Upcoming cup", detail, tone: "future" };
+    if (input.placement === 1) return { label: "Cup winner", detail, tone: "win" };
+    if (input.placement) return { label: placementLabel(input.placement), detail, tone: "neutral" };
+    return { label: "Completed", detail, tone: "neutral" };
+  }
+  if (input.won === true) return { label: "You won", detail: input.score || input.subtitle, tone: "win" };
+  if (input.won === false) return { label: "You lost", detail: input.score || input.subtitle, tone: "loss" };
+  return { label: input.status === "future" ? "Upcoming" : "Completed", detail: input.score || input.subtitle, tone: input.status === "future" ? "future" : "neutral" };
+}
+
+export function completeCalendarEvent(event: Omit<CalendarEvent, "outcome">): CalendarEvent {
+  return { ...event, outcome: deriveCalendarOutcome(event) };
 }
 
 export function deriveCalendarScorecard(
