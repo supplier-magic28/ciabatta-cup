@@ -1,6 +1,5 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { getSessionPlayer } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -18,6 +17,7 @@ import {
   type PlannedMatchFormat,
 } from "./email-data";
 import { queueUntaggedNudges } from "@/lib/notifications/untagged";
+import { otherPlannedParticipant } from "./workflow";
 
 type Result = { ok: true; id?: string } | { ok: false; error: string };
 const refresh = () => ["/", "/matches", "/profile", "/notifications", "/admin/approvals"].forEach((path) => revalidatePath(path));
@@ -55,21 +55,26 @@ export async function decidePlannedMatch(id:string, decision:"accept"|"decline"|
 }
 
 export async function submitPlannedResult(id:string, input:MatchSubmission|ExternalMatchSubmission, external=false):Promise<Result> {
-  const player=await getSessionPlayer(); if(!player)return {ok:false,error:"Sign in first."}; const admin=createAdminClient(); const {data:plan}=await admin.from("planned_matches").select("*").eq("id",id).single(); if(!plan||plan.status!=="locked_in")return {ok:false,error:"This match is not ready for a result."}; if(player.id!==plan.created_by&&player.id!==plan.opponent_player_id)return {ok:false,error:"Only participants can report this result."};
-  const checked=external?validateExternalSubmission(input as ExternalMatchSubmission,player.id):validateSubmission(input as MatchSubmission,player.id); if(!checked.ok)return checked;
-  const db = await createClient(); let courtId: string | null = null;
+  const player=await getSessionPlayer(); if(!player)return {ok:false,error:"Sign in first."}; const db=await createClient(); const {data:plan}=await db.from("planned_matches").select("*").eq("id",id).single(); if(!plan||plan.status!=="locked_in")return {ok:false,error:"This match is not ready for a result."}; if(player.id!==plan.created_by&&player.id!==plan.opponent_player_id)return {ok:false,error:"Only participants can report this result."};
+  if(Date.now()<new Date(plan.scheduled_at).getTime())return {ok:false,error:"You can enter the score after the scheduled match time."};
+  const otherId=otherPlannedParticipant(plan,player.id);
+  if(!external&&!otherId)return {ok:false,error:"The other participant could not be resolved."};
+  const checked=external?validateExternalSubmission(input as ExternalMatchSubmission,player.id):validateSubmission({...input as MatchSubmission,opponentId:otherId!},player.id); if(!checked.ok)return checked;
+  let courtId: string | null = null;
   if (checked.value.location) { const {data:resolved,error:courtError}=await db.rpc("resolve_court",{p_name:checked.value.location}); if(courtError||!resolved)return {ok:false,error:"Couldn't save that court."}; courtId=resolved as string; }
-  await admin.from("planned_match_results").update({status:"superseded"}).eq("planned_match_id",id).eq("status","pending");
   if (external) {
     const result = checked.value as import("@/lib/match/types").ValidatedExternalSubmission;
-    const externalInput=input as ExternalMatchSubmission; const {data:matchId,error}=await admin.rpc("log_external_match",{p_opponent_name:externalInput.opponentName,p_save_opponent:externalInput.saveOpponent,p_format:result.format,p_format_note:result.formatNote,p_external_won:result.externalWon,p_played_at:result.playedAt,p_location:result.location,p_sets:result.sets.map(s=>({set_number:s.setNumber,p1_games:s.selfGames,p2_games:s.opponentGames,tiebreak_p1:s.selfTiebreak,tiebreak_p2:s.opponentTiebreak}))}); if(error||!matchId)return {ok:false,error:"Couldn't save result."}; await admin.from("matches").update({planned_match_id:id,court_id:courtId,surface:result.surface,location:result.location}).eq("id",matchId); await admin.from("planned_matches").update({status:"confirmed"}).eq("id",id); await rebuildRatingCache(); await queueUntaggedNudges(matchId as string); await sendLifecycleEmail(id,"confirmed",matchId); refresh();return {ok:true};
+    const externalInput=input as ExternalMatchSubmission; const {data:matchId,error}=await db.rpc("record_external_planned_result_v2",{p_planned_match_id:id,p_opponent_name:externalInput.opponentName,p_save_opponent:externalInput.saveOpponent,p_format:result.format,p_format_note:result.formatNote,p_external_won:result.externalWon,p_played_at:result.playedAt,p_location:result.location,p_court_id:courtId,p_surface:result.surface,p_sets:result.sets.map(s=>({set_number:s.setNumber,p1_games:s.selfGames,p2_games:s.opponentGames,tiebreak_p1:s.selfTiebreak,tiebreak_p2:s.opponentTiebreak}))}); if(error||!matchId)return {ok:false,error:error?.message??"Couldn't save result."}; try{await rebuildRatingCache();}catch{return {ok:false,error:"Result saved, but points need an admin rebuild."};} await queueUntaggedNudges(matchId as string); await sendLifecycleEmail(id,"confirmed",matchId as string); refresh();return {ok:true};
   }
   const result=checked.value as import("@/lib/match/types").ValidatedSubmission;
-  const payload={match_type:result.type,format:result.format,format_note:result.formatNote,winner_player_id:result.winnerId,score:result.sets,played_at:result.playedAt,location:result.location,court_id:courtId,surface:result.surface};
-  const {data:proposal,error}=await admin.from("planned_match_results").insert({...payload,planned_match_id:id,submitted_by:player.id,status:"pending"}).select("id").single(); if(error||!proposal)return {ok:false,error:"Couldn't submit result."}; const {error:statusError}=await admin.from("planned_matches").update({status:"awaiting_result_approval"}).eq("id",id); if(statusError)return {ok:false,error:"The result was saved, but Zeus couldn't notify your opponent."}; refresh();return {ok:true};
+  const {error}=await db.rpc("submit_planned_result_v2",{p_planned_match_id:id,p_match_type:result.type,p_format:result.format,p_format_note:result.formatNote,p_winner_player_id:result.winnerId,p_score:result.sets,p_played_at:result.playedAt,p_location:result.location,p_court_id:courtId,p_surface:result.surface}); if(error)return {ok:false,error:error.message??"Couldn't submit result."}; refresh();return {ok:true};
 }
 
-export async function approvePlannedResult(id:string):Promise<Result>{ const player=await getSessionPlayer();if(!player)return {ok:false,error:"Sign in first."};const admin=createAdminClient();const {data:plan}=await admin.from("planned_matches").select("*").eq("id",id).single();const {data:proposal}=await admin.from("planned_match_results").select("*").eq("planned_match_id",id).eq("status","pending").single();if(!plan||!proposal||plan.opponent_player_id===null||proposal.submitted_by===player.id||player.id!==plan.created_by&&player.id!==plan.opponent_player_id)return {ok:false,error:"This result cannot be approved."};const status=proposal.match_type==="ranked"?"pending_approval":"approved";const {data:match,error}=await admin.from("matches").insert({type:proposal.match_type,format:proposal.format,format_note:proposal.format_note,player1_id:plan.created_by,player2_id:plan.opponent_player_id,winner_id:proposal.winner_player_id,submitted_by:proposal.submitted_by,played_at:proposal.played_at,location:proposal.location,court_id:proposal.court_id,surface:proposal.surface,status,planned_match_id:id}).select("id").single();if(error||!match)return {ok:false,error:"Couldn't create the match fact."};const sets=(proposal.score as Array<{setNumber:number;selfGames:number;opponentGames:number;selfTiebreak:number|null;opponentTiebreak:number|null}>).map(s=>({match_id:match.id,set_number:s.setNumber,p1_games:s.selfGames,p2_games:s.opponentGames,tiebreak_p1:s.selfTiebreak,tiebreak_p2:s.opponentTiebreak}));await admin.from("match_sets").insert(sets);await admin.from("planned_match_results").update({status:"approved",reviewed_at:new Date().toISOString()}).eq("id",proposal.id);await admin.from("planned_matches").update({status:status==="approved"?"confirmed":"awaiting_admin_approval"}).eq("id",id);if(status==="approved"){await rebuildRatingCache();await queueUntaggedNudges(match.id);await sendLifecycleEmail(id,"confirmed",match.id);}refresh();return {ok:true}; }
+export async function approvePlannedResult(id:string):Promise<Result>{const player=await getSessionPlayer();if(!player)return {ok:false,error:"Sign in first."};const db=await createClient();const {data,error}=await db.rpc("approve_planned_result_v2",{p_planned_match_id:id});if(error)return {ok:false,error:error.message??"This result cannot be approved."};const row=Array.isArray(data)?data[0]:data;if(row?.match_status==="approved"&&row.match_id){try{await rebuildRatingCache();}catch{return {ok:false,error:"Result approved, but points need an admin rebuild."};}await queueUntaggedNudges(row.match_id);await sendLifecycleEmail(id,"confirmed",row.match_id);}refresh();return {ok:true,id:row?.match_id};}
+
+export async function requestPlannedResultCorrection(id:string):Promise<Result>{const player=await getSessionPlayer();if(!player)return {ok:false,error:"Sign in first."};const db=await createClient();const {error}=await db.rpc("request_planned_result_correction_v2",{p_planned_match_id:id});if(error)return {ok:false,error:error.message??"Couldn't request a correction."};refresh();return {ok:true};}
+
+export async function correctPlannedResult(id:string,input:MatchSubmission):Promise<Result>{const player=await getSessionPlayer();if(!player||player.role!=="admin")return {ok:false,error:"Only organisers may correct results."};const db=await createClient();const [{data:plan},{data:prior}]=await Promise.all([db.from("planned_matches").select("created_by,opponent_player_id").eq("id",id).single(),db.from("planned_match_results").select("submitted_by").eq("planned_match_id",id).order("created_at",{ascending:false}).limit(1).single()]);if(!plan||!plan.opponent_player_id||!prior)return {ok:false,error:"Result proposal not found."};const other=prior.submitted_by===plan.created_by?plan.opponent_player_id:plan.created_by;const checked=validateSubmission({...input,opponentId:other},prior.submitted_by);if(!checked.ok)return checked;let courtId:string|null=null;if(checked.value.location){const {data:resolved,error:courtError}=await db.rpc("resolve_court",{p_name:checked.value.location});if(courtError||!resolved)return {ok:false,error:"Couldn't save that court."};courtId=resolved as string;}const result=checked.value;const {error}=await db.rpc("correct_planned_result_v2",{p_planned_match_id:id,p_match_type:result.type,p_format:result.format,p_format_note:result.formatNote,p_winner_player_id:result.winnerId,p_score:result.sets,p_played_at:result.playedAt,p_location:result.location,p_court_id:courtId,p_surface:result.surface});if(error)return {ok:false,error:error.message??"Couldn't save the correction."};refresh();return {ok:true};}
 
 export async function sendLifecycleEmail(
   plannedMatchId: string,
@@ -209,16 +214,12 @@ export async function markNotificationsRead(): Promise<MarkNotificationsResult> 
   return { ok: true, count: data?.length ?? 0 };
 }
 
-export async function openNotification(formData: FormData) {
+export async function openNotification(notificationId: string): Promise<{ok:true;target:string}|{ok:false;error:string}> {
   const player = await getSessionPlayer();
-  if (!player) redirect("/sign-in");
-  const id = String(formData.get("notificationId") ?? "");
+  if (!player) return {ok:false,error:"Sign in first."};
   const db = await createClient();
-  const { data } = await db.from("notifications").select("id, target_path, planned_match_id").eq("id", id).eq("player_id", player.id).single();
-  if (!data) redirect("/notifications");
-  await db.from("notifications").update({ read_at: new Date().toISOString() }).eq("id", data.id).eq("player_id", player.id);
-  revalidatePath("/", "layout");
-  revalidatePath("/notifications");
+  const { data,error } = await db.from("notifications").update({ read_at: new Date().toISOString() }).eq("id", notificationId).eq("player_id", player.id).select("target_path,planned_match_id").single();
+  if(error||!data)return {ok:false,error:"Zeus couldn't open that notification."};
   const target = data.target_path ?? (data.planned_match_id ? `/matches/${data.planned_match_id}` : "/notifications");
-  redirect(target.startsWith("/") ? target : "/notifications");
+  return {ok:true,target:target.startsWith("/")?target:"/notifications"};
 }

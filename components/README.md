@@ -127,6 +127,12 @@ Planned next (from ARCHITECTURE.md): `Card`, `RankBadge`, `StatBlock`.
 - `planned/PlannedActions` — participant accept, decline, and cancellation controls.
 - `planned/PlannedResultForm` — post-play stakes, score, date, location, and result submission.
 - `planned/ApproveResultButton` — opponent confirmation for a proposed planned-match result.
+- `planned/PlannedCorrectionForm` — organiser editor that creates an append-only
+  corrected proposal revision and returns it for participant confirmation.
+- `match/QueriedMatchResubmitForm` — submitter correction surface for an
+  ordinary queried match, preserving participants while resetting confirmation.
+- `notifications/NotificationOpenButton` — prefetched navigation action with an
+  immediate spinner, duplicate-click lock, and failure feedback.
 - `notifications/ZeusInboxButton` — persistent 44px Zeus-avatar inbox action
   with a server-derived unread badge and active-route treatment.
 - `notifications/NotificationRealtimeBridge` — owner-filtered Supabase Realtime

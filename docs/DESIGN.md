@@ -43,6 +43,7 @@ pattern changes, update this guide and the component inventory in the same task.
 | Non-Ciabatta opponents | `/matches/new`, `/matches`, `/`, `/players/[playerId]` | Implemented | Owner-private saved names, immediate unranked approval, flat +10 scoring, owner deletion with cache rebuild, a standard leaderboard history line for every player, generic shared identity, and win/loss result email are live. |
 | Courts and surfaces | `/matches/new`, `/matches/untagged`, `/courts/[courtId]`, `/players/[playerId]` | Implemented | Shared court typeahead, optional surface chips, metadata-only retro tagging, court detail/tallies, surface records, tournament defaults, and organiser merging are live. |
 | Zeus inbox | `/notifications` | Implemented | Permanent Zeus portrait/inbox across empty, read, and unread states; a dedicated top-right Zeus-avatar action updates live for the receiver through owner-filtered Realtime, with focus recovery, failure-aware mark-all-read, navigation-only actions, planned-match destinations, and weekly-deduped untagged nudges. |
+| Match workflow recovery | `/matches`, `/matches/[plannedMatchId]`, `/admin/approvals` | Implemented | Unfinished plans remain discoverable, score entry opens after the scheduled instant, either participant can submit with the correct perspective, queried scores receive append-only organiser corrections, and ordinary queried results can be corrected and resent. |
 
 ## Implementation rules
 
@@ -64,6 +65,8 @@ inside the existing auth shell; the callback route is `/auth/confirm`.
 - Loading states must reserve the major geometry of their final route at mobile
   and desktop widths. Mutation controls acknowledge immediately but never imply
   that an immutable result or rating changed before server confirmation.
+- Notification actions acknowledge immediately with an Opening state and show
+  an absolute Melbourne timestamp before navigating to their precise target.
 # Ladder points and solo practice addition
 
 ## Planned matches and notifications

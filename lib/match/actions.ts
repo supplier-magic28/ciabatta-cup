@@ -51,56 +51,8 @@ export async function submitMatch(input: MatchSubmission): Promise<SubmitResult>
   try { courtId = await resolveCourtId(supabase, match.location); }
   catch { return { ok: false, error: "Couldn't save that court." }; }
 
-  const { data: created, error: matchError } = await supabase
-    .from("matches")
-    .insert({
-      type: match.type,
-      format: match.format,
-      format_note: match.formatNote,
-      player1_id: player.id,
-      player2_id: match.opponentId,
-      winner_id: match.winnerId,
-      status: "pending_confirmation",
-      submitted_by: player.id,
-      played_at: match.playedAt,
-      location: match.location,
-      court_id: courtId,
-      surface: match.surface,
-    })
-    .select("id")
-    .single();
-
-  if (matchError || !created) {
-    return { ok: false, error: SAVE_FAILED };
-  }
-
-  // Sequential PostgREST inserts aren't one transaction, so if a later write
-  // fails we compensate by deleting the just-created match (cascades to sets and
-  // confirmations). A transactional RPC is the follow-up if this ever matters.
-  const { error: setsError } = await supabase.from("match_sets").insert(
-    match.sets.map((set) => ({
-      match_id: created.id,
-      set_number: set.setNumber,
-      p1_games: set.selfGames,
-      p2_games: set.opponentGames,
-      tiebreak_p1: set.selfTiebreak,
-      tiebreak_p2: set.opponentTiebreak,
-    })),
-  );
-  if (setsError) {
-    await supabase.from("matches").delete().eq("id", created.id);
-    return { ok: false, error: SAVE_FAILED };
-  }
-
-  // The submitter has implicitly confirmed by submitting; the confirmation
-  // trigger advances the result once both players have confirmed (ADR-0010).
-  const { error: confirmError } = await supabase
-    .from("match_confirmations")
-    .insert({ match_id: created.id, player_id: player.id });
-  if (confirmError) {
-    await supabase.from("matches").delete().eq("id", created.id);
-    return { ok: false, error: SAVE_FAILED };
-  }
+  const {data:matchId,error:matchError}=await supabase.rpc("submit_match_v2",{p_opponent_id:match.opponentId,p_match_type:match.type,p_format:match.format,p_format_note:match.formatNote,p_winner_player_id:match.winnerId,p_played_at:match.playedAt,p_location:match.location,p_court_id:courtId,p_surface:match.surface,p_sets:match.sets.map(set=>({set_number:set.setNumber,p1_games:set.selfGames,p2_games:set.opponentGames,tiebreak_p1:set.selfTiebreak,tiebreak_p2:set.opponentTiebreak}))});
+  if(matchError||typeof matchId!=="string")return {ok:false,error:SAVE_FAILED};
 
   let warning: string | undefined;
   if (match.type === "ranked") {
@@ -113,14 +65,14 @@ export async function submitMatch(input: MatchSubmission): Promise<SubmitResult>
     const base = process.env.NEXT_PUBLIC_SITE_URL ?? "";
     try {
       await Promise.all([
-        sendTournamentEmail(player.email, renderRankedMatchLoggedEmail({ firstName: player.firstName ?? "Player", winnerName, loserName, score, matchDate: match.playedAt.slice(0, 10) }), `ranked-match/logged/${created.id}/${player.id}`),
-        opponent?.email ? sendTournamentEmail(opponent.email, renderRankedMatchLoggedEmail({ firstName: opponent.first_name ?? "Player", winnerName, loserName, score, matchDate: match.playedAt.slice(0, 10), confirmUrl: `${base}/matches` }), `ranked-match/logged/${created.id}/${match.opponentId}`) : Promise.resolve(),
+        sendTournamentEmail(player.email, renderRankedMatchLoggedEmail({ firstName: player.firstName ?? "Player", winnerName, loserName, score, matchDate: match.playedAt.slice(0, 10) }), `ranked-match/logged/${matchId}/${player.id}`),
+        opponent?.email ? sendTournamentEmail(opponent.email, renderRankedMatchLoggedEmail({ firstName: opponent.first_name ?? "Player", winnerName, loserName, score, matchDate: match.playedAt.slice(0, 10), confirmUrl: `${base}/matches` }), `ranked-match/logged/${matchId}/${match.opponentId}`) : Promise.resolve(),
       ]);
     } catch { warning = "Match logged, but one or more result emails could not be sent."; }
   }
 
   revalidatePath("/matches");
-  return { ok: true, matchId: created.id, warning };
+  return { ok: true, matchId, warning };
 }
 
 export async function submitExternalMatch(input: ExternalMatchSubmission): Promise<SubmitResult> {
@@ -236,6 +188,17 @@ export async function confirmMatch(matchId: string): Promise<MatchActionResult> 
   return { ok: true };
 }
 
+export async function resubmitQueriedMatch(matchId:string,input:MatchSubmission):Promise<MatchActionResult>{
+  const player=await getSessionPlayer();if(!player)return {ok:false,error:"Sign in first."};const db=await createClient();
+  const {data:match}=await db.from("matches").select("id,player1_id,player2_id,submitted_by,status,planned_match_id").eq("id",matchId).single();
+  if(!match||match.status!=="queried"||match.submitted_by!==player.id||match.planned_match_id)return {ok:false,error:"This queried match cannot be edited."};
+  const opponentId=match.player1_id===player.id?match.player2_id:match.player1_id;const checked=validateSubmission({...input,opponentId},player.id);if(!checked.ok)return checked;
+  let courtId:string|null=null;try{courtId=await resolveCourtId(db,checked.value.location);}catch{return {ok:false,error:"Couldn't save that court."};}
+  const v=checked.value;const firstIsSelf=match.player1_id===player.id;const sets=v.sets.map(s=>({set_number:s.setNumber,p1_games:firstIsSelf?s.selfGames:s.opponentGames,p2_games:firstIsSelf?s.opponentGames:s.selfGames,tiebreak_p1:firstIsSelf?s.selfTiebreak:s.opponentTiebreak,tiebreak_p2:firstIsSelf?s.opponentTiebreak:s.selfTiebreak}));
+  const {error}=await db.rpc("resubmit_queried_match_v2",{p_match_id:matchId,p_match_type:v.type,p_format:v.format,p_format_note:v.formatNote,p_winner_player_id:v.winnerId,p_played_at:v.playedAt,p_location:v.location,p_court_id:courtId,p_surface:v.surface,p_sets:sets});
+  if(error)return {ok:false,error:error.message||"Couldn't resubmit this result."};revalidatePath("/matches");return {ok:true};
+}
+
 /**
  * Admin-only transition of a `pending_approval` match to a terminal decision.
  * Admin-gated in code (Server Actions are POST-reachable) and at the DB by the
@@ -263,7 +226,7 @@ async function adminSetStatus(
     return { ok: false, error: "This match isn't awaiting approval." };
   }
 
-  const { error } = await supabase.from("matches").update({ status: to }).eq("id", matchId);
+  const { error } = await supabase.rpc("review_match_v2", { p_match_id: matchId, p_decision: to });
   if (error) return { ok: false, error: "Couldn't update this match — please try again." };
 
   if (to === "approved") {
@@ -280,17 +243,7 @@ async function adminSetStatus(
         error: "Match was approved, but ratings could not be rebuilt. Check the server configuration.",
       };
     }
-    if (match.planned_match_id) {
-      const admin = createAdminClient();
-      const { error: plannedError } = await admin.from("planned_matches").update({ status: "confirmed" }).eq("id", match.planned_match_id);
-      if (plannedError) {
-        revalidatePath("/admin/approvals");
-        revalidatePath("/matches");
-        revalidateRatingSurfaces();
-        return { ok: false, error: "Match was approved, but Zeus couldn't notify the players." };
-      }
-      await sendLifecycleEmail(match.planned_match_id, "confirmed", matchId);
-    }
+    if (match.planned_match_id) await sendLifecycleEmail(match.planned_match_id, "confirmed", matchId);
     await queueUntaggedNudges(matchId);
   }
 

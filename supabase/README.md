@@ -80,6 +80,11 @@ Database migrations for Ciabatta Cup. The authoritative data model is
   and must be followed by `20260715122000_reliable_realtime_notifications.sql`
   for transactional planned-match fan-out and receiver-live badge updates.
   commits and seeds one Zeus nudge for players with historical untagged facts.
+- `20260716120000_match_workflow_repair_types.sql` commits the correction and
+  complete notification enum values plus proposal-revision/match-link columns.
+- `20260716121000_atomic_match_workflows.sql` must follow it. It installs the
+  authenticated row-locking planned/ordinary workflow RPCs, complete receiver
+  fan-out, and idempotent backfill for currently actionable work (ADR-0033).
 
 The tournament participant table is editable only before the first tournament
 result. The admin console's replacement action preserves the selected seed and
@@ -208,5 +213,14 @@ Dashboard → Authentication → Add user, then `insert` the `players` row with
 ## Planned matches and Zeus notifications
 
 Apply `20260714120000_planned_matches_notifications.sql` after the activity-points migrations. It adds planned match shells, result proposals, Zeus notifications, and the nullable `matches.planned_match_id` link with participant/recipient RLS.
+
+Apply the two `2026071612*` repair migrations only after all three `2026071512*`
+inbox migrations. Before production cleanup, list shells joined to proposals,
+linked matches, sets, and notifications. A test shell may be hard-deleted only
+when a guarded transaction proves it has no approved linked match; delete the
+non-approved match first, then the shell so child rows cascade safely.
+Use `ops/planned_match_workflow_audit.sql` for the read-only preflight. The
+companion cleanup script aborts unless exactly two IDs are supplied and aborts
+again if either plan has an approved immutable fact.
 
 Apply `20260712120000_profile_play_days.sql` before `20260713120000_ladder_points_practice.sql`. The latter adds organiser-reviewed `practice_sessions`, owner/admin RLS, field constraints, and reviewed-fact immutability. After deployment, use the existing admin rebuild control once so the persisted points snapshot matches the activity economy; read surfaces compute current Melbourne-day decay from facts.

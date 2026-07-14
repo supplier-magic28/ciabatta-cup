@@ -11,6 +11,8 @@ import { DeleteExternalMatchButton } from "@/components/match/DeleteExternalMatc
 import { BackLink } from "@/components/ui/BackLink";
 import { PARENT_ROUTES } from "@/lib/navigation/parents";
 import { WorkflowZeusInboxAction } from "@/components/notifications/ZeusInboxButton";
+import { QueriedMatchResubmitForm } from "@/components/match/QueriedMatchResubmitForm";
+import { hasScheduledTimePassed } from "@/lib/planned/workflow";
 
 const STATUS_LABEL: Record<string, string> = {
   pending_confirmation: "Waiting for opponent",
@@ -40,15 +42,16 @@ export default async function MatchesPage() {
 
   const supabase = await createClient();
 
-  const [{ data: matches }, { data: players }, { data: myConfirmations }, { data: externalDetails }] = await Promise.all([
+  const [{ data: matches }, { data: players }, { data: myConfirmations }, { data: externalDetails }, { data: planned }] = await Promise.all([
     supabase
       .from("matches")
-      .select("id, type, format, format_note, status, played_at, location, court_id, surface, player1_id, player2_id, winner_id, external_won, match_sets(set_number, p1_games, p2_games, tiebreak_p1, tiebreak_p2)")
+      .select("id, type, format, format_note, status, submitted_by, played_at, location, court_id, surface, player1_id, player2_id, winner_id, external_won, match_sets(set_number, p1_games, p2_games, tiebreak_p1, tiebreak_p2)")
       .or(`player1_id.eq.${player.id},player2_id.eq.${player.id}`)
       .order("played_at", { ascending: false }),
     supabase.from("players").select("id, first_name, last_name, email, nickname, use_nickname"),
     supabase.from("match_confirmations").select("match_id").eq("player_id", player.id),
     supabase.from("external_match_details").select("match_id, opponent_name"),
+    supabase.from("planned_matches").select("id,created_by,opponent_player_id,opponent_external_id,scheduled_at,location,status,external_opponents(display_name)").or(`created_by.eq.${player.id},opponent_player_id.eq.${player.id}`).in("status",["proposed","locked_in","awaiting_result_approval","awaiting_result_correction","awaiting_admin_approval"]).order("scheduled_at",{ascending:true}),
   ]);
   const rows = matches ?? [];
 
@@ -72,7 +75,9 @@ export default async function MatchesPage() {
         <div className="flex flex-wrap items-center justify-end gap-4"><BackLink href={PARENT_ROUTES.ladder}>Ladder</BackLink><Link href="/matches/untagged" className="font-mono text-[12px] uppercase tracking-[1.5px] text-crust">Tag missing</Link><Link href="/matches/plan" className="font-mono text-[12px] uppercase tracking-[1.5px] text-green">+ Plan</Link><Link href="/matches/new" className="font-mono text-[12px] uppercase tracking-[1.5px] text-green">+ Log match</Link></div>
       </header>
 
-      {rows.length === 0 ? (
+      {(planned??[]).length>0&&<section className="mb-8"><p className={`${eyebrow} mb-3`}>Planned and in progress</p><ul className="grid gap-3">{(planned??[]).map(plan=>{const external=Boolean(plan.opponent_external_id);const relation=Array.isArray(plan.external_opponents)?plan.external_opponents[0]:plan.external_opponents;const opponentId=plan.created_by===player.id?plan.opponent_player_id:plan.created_by;const opponent=external?(relation?.display_name??"Non-Ciabatta opponent"):(nameOf.get(opponentId??"")??"Opponent");const action=plan.status==="proposed"?(plan.opponent_player_id===player.id?"Your answer needed":"Waiting for opponent"):plan.status==="locked_in"?(hasScheduledTimePassed(plan.scheduled_at)?"Score can be entered":"Locked in"):plan.status==="awaiting_result_approval"?"Player approval needed":plan.status==="awaiting_result_correction"?"Organiser correction needed":"Organiser approval needed";return <li key={plan.id}><Link href={`/matches/${plan.id}`} className={`block border-2 bg-surface p-4 ${external?"border-dashed border-muted":"border-ink shadow-[3px_3px_0_var(--color-ink)]"}`}><div className="flex items-start justify-between gap-3"><div><p className="font-heading font-bold">vs {opponent}</p><p className="mt-1 font-mono text-[10px] uppercase text-muted">{new Intl.DateTimeFormat("en-AU",{dateStyle:"medium",timeStyle:"short",timeZone:"Australia/Melbourne"}).format(new Date(plan.scheduled_at))}{plan.location?` · ${plan.location}`:""}</p></div><span className="max-w-28 text-right font-mono text-[9px] uppercase text-crust">{action}</span></div></Link></li>;})}</ul></section>}
+
+      {rows.length === 0 && (planned??[]).length===0 ? (
         <div className="rounded-[8px] border-2 border-hairline bg-surface p-6 text-center">
           <p className="font-body text-[15px] text-ink">No matches yet.</p>
           <div className="mx-auto mt-4 w-[200px]">
@@ -122,6 +127,7 @@ export default async function MatchesPage() {
                   {needsMyConfirmation ? "Needs your confirmation" : STATUS_LABEL[m.status] ?? m.status}
                 </p>
                 {needsMyConfirmation && <ConfirmMatchButton matchId={m.id} />}
+                {m.status==="queried"&&m.submitted_by===player.id&&m.player2_id&&<QueriedMatchResubmitForm matchId={m.id} opponentId={m.player2_id} opponentName={nameOf.get(m.player2_id)??"Opponent"} type={m.type as "ranked"|"exhibition"} format={m.format as "one_set"|"best_of_3"|"pro_set_8"|"custom"} formatNote={m.format_note} playedDate={String(m.played_at).slice(0,10)} location={m.location??""} surface={(m.surface as import("@/lib/courts/types").Surface|null)??null} initialSets={(m.match_sets??[]).slice().sort((a,b)=>a.set_number-b.set_number).map(set=>({selfGames:set.p1_games,opponentGames:set.p2_games,selfTiebreak:set.tiebreak_p1,opponentTiebreak:set.tiebreak_p2}))}/>}
                 {isExternal && <DeleteExternalMatchButton matchId={m.id} />}
               </li>
             );

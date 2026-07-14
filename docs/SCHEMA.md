@@ -283,6 +283,19 @@ keys make the fan-out retry-safe, including final `result_confirmed` messages.
 Changes remains restricted by owner-select RLS and the client also filters by
 the signed-in player's ID.
 
+ADR-0033 replaces the original multi-write result handoff with authenticated,
+row-locking RPCs. Score entry starts after `planned_matches.scheduled_at`;
+participant submissions are stored in submitter perspective and normalised to
+`matches.player1_id` when materialised. `awaiting_result_correction` identifies
+an organiser correction queue. Corrected proposals are new rows linked through
+`supersedes_id` and `corrected_by`, and require participant confirmation again.
+
+`notifications.match_id` precisely links ordinary confirmation and organiser
+approval alerts. Database fan-out covers ordinary confirmation, every active
+organiser awaiting a ranked review, terminal decisions, planned corrections,
+and final planned confirmation. Repeatable result approvals dedupe by proposal
+revision rather than only by planned shell.
+
 ## Points system
 Ordinary Elo uses K=32 with a zero entry baseline and zero floor. An equal first
 match gives the winner 16 and leaves the loser at zero. Only non-tournament

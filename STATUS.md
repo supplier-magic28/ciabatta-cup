@@ -26,6 +26,13 @@ This is the short operational handover. Durable intent belongs in
   locked-in and result-confirmed emails use Melbourne dates, direct match/ladder
   actions, accurate ranked/exhibition/external point cards, and the established
   non-blocking, idempotent lifecycle delivery stages.
+- Unfinished planned matches now stay in the private match hub. Score entry is
+  time-gated, works from either participant perspective, and materialises
+  atomically; queried scores receive append-only organiser corrections and
+  ordinary queried results can be corrected and resent.
+- Zeus cards show Melbourne timestamps and immediate Opening feedback. Database
+  fan-out now covers ordinary confirmation, ranked organiser review, correction,
+  approval, query, rejection, and final planned-result states.
 
 - Public ladder totals now use activity points while ordinary Elo remains derived for history/seeding: ranked +30/+15, exhibition/external +10, approved practice +5, and tournament placements unchanged.
 - Permanent Melbourne-day decay applies from first tennis activity (−1 daily plus stacked −10/7-day and −30/30-day drought penalties), with manual play marks protecting the day and resetting drought risk without awarding points.
@@ -108,6 +115,8 @@ after that password update succeeds.
 | `20260715120000_courts_surfaces_zeus_inbox.sql` | Ready after planned matches |
 | `20260715121000_seed_untagged_notifications.sql` | Ready immediately after courts/surfaces |
 | `20260715122000_reliable_realtime_notifications.sql` | Ready immediately after the notification seed |
+| `20260716120000_match_workflow_repair_types.sql` | Ready after reliable Realtime notifications |
+| `20260716121000_atomic_match_workflows.sql` | Ready immediately after workflow repair types |
 
 ## Current blockers
 
@@ -121,7 +130,8 @@ after that password update succeeds.
 ## Next product slice
 
 Apply the ready migrations in order, deploy, run the admin rating rebuild once,
-and verify practice review, planned-result approval, Zeus navigation, court
+and verify practice review, delayed planned-result entry, participant correction,
+organiser approval, Zeus navigation, court
 creation/merge, retro tagging, tournament defaults, Melbourne decay, and the
 qualifier placement totals in production.
 Append-only corrections, generalised setup, and mid-event withdrawals remain

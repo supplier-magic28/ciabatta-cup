@@ -11,6 +11,8 @@ import { PARENT_ROUTES } from "@/lib/navigation/parents";
 import Link from "next/link";
 import { PracticeApprovalActions } from "@/components/practice/PracticeApprovalActions";
 import { WorkflowZeusInboxAction } from "@/components/notifications/ZeusInboxButton";
+import { PlannedCorrectionForm } from "@/components/planned/PlannedCorrectionForm";
+import { loadCourtOptions } from "@/lib/courts/read";
 
 const eyebrow = "font-mono text-[10px] uppercase tracking-[2px] text-muted";
 
@@ -27,7 +29,7 @@ export default async function ApprovalsPage({ searchParams }: { searchParams: Pr
 
   const supabase = await createClient();
 
-  const [{ data: matches }, { data: players }, { data: practices }] = await Promise.all([
+  const [{ data: matches }, { data: players }, { data: practices }, {data: correctionPlans}, {data: correctionResults}, courts] = await Promise.all([
     supabase
       .from("matches")
       .select("id, format, format_note, player1_id, player2_id, winner_id, played_at, match_sets(set_number, p1_games, p2_games, tiebreak_p1, tiebreak_p2)")
@@ -35,6 +37,9 @@ export default async function ApprovalsPage({ searchParams }: { searchParams: Pr
       .order("played_at", { ascending: true }),
     supabase.from("players").select("id, first_name, last_name, email, nickname, use_nickname"),
     supabase.from("practice_sessions").select("id, player_id, activity, minutes, practiced_on, note, created_at").eq("status", "pending").order("created_at", { ascending: true }),
+    supabase.from("planned_matches").select("id,created_by,opponent_player_id").eq("status","awaiting_result_correction"),
+    supabase.from("planned_match_results").select("*").eq("status","queried").order("created_at",{ascending:false}),
+    loadCourtOptions(),
   ]);
   const rows = matches ?? [];
   const kind = (await searchParams).kind;
@@ -49,6 +54,7 @@ export default async function ApprovalsPage({ searchParams }: { searchParams: Pr
   );
 
   const setsByMatch = indexEmbeddedScoreSets(rows);
+  const correctionByPlan=new Map((correctionResults??[]).map(result=>[result.planned_match_id,result]));
 
   return (
     <main className="mx-auto w-full max-w-lg flex-1 px-6 py-10">
@@ -63,12 +69,12 @@ export default async function ApprovalsPage({ searchParams }: { searchParams: Pr
 
       <nav className="mb-5 flex gap-2" aria-label="Approval filters">{[["","All"],["matches","Matches"],["practice","Practice"]].map(([value,label]) => <Link key={label} href={value ? `/admin/approvals?kind=${value}` : "/admin/approvals"} className={`rounded-full border-2 border-ink px-3 py-1 font-mono text-[10px] uppercase ${kind === value || (!kind && !value) ? "bg-ink text-chartreuse" : "bg-surface text-ink"}`}>{label}</Link>)}</nav>
 
-      {(!showMatches || rows.length === 0) && (!showPractice || (practices ?? []).length === 0) ? (
+      {(!showMatches || (rows.length === 0&&(correctionPlans??[]).length===0)) && (!showPractice || (practices ?? []).length === 0) ? (
         <div className="rounded-[8px] border-2 border-hairline bg-surface p-6 text-center">
           <p className="font-body text-[15px] text-ink">Nothing awaiting approval.</p>
         </div>
       ) : (
-        <div className="grid gap-5">{showMatches && <ul className="flex flex-col gap-3">
+        <div className="grid gap-5">{showMatches&&(correctionPlans??[]).map(plan=>{const proposal=correctionByPlan.get(plan.id);if(!proposal||!plan.opponent_player_id)return null;const otherId=proposal.submitted_by===plan.created_by?plan.opponent_player_id:plan.created_by;return <section key={plan.id} className="border-2 border-rust bg-surface p-4 shadow-[3px_3px_0_var(--color-rust)]"><p className="font-mono text-[10px] uppercase text-rust">Planned result needs correction</p><h2 className="mt-1 font-heading text-lg font-bold">{nameOf.get(plan.created_by)??"Player"} vs {nameOf.get(plan.opponent_player_id)??"Player"}</h2><PlannedCorrectionForm id={plan.id} opponentId={otherId} submitterName={nameOf.get(proposal.submitted_by)??"Submitter"} opponentName={nameOf.get(otherId)??"Opponent"} proposal={proposal as Parameters<typeof PlannedCorrectionForm>[0]["proposal"]} courts={courts}/></section>;})}{showMatches && <ul className="flex flex-col gap-3">
           {rows.map((m) => {
             const winnerName = nameOf.get(m.winner_id ?? "") ?? "Unknown";
             const loserId = m.winner_id === m.player1_id ? m.player2_id : m.player1_id;
