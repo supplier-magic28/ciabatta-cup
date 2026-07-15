@@ -84,8 +84,9 @@ export default async function ManageTournamentPage({ params }: { params: Promise
       <TournamentPhotoControl tournamentId={tournamentId} photoUrl={board.tournament.cover_image_url} canEdit frameShape={board.tournament.cover_frame_shape} cropZoom={Number(board.tournament.cover_zoom)} cropOffsetX={Number(board.tournament.cover_offset_x)} cropOffsetY={Number(board.tournament.cover_offset_y)}/>
 
       {!board.tournament.draw_locked_at&&<TournamentLeadupConsole
+        key={`${board.tournament.seat_count}:${participants.map((participant)=>`${participant.seed}-${participant.id}`).join(":")}`}
         tournament={board.tournament}
-        participants={participants.map((participant)=>({id:participant.id,seed:participant.seed}))}
+        participants={participants}
         players={activePlayers}
       />}
       {!board.tournament.draw_locked_at && <CupInviteConsole

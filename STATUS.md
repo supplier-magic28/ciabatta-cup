@@ -14,6 +14,10 @@ This is the short operational handover. Durable intent belongs in
   badge derived from the official placement fact. Email deep links preserve the
   precise invited cup through sign-in.
 
+- The configurable cup roster always renders persisted seeded players in their
+  saved seats, including when a player is absent from the active-player option
+  query, and refreshes its local editor state after server-side roster changes.
+
 - Organisers can create a cup before its field or cover is ready, configure two
   to eight ordered seats, lock/unlock the schedule, select independent group and
   downstream formats plus one of three championship paths, and permanently lock

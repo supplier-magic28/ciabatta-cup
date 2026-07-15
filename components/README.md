@@ -125,7 +125,8 @@ of Done (`CLAUDE.md`).
   and 100–250% zoom editor used before cup creation. It retains the full frame
   while normalizing uploads to a bounded WebP before the Server Action runs.
 - `tournament/TournamentLeadupConsole` — schedule lock, independent formats,
-  championship path, ordered 2–8 roster, and permanent-lock checklist.
+  championship path, ordered 2–8 roster, persisted-seed-safe player options,
+  and permanent-lock checklist.
 - `tournament/TournamentLifecycleActions` — irreversible draw lock plus
   retry-safe locked-in, game-day, and completed-placement email controls.
 - `tournament/TournamentAdminActions` — fixture generation plus confirmed,
