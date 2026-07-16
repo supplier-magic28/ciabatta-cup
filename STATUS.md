@@ -45,7 +45,10 @@ model in `docs/SCHEMA.md`, and decision history in the ADR index.
   always-visible personal trophy case. Ranked first-place awards, repeat
   collectibles, event metadata, cover crops, and the winner's complete approved
   campaign are derived read-only from existing placement and match facts; the
-  3D/AR action is visibly deferred until final model assets exist.
+  cabinet now completes a brightened, audible-when-enabled selection shake
+  before opening its browser-zoom-safe sheet. Synthesized cabinet sound is
+  persistently mutable, reduced-motion selection opens immediately, and the
+  3D/AR action remains visibly deferred until final model assets exist.
 
 ## Latest verification
 
@@ -58,10 +61,10 @@ syntax issue recorded below.
 | --- | --- |
 | Aggregate application preflight | Passed on the current tree; every `npm run verify` constituent is green |
 | ESLint / TypeScript | Passed / passed |
-| Vitest | 273 tests passed; one fresh-Supabase integration test skipped by design |
+| Vitest | 280 tests passed; one fresh-Supabase integration test skipped by design |
 | Documentation gates | `docs:check` and `docs:impact` passed; structural fixtures 16/16 and impact fixtures 8/8 passed |
 | Production build | Passed |
-| UI performance contracts | 5/5 passed; these are geometry/query-shape contracts only |
+| UI performance contracts | 9/9 passed; these are geometry/query-shape contracts only |
 | Browser smoke | 7/7 passed on a runner-owned dynamic port with exact preserved `next` destinations |
 | Database pgTAP/lint | All 256 declared pgTAP assertions passed locally and on a fresh CI stack (27+21+18+10+50+56+74); database lint passed after clean migration application |
 | Authenticated ranked integration | Passed on a disposable Node 24/Supabase stack: ranked submit, opponent confirm, organiser approve, cache rebuild, and exact ladder/profile agreement |

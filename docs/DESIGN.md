@@ -36,7 +36,7 @@ component inventory in the same task.
 | 06 Admin dashboard | `/admin/approvals`, `/admin/players`, `/admin/health` | Partial | Approval queue, roster, per-action pending feedback, loading queues, and green/amber/red backend health with guarded recovery controls exist as focused routes; general activity feed is pending. |
 | 07 Manage tournament | `/admin/tournaments/new`, `/admin/tournaments/[tournamentId]` | Implemented | Photo-first partial creation, 2–8 ordered seats with persisted players shown in their saved seeds, reversible schedule lock, independent formats, three championship paths, permanent atomic draw lock, multi-set scoring, deciders, finals, and recovery-aware email controls are live. Withdrawals and post-lock substitutions remain deferred. |
 | Claymore trophy + invites | `/admin/tournaments/[tournamentId]`, `/tournaments/[tournamentId]`, `/notifications`, `/` | Implemented | An ordinary cup can own the Claymore collectible; organisers over-invite the bench by email plus Zeus, players RSVP without taking a roster seat, the director retains final-field authority, saved photo crop metadata reaches email, and official winners wear the badge in ladder history. Native push remains deferred. |
-| My trophies | `/tournaments` | Implemented | The signed-in player always sees a derived wooden trophy case between upcoming cups and the archive. Named and generic ranked wins remain distinct, repeat wins stay on the shelf, and owned `?trophy={tournamentId}` deep links open an accessible campaign detail sheet with event-local metadata, preserved cover crop, opponent avatars, and player-oriented scores. The disabled “See my trophy · Coming soon” control reserves the handoff position; 3D models, `<model-viewer>`, and camera/AR behavior remain a separate asset-gated release. |
+| My trophies | `/tournaments` | Implemented | The signed-in player always sees a derived wooden trophy case between upcoming cups and the archive. Named and generic ranked wins remain distinct, repeat wins stay on the shelf, and owned `?trophy={tournamentId}` deep links open an accessible campaign detail sheet with event-local metadata, preserved cover crop, opponent avatars, and player-oriented scores. Trophy selection brightens on hover, focus, and press, then completes its visible shake before opening; optional synthesized cabinet sounds are on by default and persistently mutable. The sheet remains contained at short, narrow, and browser-zoomed viewports. The disabled “See my trophy · Coming soon” control reserves the handoff position; 3D models, `<model-viewer>`, and camera/AR behavior remain a separate asset-gated release. |
 | 08 Manage players | `/admin/players` | Partial | Invite, roster status, safe deletion of unused players, and stable pending/loading states are live; edit, deactivate, resend, and revoke flows are pending. |
 | My tennis calendar | `/calendar` | Implemented | Responsive grid/list, image-rich day and event drill-down, range-independent recent history, explicit outcomes, URL-preserved instant client controls, cup aggregation including public dated drafts for open-field discovery, private Non-Ciabatta facts, upcoming plans, and a canonical-ledger scorecard are live. |
 | Password recovery | `/forgot-password`, `/update-password` | Implemented | Recovery email request, PKCE callback, replacement password form, invited-profile activation, and stable pending feedback are live. |
@@ -62,6 +62,17 @@ inside the existing auth shell; the callback route is `/auth/confirm`.
   newest-first within each group; its detail sheet shows the winner's complete
   approved campaign, including losses, and never treats a skipped fixture as a
   walkover result.
+- Trophy controls use a bright chartreuse/brass hover, focus, and pressed state.
+  Ordinary activation locks duplicates, plays the complete base-pivot shake in
+  the visible cabinet, and only then opens the sheet and updates the URL.
+  Reduced-motion users and direct deep links open immediately. The persistent
+  44px sound toggle independently controls the optional synthesized hover chime
+  and activation clank; audio failure never blocks navigation.
+- Trophy sheets are bounded by the visual viewport, own their scrolling, keep
+  the close/header region sticky, and collapse metadata, scores, and the future
+  AR call-to-action before browser zoom can introduce horizontal overflow.
+  Cover frames retain the stored wide, square, or three-two ratio and exact crop
+  transform while also respecting the available viewport height.
 - Keep Zeus outside the text navigation as a permanent top-right 44px avatar
   action; its rust badge appears only when unread messages exist.
 - Dashed borders identify people and actions outside the Ciabatta ladder.

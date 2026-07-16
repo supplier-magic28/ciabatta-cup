@@ -128,8 +128,11 @@ of Done (`CLAUDE.md`).
 **Tournaments**
 - `trophies/TrophyCase` — authenticated player's derived wooden cabinet and
   deep-linkable, focus-contained trophy detail sheet. It preserves cup cover
-  crops, shows the complete approved campaign, skips non-results, disables
-  motion when requested, and keeps the future AR action explicitly inert.
+  crops, shows the complete approved campaign, skips non-results, completes a
+  visible selection shake before opening, and offers persistently mutable
+  synthesized cabinet sounds. Its viewport-bounded sheet handles browser zoom
+  and short screens, disables motion when requested, and keeps the future AR
+  action explicitly inert.
 - `tournament/CupInviteConsole` — organiser bench multi-invite and RSVP status
   surface; it submits the browser timezone offset with the local deadline,
   preserves accepted responses across delivery retry, and keeps responses

@@ -86,3 +86,29 @@ test("match-heavy reads embed sets instead of starting a second query", () => {
     expect(contents, source).not.toMatch(/\.from\(["']match_sets["']\)/);
   }
 });
+
+test("trophy sheet fits narrow effective viewports and keeps 44px controls", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 500 });
+  const trophyCss = readFileSync(path.join(process.cwd(), "components/trophies/TrophyCase.module.css"), "utf8");
+  await page.setContent(`<style>${productionCss()}${trophyCss}</style><div class="backdrop"><div class="sheet"><header class="sheetHeader"><div class="grabber"></div><button id="close" class="h-11 w-11">Close</button></header><div class="sheetBody"><div class="coverFrame" style="aspect-ratio:2.285714;width:min(100%,calc(38dvh * 2.285714))"></div><dl style="height:180px"></dl><div class="runRow"><span>R1</span><span>Avatar</span><span>A very long opponent name that must fit</span><span class="runScore">7–6 (12–10)</span></div></div></div></div>`);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  const sheetBox = await page.locator(".sheet").boundingBox();
+  expect(sheetBox!.width).toBeLessThanOrEqual(320);
+  expect(sheetBox!.height).toBeLessThanOrEqual(500);
+  const closeBox = await page.locator("#close").boundingBox();
+  expect(closeBox!.width).toBeGreaterThanOrEqual(44);
+  expect(closeBox!.height).toBeGreaterThanOrEqual(44);
+  expect(await page.locator(".sheetHeader").evaluate((element) => getComputedStyle(element).position)).toBe("sticky");
+});
+
+for (const [shape, ratio] of [["wide",16/7],["square",1],["three_two",3/2]] as const) {
+  test(`trophy cover preserves the ${shape} ratio`, async ({ page }) => {
+    await page.setViewportSize({ width:390, height:500 });
+    const trophyCss = readFileSync(path.join(process.cwd(), "components/trophies/TrophyCase.module.css"), "utf8");
+    await page.setContent(`<style>${productionCss()}${trophyCss}</style><div class="coverFrame" style="aspect-ratio:${ratio};width:min(100%,calc(38dvh * ${ratio}))"></div>`);
+    const box = await page.locator(".coverFrame").boundingBox();
+    expect(box!.width / box!.height).toBeCloseTo(ratio, 1);
+    expect(box!.width).toBeLessThanOrEqual(390);
+    expect(box!.height).toBeLessThanOrEqual(500 * 0.38 + 2);
+  });
+}
