@@ -48,7 +48,7 @@ is intentionally exact; never edit an applied file or move a filename.
 38. `20260718127000_unified_email_delivery_outbox.sql` - unified custom-email intent, claim, recovery, and health v3.
 39. `20260718128000_workflow_consistency_hardening.sql` - active actors, fact-safe deletion, precise scoring triggers, idempotent practice submission, safe RSVP generations, tournament atomicity, and health v4.
 40. `20260718129000_transaction_invariant_repairs.sql` - clean-stack grants, deterministic cup standings/placements, payload-safe retries, lifecycle revisions, atomic draw/replacement/cover RPCs, legacy outbox reconciliation, and health v5.
-41. `20260718130000_rpc_mutation_path_enforcement.sql` - revoke direct practice, RSVP, email-ledger, cup, placement, and championship-stage writes after callers use the canonical RPCs.
+41. `20260718130000_rpc_mutation_path_enforcement.sql` - revoke direct practice, RSVP, email-ledger, cup, placement, and championship-stage writes after callers use the canonical RPCs; supply explicit clean-stack service reads, organiser bootstrap, and guarded invite-activation column grants.
 
 The final four migrations are one compatible rollout chain. Apply the additive
 outbox, workflow, and invariant migrations (127-129) in order, deploy the
@@ -157,9 +157,9 @@ The committed pgTAP inventory and declared assertion plans are exact:
 4. `20260718126000_cup_trophies_invites.test.sql` - 10 assertions.
 5. `20260718127000_unified_email_outbox.test.sql` - 50 assertions.
 6. `20260718128000_workflow_consistency_hardening.test.sql` - 56 assertions.
-7. `20260718129000_transaction_invariants.test.sql` - 71 assertions.
+7. `20260718129000_transaction_invariants.test.sql` - 74 assertions.
 
-`npm run db:test` executes that filename order. The declared total is 253;
+`npm run db:test` executes that filename order. The declared total is 256;
 record an actual pass count only from command output for the current tree.
 
 ## Password recovery

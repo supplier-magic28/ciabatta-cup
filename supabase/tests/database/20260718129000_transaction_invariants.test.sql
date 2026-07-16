@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(71);
+select plan(74);
 
 select has_function('public','tournament_standings_v1',array['uuid'],'canonical cup standings exist');
 select has_function('public','canonical_tournament_placements_v1',array['uuid','tournament_completion_path'],'canonical placements exist');
@@ -19,6 +19,15 @@ select ok(has_column_privilege('authenticated','public.players','nickname','upda
   and has_column_privilege('authenticated','public.players','use_nickname','update')
   and has_column_privilege('authenticated','public.players','avatar_url','update'),'profile columns have least-privilege update grants');
 select ok(not has_column_privilege('authenticated','public.players','role','update'),'profile grant cannot change roles');
+select ok(has_column_privilege('authenticated','public.players','status','update')
+  and has_column_privilege('authenticated','public.players','joined_at','update'),
+  'invite acceptance has only the guarded activation columns');
+select ok(has_column_privilege('service_role','public.players','role','update'),
+  'trusted backend can bootstrap an organiser on a clean stack');
+select ok(not exists(
+  select 1 from pg_catalog.pg_tables t where t.schemaname='public'
+    and not has_table_privilege('service_role',format('%I.%I',t.schemaname,t.tablename),'select')
+  ),'trusted backend can reconstruct current public facts on a clean stack');
 select ok(not has_table_privilege('authenticated','public.practice_sessions','insert'),'practice creation is RPC-only');
 select ok(not has_table_privilege('authenticated','public.tournament_invites','update'),'RSVP mutation is RPC-only');
 select ok(not has_table_privilege('service_role','public.custom_email_outbox','insert')

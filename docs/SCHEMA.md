@@ -82,7 +82,11 @@ Nicknames are display labels and are intentionally not unique. The avatar URL
 points to a public object in the `avatars` Storage bucket; upload, replacement,
 and deletion are restricted to an **active** owning player in the
 `<player_id>/` folder. Final Storage policies enforce the active-member check
-independently of the Server Action.
+independently of the Server Action. Invited identities additionally receive
+column grants for `status` and `joined_at`; RLS and
+`enforce_player_self_update()` restrict that path to their own one-way
+`invited -> active` transition. The server-only service role can update only
+`role` for trusted first-organiser bootstrap through the Data API.
 
 ### matches _(Phase 3a — implemented)_
 Immutable match facts (ADR-0001). Once `status = approved` a row is frozen by a
@@ -445,6 +449,9 @@ addition to their official placement award.
   migration 130 then revokes direct practice, RSVP, legacy email-ledger,
   tournament, participant, fixture, and placement mutation grants. Canonical
   security-definer RPCs retain explicit execute grants and own those writes.
+  Migration 130 also gives the server-only service role read access to the
+  current public fact model and the narrow `players.role` bootstrap column;
+  future tables still require an explicit reviewed grant.
 
 ## Non-Ciabatta opponents _(Phase 6 — implemented)_
 

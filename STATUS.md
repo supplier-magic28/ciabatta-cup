@@ -58,8 +58,8 @@ syntax issue recorded below.
 | Production build | Passed |
 | UI performance contracts | 5/5 passed; these are geometry/query-shape contracts only |
 | Browser smoke | 7/7 passed on a runner-owned dynamic port with exact preserved `next` destinations |
-| Database pgTAP/lint | All 253 declared pgTAP assertions passed (27+21+18+10+50+56+71). `db:lint` remains blocked before connection by malformed line 1 of `.env.local` |
-| Authenticated ranked integration | Implemented for a disposable Supabase CI stack; locally skipped and not yet verified because the same environment-file error prevents stack setup |
+| Database pgTAP/lint | All 256 declared pgTAP assertions passed locally (27+21+18+10+50+56+74). The preceding fresh-stack CI run passed database lint; the amended migration 130 is awaiting its replacement clean-stack CI proof |
+| Authenticated ranked integration | Node 24 now reaches the authenticated test. Its first clean-stack run exposed missing explicit service/bootstrap grants; migration 130 now supplies them and the replacement CI proof is pending |
 | Production post-129 health | Operator-reported zero drift, no integrity issues, 18 sent deliveries, and no actionable deliveries |
 
 ## Active risks
@@ -76,6 +76,9 @@ syntax issue recorded below.
   remote migration-history entries still need to be marked applied before a
   future linked `db push`. Migration 130 must remain pending until the new
   application has deployed and passed the controlled production smoke suite.
+- The amended migration 130 has 74/74 focused and 256/256 aggregate local pgTAP
+  coverage, but must not be applied until fresh-stack CI proves its clean
+  application and authenticated ranked lifecycle.
 - Until the application cutover and final enforcement complete, old application
   instances can still use legacy email-ledger and direct mutation paths that
   migration 130 is designed to revoke.

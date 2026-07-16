@@ -101,6 +101,11 @@ require an active player. Inactive members retain historical read access but
 cannot mutate league facts or exercise organiser authority. Direct table grants
 are removed where a validated RPC owns the mutation. The Supabase secret key is
 server-only and is used only for genuine administrative/integration boundaries.
+Clean projects explicitly grant its `service_role` read access to the current
+public fact model so projection rebuilds do not depend on deprecated automatic
+Data API exposure. Its sole direct player mutation is the reviewed first-admin
+`role` bootstrap; browser activation receives only `status`/`joined_at` and is
+still constrained by RLS and the one-way profile trigger.
 
 ### Presentation architecture
 

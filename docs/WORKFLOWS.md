@@ -186,7 +186,7 @@ but cache or delivery recovery remains available at `/admin/health`.
 | Contract | Current behaviour |
 | --- | --- |
 | Actor/status | Active organiser invites or deletes; self-deletion is forbidden. |
-| Transaction boundary | Supabase Auth admin API creates/deletes the identity. `handle_new_user` atomically creates the profile. Before deletion, `player_deletion_blockers_v1` checks all historical fact families using trusted server context. |
+| Transaction boundary | Supabase Auth admin API creates/deletes the identity. `handle_new_user` atomically creates the profile. Clean-stack grants let the trusted service role bootstrap `players.role`; invitees receive only `status`/`joined_at`, with RLS and `enforce_player_self_update()` limiting activation to their own one-way transition. Before deletion, `player_deletion_blockers_v1` checks all historical fact families using trusted server context. |
 | Transitions | Auth invite -> `players.status = invited` -> password completion -> `active`. Hard deletion exists only for a genuinely fact-free identity; otherwise deactivate. |
 | Idempotency | Provider invite semantics prevent duplicate identities. A missing deletion target is a stable no-longer-exists result. |
 | Approval | Active organiser only. |
@@ -218,7 +218,7 @@ but cache or delivery recovery remains available at `/admin/health`.
 | Contract | Current behaviour |
 | --- | --- |
 | Actor/status | Active organiser triggers player invite; any user may request password recovery; Supabase owns confirmation/invite/recovery token delivery. |
-| Transaction boundary | Supabase Auth creates/verifies tokens and sessions. `/auth/confirm` exchanges the token; invite/password actions activate an invited profile only after password update succeeds. |
+| Transaction boundary | Supabase Auth creates/verifies tokens and sessions. `/auth/confirm` exchanges the token; invite/password actions activate an invited profile only after password update succeeds. Explicit `status`/`joined_at` column grants make that guarded transition portable to clean Supabase projects without broad profile mutation access. |
 | Transitions | Invited -> active after verified password setup; recovery preserves status and replaces the Auth password. |
 | Idempotency | Provider token expiry/one-time-use semantics; callback validates only safe internal `next` destinations. |
 | Approval | No domain approval; Auth verification is the trust boundary. |

@@ -127,7 +127,10 @@ For the current hardening release:
 7. Only then apply `20260718130000_rpc_mutation_path_enforcement.sql`. It revokes
    obsolete direct practice, RSVP, email-ledger, and broad cup mutation paths;
    activates active-member Storage policies; and installs transaction-marker
-   guards around championship stages, placements, and completion.
+   guards around championship stages, placements, and completion. It also
+   supplies explicit clean-stack service-role reads and organiser-bootstrap
+   access plus the guarded invitee activation columns required when automatic
+   Data API grants are disabled.
 8. Repeat health, practice retry, RSVP, group draw/replacement, stage,
    completion, cover, and delivery recovery checks against the enforced
    boundary, then reopen general mutations.

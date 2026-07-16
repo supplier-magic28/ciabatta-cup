@@ -2,6 +2,15 @@
 -- migrations 127-129 (ADR-0043). Keep this as a separate rollout step so the
 -- additive database boundary and application can be released before lockdown.
 
+-- Clean projects no longer auto-expose public tables to Data API roles. The
+-- server-only service role must be able to reconstruct facts and bootstrap the
+-- first organiser, while an invited browser identity needs only the two
+-- columns used by its guarded invited -> active transition. RLS plus
+-- enforce_player_self_update() remains the row/state boundary.
+grant select on all tables in schema public to service_role;
+grant update(role) on public.players to service_role;
+grant update(status,joined_at) on public.players to authenticated;
+
 -- Practice creation is idempotent only through submit_practice_v1.
 drop policy if exists "practice_owner_insert" on public.practice_sessions;
 revoke insert on public.practice_sessions from authenticated;

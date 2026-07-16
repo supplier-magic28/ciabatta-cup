@@ -81,3 +81,7 @@ RPCs.
 - The additive migrations depend on ADR-0042's outbox and must be applied in
   order through 129; compatibility wrappers/grants allow the app to roll
   forward before migration 130 enforces RPC-only mutation.
+- Clean-stack enforcement explicitly grants the trusted service role read
+  access to the current public fact model and `players.role` bootstrap, while
+  invited browser identities receive only the `status`/`joined_at` columns
+  constrained by RLS and the one-way activation trigger.
