@@ -121,7 +121,9 @@ export function TournamentListSkeleton() {
     <LoadingRegion className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 pb-12 pt-5 sm:px-6">
       <HeaderSkeleton />
       <div className="mb-6 flex justify-between"><Skeleton className="h-10 w-52" /><Skeleton className="h-10 w-24" /></div>
-      <div className="grid gap-4 sm:grid-cols-2">{Array.from({ length: 4 }, (_, index) => <div key={index} className="h-36 border-2 border-ink bg-surface p-5 shadow-[4px_4px_0_var(--color-ink)]"><Skeleton className="h-6 w-2/3" /><Skeleton className="mt-8 h-4 w-3/4" /><Skeleton className="mt-2 h-4 w-1/2" /></div>)}</div>
+      <Skeleton className="mb-3 h-7 w-40" />
+      <div className="grid gap-4 sm:grid-cols-2">{Array.from({ length: 2 }, (_, index) => <div key={index} className="h-36 border-2 border-ink bg-surface p-5 shadow-[4px_4px_0_var(--color-ink)]"><Skeleton className="h-6 w-2/3" /><Skeleton className="mt-8 h-4 w-3/4" /><Skeleton className="mt-2 h-4 w-1/2" /></div>)}</div>
+      <div className="my-10"><div className="mb-4 flex justify-between"><Skeleton className="h-9 w-44"/><Skeleton className="h-4 w-24"/></div><div className="h-[430px] rounded-[12px] border-[3px] border-ink bg-crust p-5 shadow-[5px_5px_0_var(--color-ink)]"><Skeleton className="mx-auto h-7 w-40 bg-crust-top"/><div className="mt-5 h-[340px] border-[3px] border-ink bg-ink p-5"><div className="grid h-1/2 grid-cols-2 items-end gap-5 border-b-[12px] border-crust"><Skeleton className="mx-auto h-28 w-20 bg-muted-dark"/><Skeleton className="mx-auto h-28 w-20 bg-muted-dark"/></div><div className="grid h-1/2 grid-cols-2 items-end gap-5 border-b-[12px] border-crust"><Skeleton className="mx-auto h-24 w-20 bg-muted-dark"/><Skeleton className="mx-auto h-24 w-20 bg-muted-dark"/></div></div></div></div>
     </LoadingRegion>
   );
 }

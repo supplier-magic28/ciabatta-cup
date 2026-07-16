@@ -17,6 +17,8 @@ of Done (`CLAUDE.md`).
 - `brand/TrophyBadge` — compact earned-tournament trophy icon used in ladder rows.
 - `brand/ClaymoreCupIcon` — reusable sword, ball, and clay trophy mark used by
   Claymore cup pages, invitations, and official winner history.
+- `brand/RankedCupIcon` — generic tennis-cup mark for ranked wins without a
+  named collectible identity.
 - `brand/Wordmark` — "CIABATTA CUP" wordmark, `tone` light/dark.
 
 **UI primitives**
@@ -124,6 +126,10 @@ of Done (`CLAUDE.md`).
   immediate `Opening…` state and duplicate-activation lock.
 
 **Tournaments**
+- `trophies/TrophyCase` — authenticated player's derived wooden cabinet and
+  deep-linkable, focus-contained trophy detail sheet. It preserves cup cover
+  crops, shows the complete approved campaign, skips non-results, disables
+  motion when requested, and keeps the future AR action explicitly inert.
 - `tournament/CupInviteConsole` — organiser bench multi-invite and RSVP status
   surface; it submits the browser timezone offset with the local deadline,
   preserves accepted responses across delivery retry, and keeps responses

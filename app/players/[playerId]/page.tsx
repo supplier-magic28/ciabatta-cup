@@ -57,7 +57,7 @@ export default async function PlayerProfilePage({
       .select("id, player1_id, player2_id, winner_id, type, status, played_at, tournament_id, fixture_id, surface, match_sets(set_number, p1_games, p2_games, tiebreak_p1, tiebreak_p2)")
       .eq("status", "approved"),
     supabase.from("external_match_details").select("match_id, opponent_name"),
-    supabase.from("tournaments").select("id, counts_as"),
+    supabase.from("tournaments").select("id, counts_as, trophy_key, trophy_name, starts_at, timezone"),
     supabase.from("fixtures").select("id, ruleset"),
   ]);
 

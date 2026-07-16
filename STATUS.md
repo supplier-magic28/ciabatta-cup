@@ -41,6 +41,11 @@ model in `docs/SCHEMA.md`, and decision history in the ADR index.
   one reconstructable outbox with atomic claims, terminal supersession for
   obsolete RSVP generations, and health recovery. Supabase Auth confirmation/
   invite/recovery mail remains provider-owned by design.
+- `/tournaments` now separates upcoming cups from the archive around an
+  always-visible personal trophy case. Ranked first-place awards, repeat
+  collectibles, event metadata, cover crops, and the winner's complete approved
+  campaign are derived read-only from existing placement and match facts; the
+  3D/AR action is visibly deferred until final model assets exist.
 
 ## Latest verification
 
@@ -53,7 +58,7 @@ syntax issue recorded below.
 | --- | --- |
 | Aggregate application preflight | Passed on the current tree; every `npm run verify` constituent is green |
 | ESLint / TypeScript | Passed / passed |
-| Vitest | 268 tests passed; one fresh-Supabase integration test skipped by design |
+| Vitest | 273 tests passed; one fresh-Supabase integration test skipped by design |
 | Documentation gates | `docs:check` and `docs:impact` passed; structural fixtures 16/16 and impact fixtures 8/8 passed |
 | Production build | Passed |
 | UI performance contracts | 5/5 passed; these are geometry/query-shape contracts only |

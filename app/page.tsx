@@ -36,7 +36,7 @@ export default async function Home() {
       .from("players")
       .select("id, first_name, last_name, email, nickname, use_nickname, avatar_url, status")
       .order("first_name", { ascending: true }),
-    supabase.from("tournaments").select("id, counts_as, trophy_key, trophy_name, starts_at"),
+    supabase.from("tournaments").select("id, counts_as, trophy_key, trophy_name, starts_at, timezone"),
     supabase.from("fixtures").select("id, ruleset"),
     supabase.from("planned_matches").select("id, created_by, opponent_player_id, opponent_external_id, scheduled_at, location, status, external_opponents(display_name)").in("status", ["proposed", "locked_in"]).order("scheduled_at", { ascending:true }).limit(8),
   ]);

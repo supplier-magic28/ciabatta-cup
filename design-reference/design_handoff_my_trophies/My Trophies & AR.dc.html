@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="./image-slot.js"></script>
+<style>
+  body { margin:0; background:#20221E; font-family:'Work Sans',sans-serif; }
+  a { color:#C9DA5A; text-decoration:none; }
+  a:hover { color:#ffffff; }
+  @keyframes arSway { 0%,100% { transform:rotateY(-32deg); } 50% { transform:rotateY(32deg); } }
+  @keyframes scanPulse { 0%,100% { transform:rotateX(58deg) scale(0.9); opacity:0.55; } 50% { transform:rotateX(58deg) scale(1); opacity:1; } }
+</style>
+</helmet>
+
+<svg width="0" height="0" style="position:absolute;">
+  <defs>
+    <g id="claymoreCup">
+      <circle cx="70" cy="92" r="27" fill="#C9DA5A" stroke="#1B1A16" stroke-width="3"></circle>
+      <path d="M50,75 Q66,92 50,109" fill="none" stroke="#EFE6D0" stroke-width="3.5"></path>
+      <path d="M90,75 Q74,92 90,109" fill="none" stroke="#EFE6D0" stroke-width="3.5"></path>
+      <path d="M65.5,55 L74.5,55 L71.5,140 L70,148 L68.5,140 Z" fill="#EFE6D0" stroke="#1B1A16" stroke-width="2.5" stroke-linejoin="round"></path>
+      <line x1="70" y1="60" x2="70" y2="132" stroke="#8C8672" stroke-width="1.5"></line>
+      <path d="M67,49 L41,61 L43.5,67 L68,56 Z" fill="#D9CCAE" stroke="#1B1A16" stroke-width="2.5" stroke-linejoin="round"></path>
+      <path d="M73,49 L99,61 L96.5,67 L72,56 Z" fill="#D9CCAE" stroke="#1B1A16" stroke-width="2.5" stroke-linejoin="round"></path>
+      <circle cx="41" cy="64" r="4.5" fill="#C98A4B" stroke="#1B1A16" stroke-width="2.5"></circle>
+      <circle cx="99" cy="64" r="4.5" fill="#C98A4B" stroke="#1B1A16" stroke-width="2.5"></circle>
+      <rect x="66" y="18" width="8" height="33" rx="2" fill="#8C5426" stroke="#1B1A16" stroke-width="2.5"></rect>
+      <path d="M66,25 h8 M66,32 h8 M66,39 h8 M66,46 h8" stroke="#1B1A16" stroke-width="1.5"></path>
+      <circle cx="70" cy="12" r="8.5" fill="#C98A4B" stroke="#1B1A16" stroke-width="2.5"></circle>
+      <circle cx="70" cy="12" r="3" fill="#1B1A16"></circle>
+      <path d="M38,128 l7,-6 l2,7 Z" fill="#A0442C" stroke="#1B1A16" stroke-width="2" stroke-linejoin="round"></path>
+      <path d="M97,126 l8,-3 l-2,8 Z" fill="#A0442C" stroke="#1B1A16" stroke-width="2" stroke-linejoin="round"></path>
+      <path d="M18,168 Q22,148 44,141 Q56,137 70,137 Q84,137 96,141 Q118,148 122,168 Z" fill="#A0442C" stroke="#1B1A16" stroke-width="3" stroke-linejoin="round"></path>
+      <path d="M46,143 Q58,139.5 70,139.5 Q82,139.5 94,143" fill="none" stroke="#C98A4B" stroke-width="3"></path>
+      <path d="M62,141 l-8,5 M78,141 l8,5 M70,143 l0,7" stroke="#1B1A16" stroke-width="2" fill="none"></path>
+      <circle cx="38" cy="156" r="1.8" fill="#7C3220"></circle>
+      <circle cx="55" cy="151" r="1.8" fill="#7C3220"></circle>
+      <circle cx="88" cy="153" r="1.8" fill="#7C3220"></circle>
+      <circle cx="103" cy="160" r="1.8" fill="#7C3220"></circle>
+    </g>
+    <g id="rankedCup">
+      <path d="M35,22 L85,22 L79,58 Q71,76 60,76 Q49,76 41,58 Z" fill="#C98A4B" stroke="#1B1A16" stroke-width="3" stroke-linejoin="round"></path>
+      <path d="M35,27 Q13,32 21,50 Q26,60 41,58" fill="none" stroke="#1B1A16" stroke-width="8"></path>
+      <path d="M35,27 Q13,32 21,50 Q26,60 41,58" fill="none" stroke="#C98A4B" stroke-width="4"></path>
+      <path d="M85,27 Q107,32 99,50 Q94,60 79,58" fill="none" stroke="#1B1A16" stroke-width="8"></path>
+      <path d="M85,27 Q107,32 99,50 Q94,60 79,58" fill="none" stroke="#C98A4B" stroke-width="4"></path>
+      <line x1="40" y1="30" x2="80" y2="30" stroke="#8C5426" stroke-width="2"></line>
+      <circle cx="60" cy="21" r="11" fill="#C9DA5A" stroke="#1B1A16" stroke-width="2.5"></circle>
+      <path d="M52,14 Q60,21 52,28 M68,14 Q60,21 68,28" fill="none" stroke="#EFE6D0" stroke-width="2"></path>
+      <rect x="54" y="76" width="12" height="15" fill="#8C5426" stroke="#1B1A16" stroke-width="2.5"></rect>
+      <path d="M42,105 L78,105 L72,91 L48,91 Z" fill="#8C5426" stroke="#1B1A16" stroke-width="2.5" stroke-linejoin="round"></path>
+      <rect x="34" y="105" width="52" height="11" rx="2" fill="#C98A4B" stroke="#1B1A16" stroke-width="2.5"></rect>
+    </g>
+  </defs>
+</svg>
+
+<section data-screen-label="My Trophies — Trophy Case, Detail Sheet, AR Flow" style="padding:48px 56px 72px 56px; display:flex; flex-direction:column; gap:56px;">
+  <div>
+    <div style="color:#8A9188; font-family:'IBM Plex Mono',monospace; font-size:13px; letter-spacing:2px; margin-bottom:6px;">MY TROPHIES · TROPHY CASE + DETAIL SHEET + "SEE MY TROPHY" AR FLOW</div>
+    <div style="color:#8A9188; font-family:'Work Sans',sans-serif; font-size:13px; max-width:760px;">A wooden trophy case in the cups area holding every cup you've won. Tap a trophy — it shakes, then opens its full story. From there, "See My Trophy" places a slowly rotating 3D model of it on a real surface through your camera.</div>
+  </div>
+
+  <div style="display:flex; flex-wrap:wrap; gap:48px; align-items:flex-start;">
+
+    <!-- ============ 01 TROPHY CASE ============ -->
+    <div style="width:700px; flex-shrink:0; display:flex; flex-direction:column; gap:14px;">
+      <div style="color:#8A9188; font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:2px;">01 · THE TROPHY CASE · CUPS AREA</div>
+      <div style="color:#8A9188; font-family:'Work Sans',sans-serif; font-size:12px;">Lives on /tournaments beneath upcoming cups. Always rendered — an empty case sells the chase. Tap the claymore below to feel the shake.</div>
+      <div style="background:#EFE6D0; border:2px solid #1B1A16; border-radius:12px; padding:26px 28px 22px 28px;">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; color:#8C8672; margin-bottom:14px;">CUPS · /TOURNAMENTS</div>
+        <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px;">
+          <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:24px; color:#1B1A16; white-space:nowrap;">My trophies</div>
+          <sc-if value="{{ hasTrophies }}" hint-placeholder-val="{{ true }}">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1.5px; color:#8C8672; white-space:nowrap;">2 ON THE SHELF</div>
+          </sc-if>
+          <sc-if value="{{ emptyCase }}" hint-placeholder-val="{{ false }}">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1.5px; color:#8C8672; white-space:nowrap;">NOTHING YET</div>
+          </sc-if>
+        </div>
+        <div style="border:3px solid #1B1A16; border-radius:12px; box-shadow:5px 5px 0 #1B1A16; overflow:hidden; background:linear-gradient(160deg,#7A4B2A,#5A3520 55%,#4A2A16); padding:14px 16px 18px 16px;">
+          <div style="margin:0 auto 13px auto; width:max-content; background:linear-gradient(180deg,#D9A05B,#9C6230); border:2px solid #1B1A16; border-radius:4px; padding:5px 20px; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; color:#3B2008; text-shadow:0 1px 0 rgba(255,255,255,0.35); box-shadow:inset 0 1px 0 rgba(255,255,255,0.5), 0 2px 4px rgba(0,0,0,0.4); white-space:nowrap;">MY TROPHIES</div>
+          <div style="border:2px solid #2A1709; border-radius:8px; background:radial-gradient(ellipse 90% 55% at 50% 0%, rgba(255,196,110,0.16), transparent 65%), repeating-linear-gradient(90deg, rgba(0,0,0,0.16) 0px, rgba(0,0,0,0.16) 3px, rgba(255,255,255,0.02) 3px, rgba(255,255,255,0.02) 6px, transparent 6px, transparent 84px), linear-gradient(180deg,#3A2312,#2B180B); box-shadow:inset 0 8px 24px rgba(0,0,0,0.6), inset 0 -4px 12px rgba(0,0,0,0.4); padding:30px 26px 4px 26px;">
+            <sc-if value="{{ hasTrophies }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex; align-items:flex-end; justify-content:center; padding:0 10px; margin-bottom:-1px;">
+                <div onClick="{{ shakeTrophy }}" style="cursor:pointer; transform-origin:50% 100%; display:flex; flex-direction:column; align-items:center; gap:7px;" style-hover="transform:translateY(-3px)">
+                  <svg width="100" height="121" viewBox="0 0 140 170" style="filter:drop-shadow(0 10px 8px rgba(0,0,0,0.45));"><use href="#claymoreCup"></use></svg>
+                  <div style="background:linear-gradient(180deg,#241308,#170C04); border:1.5px solid #000000; border-radius:3px; padding:4px 8px;">
+                    <div style="background:linear-gradient(180deg,#D9A05B,#9C6230); border-radius:2px; padding:3px 10px; font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:1.5px; color:#3B2008; white-space:nowrap;">THE CLAYMORE · 2026</div>
+                  </div>
+                </div>
+              </div>
+              <div style="height:14px; border-radius:2px; background:linear-gradient(180deg,#A06A3C,#6B4123 45%,#4E2C14); border:1.5px solid #241206; box-shadow:0 10px 14px rgba(0,0,0,0.5);"></div>
+              <div style="display:flex; align-items:flex-end; justify-content:space-evenly; padding:0 10px; margin-top:28px; margin-bottom:-1px;">
+                <div onClick="{{ shakeTrophy }}" style="cursor:pointer; transform-origin:50% 100%; display:flex; flex-direction:column; align-items:center; gap:7px;" style-hover="transform:translateY(-3px)">
+                  <svg width="82" height="89" viewBox="0 0 120 130" style="filter:drop-shadow(0 10px 8px rgba(0,0,0,0.45));"><use href="#rankedCup"></use></svg>
+                  <div style="background:linear-gradient(180deg,#241308,#170C04); border:1.5px solid #000000; border-radius:3px; padding:4px 8px;">
+                    <div style="background:linear-gradient(180deg,#D9A05B,#9C6230); border-radius:2px; padding:3px 10px; font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:1.5px; color:#3B2008; white-space:nowrap;">RANKED CUP · MAY 2026</div>
+                  </div>
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:center; gap:7px;">
+                  <div style="filter:brightness(0.25) saturate(0.3); opacity:0.4;"><svg width="74" height="90" viewBox="0 0 140 170"><use href="#claymoreCup"></use></svg></div>
+                  <div style="border:1.5px dashed rgba(255,255,255,0.28); border-radius:3px; padding:5px 12px; font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:1.5px; color:rgba(255,255,255,0.4); white-space:nowrap;">NEXT CUP</div>
+                </div>
+              </div>
+              <div style="height:14px; border-radius:2px; background:linear-gradient(180deg,#A06A3C,#6B4123 45%,#4E2C14); border:1.5px solid #241206; box-shadow:0 10px 14px rgba(0,0,0,0.5);"></div>
+            </sc-if>
+            <sc-if value="{{ emptyCase }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex; align-items:flex-end; justify-content:space-evenly; padding:0 10px; margin-bottom:-1px;">
+                <div style="filter:brightness(0.25) saturate(0.3); opacity:0.4;"><svg width="86" height="104" viewBox="0 0 140 170"><use href="#claymoreCup"></use></svg></div>
+                <div style="filter:brightness(0.25) saturate(0.3); opacity:0.35;"><svg width="70" height="76" viewBox="0 0 120 130"><use href="#rankedCup"></use></svg></div>
+              </div>
+              <div style="height:14px; border-radius:2px; background:linear-gradient(180deg,#A06A3C,#6B4123 45%,#4E2C14); border:1.5px solid #241206; box-shadow:0 10px 14px rgba(0,0,0,0.5);"></div>
+              <div style="display:flex; justify-content:center; padding:26px 0 22px 0;">
+                <div style="background:linear-gradient(180deg,#D9A05B,#9C6230); border:2px solid #1B1A16; border-radius:4px; padding:6px 18px; font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; color:#3B2008; text-shadow:0 1px 0 rgba(255,255,255,0.35); white-space:nowrap;">WIN A CUP TO FILL THIS SHELF</div>
+              </div>
+            </sc-if>
+            <div style="height:16px;"></div>
+          </div>
+        </div>
+        <div style="margin-top:16px; display:flex; align-items:center; gap:10px; font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:1.5px; color:#8C8672;">
+          <span style="background:#1B1A16; color:#C9DA5A; padding:3px 8px; border-radius:3px; white-space:nowrap;">TAP</span>
+          <span style="white-space:nowrap;">→ SHAKES 400MS →</span>
+          <span style="background:#1B1A16; color:#C9DA5A; padding:3px 8px; border-radius:3px; white-space:nowrap;">DETAIL SHEET</span>
+          <span>OPENS FROM THE BOTTOM</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 02 DETAIL SHEET ============ -->
+    <div style="width:420px; flex-shrink:0; display:flex; flex-direction:column; gap:14px;">
+      <div style="color:#8A9188; font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:2px;">02 · TROPHY DETAIL SHEET</div>
+      <div style="color:#8A9188; font-family:'Work Sans',sans-serif; font-size:12px;">Slides up over the cups page after the shake. Every field is auto-sourced from the tournament record — nothing is hand-entered.</div>
+      <div style="height:860px; border:2px solid #1B1A16; border-radius:14px; background:linear-gradient(180deg,#57544B,#45423B); display:flex; flex-direction:column; justify-content:flex-end; overflow:hidden;">
+        <div style="background:#F7F0DE; border-top:2.5px solid #1B1A16; border-radius:18px 18px 0 0; padding-bottom:20px;">
+          <div style="width:44px; height:5px; border-radius:99px; background:rgba(27,26,22,0.25); margin:10px auto 4px auto;"></div>
+          <div style="display:flex; align-items:center; gap:14px; padding:8px 22px 0 22px;">
+            <div style="width:56px; height:56px; border-radius:50%; background:#C9DA5A; border:2px solid #1B1A16; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+              <svg width="30" height="36" viewBox="0 0 140 170"><use href="#claymoreCup"></use></svg>
+            </div>
+            <div style="min-width:0;">
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1.5px; color:#8C5426; white-space:nowrap;">CIABATTA CLAYMORE CUP · CHAMPION</div>
+              <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:26px; color:#1B1A16; line-height:1.1; margin-top:2px;">The Claymore</div>
+            </div>
+          </div>
+          <div style="margin:14px 22px 0 22px; background:linear-gradient(180deg,#D9A05B,#9C6230); border:2px solid #1B1A16; border-radius:4px; padding:7px 12px; text-align:center; font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:2px; color:#3B2008; text-shadow:0 1px 0 rgba(255,255,255,0.35); white-space:nowrap;">A. ALCARINGO · CHAMPION · MMXXVI</div>
+          <div style="margin:14px 22px 0 22px; height:168px; border:2px solid #1B1A16; border-radius:8px; overflow:hidden;">
+            <image-slot id="trophy-photo-claymore" placeholder="Tournament-day photo — auto: the cup's cover photo, saved crop preserved" style="width:100%; height:100%; display:block;"></image-slot>
+          </div>
+          <div style="margin:14px 22px 0 22px; border:2px solid #1B1A16; border-radius:8px; background:#EFE6D0; overflow:hidden; display:grid; grid-template-columns:1fr 1fr;">
+            <div style="padding:10px 14px; border-bottom:1px solid #D9CCAE; border-right:1px solid #D9CCAE;">
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:8.5px; letter-spacing:1.5px; color:#8C8672;">DATE</div>
+              <div style="font-family:'Work Sans',sans-serif; font-size:13px; font-weight:600; color:#1B1A16; margin-top:2px;">Sat 1 Aug 2026</div>
+            </div>
+            <div style="padding:10px 14px; border-bottom:1px solid #D9CCAE;">
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:8.5px; letter-spacing:1.5px; color:#8C8672;">LOCATION</div>
+              <div style="font-family:'Work Sans',sans-serif; font-size:13px; font-weight:600; color:#1B1A16; margin-top:2px;">Northcote Tennis Club</div>
+            </div>
+            <div style="padding:10px 14px; border-right:1px solid #D9CCAE;">
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:8.5px; letter-spacing:1.5px; color:#8C8672;">SURFACE</div>
+              <div style="display:flex; align-items:center; gap:6px; margin-top:3px;">
+                <div style="width:10px; height:10px; border-radius:50%; background:#A0442C; border:1.5px solid #1B1A16;"></div>
+                <div style="font-family:'Work Sans',sans-serif; font-size:13px; font-weight:600; color:#1B1A16;">Clay</div>
+              </div>
+            </div>
+            <div style="padding:10px 14px;">
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:8.5px; letter-spacing:1.5px; color:#8C8672;">FIELD</div>
+              <div style="font-family:'Work Sans',sans-serif; font-size:13px; font-weight:600; color:#1B1A16; margin-top:2px;">6 players · knockout</div>
+            </div>
+          </div>
+          <div style="margin:16px 22px 0 22px;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; color:#8C8672;">THE RUN · THREE WINS</div>
+            <div style="display:flex; align-items:center; gap:10px; padding:10px 2px; border-bottom:1.5px dashed #D9CCAE;">
+              <div style="width:26px; font-family:'IBM Plex Mono',monospace; font-size:9px; font-weight:700; color:#8C8672;">QF</div>
+              <img src="players/ben.png" alt="Ben" style="width:32px; height:32px; border-radius:50%; border:1.5px solid #1B1A16; object-fit:cover;">
+              <div style="flex:1; font-family:'Work Sans',sans-serif; font-size:13px; font-weight:600; color:#1B1A16;">d. Ben</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:700; color:#1B1A16; white-space:nowrap;">6-3</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px; padding:10px 2px; border-bottom:1.5px dashed #D9CCAE;">
+              <div style="width:26px; font-family:'IBM Plex Mono',monospace; font-size:9px; font-weight:700; color:#8C8672;">SF</div>
+              <img src="players/string.png" alt="String" style="width:32px; height:32px; border-radius:50%; border:1.5px solid #1B1A16; object-fit:cover;">
+              <div style="flex:1; font-family:'Work Sans',sans-serif; font-size:13px; font-weight:600; color:#1B1A16;">d. String</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:700; color:#1B1A16; white-space:nowrap;">4-6 6-4 [10-7]</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px; padding:10px 8px; background:#C9DA5A; border:1.5px solid #1B1A16; border-radius:6px; margin-top:8px;">
+              <div style="width:20px; font-family:'IBM Plex Mono',monospace; font-size:9px; font-weight:700; color:#1B1A16;">F</div>
+              <img src="players/ringo.png" alt="Ringo" style="width:32px; height:32px; border-radius:50%; border:1.5px solid #1B1A16; object-fit:cover;">
+              <div style="flex:1; font-family:'Work Sans',sans-serif; font-size:13px; font-weight:600; color:#1B1A16;">d. Ringo</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:700; color:#1B1A16; white-space:nowrap;">7-5 6-4</div>
+            </div>
+          </div>
+          <div style="margin:18px 22px 0 22px; background:#C9DA5A; border:2px solid #1B1A16; border-radius:10px; box-shadow:3px 3px 0 #1B1A16; padding:13px 16px; display:flex; align-items:center; justify-content:center; gap:12px; cursor:pointer;" style-hover="transform:translate(-1px,-1px); box-shadow:4px 4px 0 #1B1A16;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1B1A16" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3 L20 7.5 L20 16.5 L12 21 L4 16.5 L4 7.5 Z"></path><path d="M4 7.5 L12 12 L20 7.5 M12 12 L12 21"></path></svg>
+            <div>
+              <div style="font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:16px; color:#1B1A16; letter-spacing:0.5px;">SEE MY TROPHY</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:8.5px; letter-spacing:1.5px; color:#1B1A16; margin-top:1px; white-space:nowrap;">PLACE IT IN YOUR SPACE · USES CAMERA</div>
+            </div>
+          </div>
+          <div style="text-align:center; margin-top:12px; font-family:'IBM Plex Mono',monospace; font-size:8.5px; letter-spacing:1.5px; color:#8C8672;">SWIPE DOWN TO CLOSE</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 03 AR FLOW ============ -->
+  <div style="display:flex; flex-direction:column; gap:14px;">
+    <div style="color:#8A9188; font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:2px;">03 · "SEE MY TROPHY" · AR FLOW</div>
+    <div style="color:#8A9188; font-family:'Work Sans',sans-serif; font-size:12px; max-width:760px;">Mobile-first. Desktop stops at step 1 (the 3D viewer — no camera). Drop a photo of a room into the camera frames of steps 3–4 to sell the effect.</div>
+    <div style="display:flex; flex-wrap:wrap; gap:40px; align-items:flex-start;">
+
+      <div style="display:flex; flex-direction:column; gap:12px; width:434px;">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:2px; color:#C9DA5A;">STEP 1 · 3D VIEWER</div>
+        <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="434px,916px">
+          <div style="height:100%; background:radial-gradient(ellipse at 50% 32%, #2E2C25, #1B1A16 72%); display:flex; flex-direction:column; padding:72px 24px 46px 24px; box-sizing:border-box;">
+            <div style="display:flex; justify-content:flex-end;">
+              <div style="width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,0.12); color:#EFE6D0; display:flex; align-items:center; justify-content:center; font-size:18px;">✕</div>
+            </div>
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;">
+              <div style="perspective:800px;">
+                <div style="animation:arSway 7s ease-in-out infinite;">
+                  <svg width="190" height="231" viewBox="0 0 140 170" style="filter:drop-shadow(0 18px 16px rgba(0,0,0,0.55));"><use href="#claymoreCup"></use></svg>
+                </div>
+              </div>
+              <div style="width:190px; height:36px; border-radius:50%; background:radial-gradient(ellipse, rgba(201,218,90,0.28), rgba(201,218,90,0.03) 70%); margin-top:-8px;"></div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; color:#C9DA5A; margin-top:18px;">THE CLAYMORE · 2026</div>
+              <div style="font-family:'Work Sans',sans-serif; font-size:13px; color:#BFD3B4;">Drag to spin · pinch to zoom</div>
+            </div>
+            <div style="background:#C9DA5A; border:2px solid #1B1A16; border-radius:999px; padding:15px; text-align:center; font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:16px; color:#1B1A16;">Place in your space</div>
+            <div style="text-align:center; margin-top:10px; font-family:'IBM Plex Mono',monospace; font-size:8.5px; letter-spacing:2px; color:#8A9188;">AR · WEBXR / QUICK LOOK</div>
+          </div>
+        </x-import>
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; line-height:1.8; color:#8A9188;">OPENS FROM THE SHEET CTA · RENDERS CLAYMORE.GLB, AUTO-ROTATING<br>THIS SCREEN IS ALSO THE DESKTOP + NO-AR FALLBACK</div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:12px; width:434px;">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:2px; color:#C9DA5A;">STEP 2 · CAMERA PERMISSION</div>
+        <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="434px,916px">
+          <div style="height:100%; background:radial-gradient(ellipse at 50% 32%, #2E2C25, #1B1A16 72%); display:flex; flex-direction:column; padding:72px 24px 46px 24px; box-sizing:border-box; position:relative;">
+            <div style="opacity:0.3; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+              <svg width="190" height="231" viewBox="0 0 140 170"><use href="#claymoreCup"></use></svg>
+            </div>
+            <div style="opacity:0.3; background:#C9DA5A; border:2px solid #1B1A16; border-radius:999px; padding:15px; text-align:center; font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:16px; color:#1B1A16;">Place in your space</div>
+            <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;">
+              <div style="width:272px; background:rgba(246,246,246,0.98); border-radius:14px; overflow:hidden; text-align:center; box-shadow:0 18px 50px rgba(0,0,0,0.5); font-family:-apple-system,'SF Pro',system-ui,sans-serif;">
+                <div style="padding:19px 18px 4px 18px; font-size:15px; font-weight:600; color:#000000; line-height:1.3;">“Ciabatta Cup” Would Like to Access the Camera</div>
+                <div style="padding:0 18px 16px 18px; font-size:12.5px; color:#3C3C43; line-height:1.4;">To place your trophy on a real surface in front of you.</div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; border-top:0.5px solid #C6C6C8;">
+                  <div style="padding:12px; font-size:15px; color:#0A84FF; border-right:0.5px solid #C6C6C8;">Don't Allow</div>
+                  <div style="padding:12px; font-size:15px; font-weight:600; color:#0A84FF;">Allow</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </x-import>
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; line-height:1.8; color:#8A9188;">ASKED ONCE, ON FIRST AR LAUNCH · DENY → STAYS IN THE 3D VIEWER<br>WITH A "CAMERA NEEDED FOR AR" HINT UNDER THE BUTTON</div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:12px; width:434px;">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:2px; color:#C9DA5A;">STEP 3 · FIND A SURFACE</div>
+        <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="434px,916px">
+          <div style="height:100%; position:relative; overflow:hidden; background:#2A2620;">
+            <image-slot id="ar-room-scan" placeholder="Camera feed — drop a photo of a room" style="position:absolute; inset:0; width:100%; height:100%;"></image-slot>
+            <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; padding:76px 24px 50px 24px; box-sizing:border-box;">
+              <div style="background:rgba(27,26,22,0.75); color:#EFE6D0; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; padding:9px 16px; border-radius:999px; white-space:nowrap;">MOVE YOUR PHONE SLOWLY</div>
+              <div style="flex:1; display:flex; align-items:center; justify-content:center; perspective:600px;">
+                <div style="width:160px; height:160px; border:3px dashed #C9DA5A; border-radius:50%; animation:scanPulse 1.7s ease-in-out infinite; display:flex; align-items:center; justify-content:center;">
+                  <div style="width:10px; height:10px; border-radius:50%; background:#C9DA5A;"></div>
+                </div>
+              </div>
+              <div style="background:rgba(27,26,22,0.75); color:#EFE6D0; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; padding:9px 16px; border-radius:999px; white-space:nowrap;">POINT AT A TABLE OR THE FLOOR</div>
+            </div>
+          </div>
+        </x-import>
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; line-height:1.8; color:#8A9188;">PLANE DETECTION · RETICLE SITS FLAT ON CANDIDATE SURFACES<br>SNAPS SOLID + HAPTIC TICK WHEN A SURFACE LOCKS → TAP TO PLACE</div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:12px; width:434px;">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:2px; color:#C9DA5A;">STEP 4 · PLACED · SLOW SPIN</div>
+        <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="434px,916px">
+          <div style="height:100%; position:relative; overflow:hidden; background:#2A2620;">
+            <image-slot id="ar-room-placed" placeholder="Camera feed — drop a photo of a room" style="position:absolute; inset:0; width:100%; height:100%;"></image-slot>
+            <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; padding:76px 24px 44px 24px; box-sizing:border-box;">
+              <div style="background:linear-gradient(180deg,#D9A05B,#9C6230); border:2px solid #1B1A16; border-radius:4px; padding:6px 14px; font-family:'IBM Plex Mono',monospace; font-size:8.5px; letter-spacing:2px; color:#3B2008; text-shadow:0 1px 0 rgba(255,255,255,0.35); white-space:nowrap;">THE CLAYMORE · 2026 · A. ALCARINGO</div>
+              <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                <div style="perspective:800px;">
+                  <div style="animation:arSway {{ arSpin }} ease-in-out infinite;">
+                    <svg width="170" height="207" viewBox="0 0 140 170" style="filter:drop-shadow(0 14px 12px rgba(0,0,0,0.5));"><use href="#claymoreCup"></use></svg>
+                  </div>
+                </div>
+                <div style="width:130px; height:26px; border-radius:50%; background:radial-gradient(ellipse, rgba(0,0,0,0.45), rgba(0,0,0,0.02) 72%); margin-top:-10px;"></div>
+              </div>
+              <div style="background:rgba(27,26,22,0.75); color:#EFE6D0; font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1.5px; padding:7px 14px; border-radius:999px; margin-bottom:18px; white-space:nowrap;">PINCH TO RESIZE · DRAG TO MOVE</div>
+              <div style="display:flex; align-items:center; justify-content:center; gap:30px;">
+                <div style="width:44px; height:44px; border-radius:50%; background:rgba(27,26,22,0.75); color:#EFE6D0; display:flex; align-items:center; justify-content:center; font-size:19px;">↺</div>
+                <div style="width:66px; height:66px; border-radius:50%; border:3.5px solid #FFFFFF; display:flex; align-items:center; justify-content:center;">
+                  <div style="width:52px; height:52px; border-radius:50%; background:#FFFFFF;"></div>
+                </div>
+                <div style="height:44px; padding:0 18px; border-radius:999px; background:rgba(27,26,22,0.75); color:#EFE6D0; display:flex; align-items:center; font-family:'Work Sans',sans-serif; font-size:14px; font-weight:600;">Done</div>
+              </div>
+            </div>
+          </div>
+        </x-import>
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; line-height:1.8; color:#8A9188;">ANCHORED TO THE PLANE · ROTATES SLOWLY (TWEAKABLE SPEED →)<br>SHUTTER SAVES A PHOTO · ↺ RE-PLACES · DONE RETURNS TO THE SHEET</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 04 BUILD NOTES ============ -->
+  <div style="display:flex; flex-direction:column; gap:14px;">
+    <div style="color:#8A9188; font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:2px;">04 · WORKFLOW &amp; BUILD NOTES · FOR CODEX</div>
+    <div style="display:flex; flex-wrap:wrap; gap:28px; align-items:flex-start;">
+      <div style="width:420px; display:flex; flex-direction:column; gap:0;">
+        <div style="background:#EFE6D0; border:2px solid #1B1A16; border-radius:8px; padding:12px 16px;">
+          <div style="font-family:'Work Sans',sans-serif; font-size:13px; font-weight:600; color:#1B1A16;">1 · Cups page — the case</div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; line-height:1.65; color:#1B1A16; margin-top:4px;">Renders from existing ladder history: trophyAwards[] (claymore etc.) + ranked-trophy count. No new tables. Always visible; zero trophies = dust silhouettes.</div>
+        </div>
+        <div style="text-align:center; color:#8A9188; font-size:16px; padding:4px 0;">↓</div>
+        <div style="background:#EFE6D0; border:2px solid #1B1A16; border-radius:8px; padding:12px 16px;">
+          <div style="font-family:'Work Sans',sans-serif; font-size:13px; font-weight:600; color:#1B1A16;">2 · Tap → shake → sheet</div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; line-height:1.65; color:#1B1A16; margin-top:4px;">400ms WAAPI shake, transform-origin bottom-centre, then bottom sheet. Data: the cup's tournaments row + my completed fixtures in it.</div>
+        </div>
+        <div style="text-align:center; color:#8A9188; font-size:16px; padding:4px 0;">↓</div>
+        <div style="background:#EFE6D0; border:2px solid #1B1A16; border-radius:8px; padding:12px 16px;">
+          <div style="font-family:'Work Sans',sans-serif; font-size:13px; font-weight:600; color:#1B1A16;">3 · "See my trophy" — capability check</div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; line-height:1.65; color:#1B1A16; margin-top:4px;">Open the 3D viewer immediately, then branch on AR support:</div>
+        </div>
+        <div style="text-align:center; color:#8A9188; font-size:16px; padding:4px 0;">↓</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
+          <div style="background:#1B1A16; border:2px solid #1B1A16; border-radius:8px; padding:10px 12px;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1px; color:#C9DA5A;">IOS SAFARI</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:9.5px; line-height:1.6; color:#EFE6D0; margin-top:4px;">AR Quick Look → claymore.usdz</div>
+          </div>
+          <div style="background:#1B1A16; border:2px solid #1B1A16; border-radius:8px; padding:10px 12px;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1px; color:#C9DA5A;">ANDROID CHROME</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:9.5px; line-height:1.6; color:#EFE6D0; margin-top:4px;">WebXR / Scene Viewer → claymore.glb</div>
+          </div>
+          <div style="background:#1B1A16; border:2px solid #1B1A16; border-radius:8px; padding:10px 12px;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1px; color:#C9DA5A;">NO AR</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:9.5px; line-height:1.6; color:#EFE6D0; margin-top:4px;">Stay in full-screen 3D viewer</div>
+          </div>
+        </div>
+        <div style="text-align:center; color:#8A9188; font-size:16px; padding:4px 0;">↓</div>
+        <div style="background:#EFE6D0; border:2px solid #1B1A16; border-radius:8px; padding:12px 16px;">
+          <div style="font-family:'Work Sans',sans-serif; font-size:13px; font-weight:600; color:#1B1A16;">4 · Placed</div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; line-height:1.65; color:#1B1A16; margin-top:4px;">Anchored to the detected plane, rotating slowly, pinch-scalable. Shutter → photo to camera roll. Done → back to the sheet.</div>
+        </div>
+      </div>
+      <div style="width:460px; display:flex; flex-direction:column; gap:14px;">
+        <div style="background:#1B1A16; border:2px solid #8A9188; border-radius:8px; padding:14px 18px;">
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:2px; color:#C9DA5A; margin-bottom:8px;">DATA MAPPING · SHEET FIELD ← SOURCE</div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; line-height:1.9; color:#EFE6D0;">TROPHY NAME + YEAR ← tournaments.trophy_key / trophy_name + placement year<br>DATE · LOCATION · SURFACE ← starts_at · location_name · default_surface<br>PHOTO ← cover_image_url, saved frame crop preserved<br>THE RUN ← my completed fixtures in that cup, QF→F, opponent + score<br>AVATARS ← players.photo_url</div>
+        </div>
+        <div style="background:#EFE6D0; border:2px solid #1B1A16; border-radius:8px; box-shadow:3px 3px 0 #1B1A16; padding:14px 18px;">
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:2px; color:#8C5426; margin-bottom:8px;">AR ASSET PIPELINE · RECOMMENDED SHELL</div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; line-height:1.9; color:#1B1A16;">One model pair per trophy_key in /public/trophies/: claymore.glb + claymore.usdz (&lt;5MB, baked lighting).<br><br>&lt;model-viewer ar ar-modes="webxr scene-viewer quick-look" src=".glb" ios-src=".usdz" auto-rotate rotation-per-second="30deg" camera-controls&gt;<br><br>One tag covers viewer + AR handoff + fallback — no custom WebXR code. v1 ships a shared model per trophy; the engraved winner plate is a v2 texture pass.</div>
+        </div>
+        <div style="background:#EFE6D0; border:2px solid #1B1A16; border-radius:8px; padding:14px 18px;">
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:2px; color:#8C5426; margin-bottom:8px;">GUARDRAILS</div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; line-height:1.9; color:#1B1A16;">Camera asked once · deny keeps the 3D viewer.<br>"Place in your space" hidden on desktop — viewer only.<br>Trophies stay derived facts — the case reads existing history, writes nothing.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;emptyCase&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;section&quot;:&quot;Trophy case&quot;,&quot;tsType&quot;:&quot;boolean&quot;},&quot;arSpinSeconds&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:9,&quot;min&quot;:4,&quot;max&quot;:24,&quot;step&quot;:1,&quot;unit&quot;:&quot;s&quot;,&quot;section&quot;:&quot;AR&quot;,&quot;tsType&quot;:&quot;number&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const empty = this.props.emptyCase ?? false;
+    return {
+      emptyCase: empty,
+      hasTrophies: !empty,
+      arSpin: `${this.props.arSpinSeconds ?? 9}s`,
+      shakeTrophy: (e) => {
+        e.currentTarget.animate([
+          { transform: 'rotate(0deg)' },
+          { transform: 'rotate(-5deg) translateX(-2px)' },
+          { transform: 'rotate(4deg) translateX(2px)' },
+          { transform: 'rotate(-3deg)' },
+          { transform: 'rotate(2deg)' },
+          { transform: 'rotate(0deg)' },
+        ], { duration: 420, easing: 'ease-in-out' });
+      },
+    };
+  }
+}
+</script>
+</body>
+</html>

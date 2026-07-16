@@ -14,7 +14,8 @@ Canonical sources must be committed and maintained:
 - Preserved, Git-tracked visual inputs:
   `design-reference/design_handoff_ciabatta_cup/`,
   `design-reference/design_handoff_non_ciabatta/`, and
-  `design-reference/design_handoff_profile_updates/`.
+  `design-reference/design_handoff_profile_updates/`, and
+  `design-reference/design_handoff_my_trophies/`.
 
 Do not edit preserved handoff files. ZIP archives, missing externally supplied
 bundles, and untracked files are **not** part of the authority chain. They may
@@ -35,6 +36,7 @@ component inventory in the same task.
 | 06 Admin dashboard | `/admin/approvals`, `/admin/players`, `/admin/health` | Partial | Approval queue, roster, per-action pending feedback, loading queues, and green/amber/red backend health with guarded recovery controls exist as focused routes; general activity feed is pending. |
 | 07 Manage tournament | `/admin/tournaments/new`, `/admin/tournaments/[tournamentId]` | Implemented | Photo-first partial creation, 2–8 ordered seats with persisted players shown in their saved seeds, reversible schedule lock, independent formats, three championship paths, permanent atomic draw lock, multi-set scoring, deciders, finals, and recovery-aware email controls are live. Withdrawals and post-lock substitutions remain deferred. |
 | Claymore trophy + invites | `/admin/tournaments/[tournamentId]`, `/tournaments/[tournamentId]`, `/notifications`, `/` | Implemented | An ordinary cup can own the Claymore collectible; organisers over-invite the bench by email plus Zeus, players RSVP without taking a roster seat, the director retains final-field authority, saved photo crop metadata reaches email, and official winners wear the badge in ladder history. Native push remains deferred. |
+| My trophies | `/tournaments` | Implemented | The signed-in player always sees a derived wooden trophy case between upcoming cups and the archive. Named and generic ranked wins remain distinct, repeat wins stay on the shelf, and owned `?trophy={tournamentId}` deep links open an accessible campaign detail sheet with event-local metadata, preserved cover crop, opponent avatars, and player-oriented scores. The disabled “See my trophy · Coming soon” control reserves the handoff position; 3D models, `<model-viewer>`, and camera/AR behavior remain a separate asset-gated release. |
 | 08 Manage players | `/admin/players` | Partial | Invite, roster status, safe deletion of unused players, and stable pending/loading states are live; edit, deactivate, resend, and revoke flows are pending. |
 | My tennis calendar | `/calendar` | Implemented | Responsive grid/list, image-rich day and event drill-down, range-independent recent history, explicit outcomes, URL-preserved instant client controls, cup aggregation including public dated drafts for open-field discovery, private Non-Ciabatta facts, upcoming plans, and a canonical-ledger scorecard are live. |
 | Password recovery | `/forgot-password`, `/update-password` | Implemented | Recovery email request, PKCE callback, replacement password form, invited-profile activation, and stable pending feedback are live. |
@@ -55,6 +57,11 @@ inside the existing auth shell; the callback route is `/auth/confirm`.
 - Reuse tokens and shared components before adding page-specific styling.
 - Keep the handoff's mobile-first information hierarchy, hard borders, solid
   offset shadows, and typography roles intact.
+- Trophy awards are read-only projections of ranked first-place placement
+  facts. The case orders named awards first and generic ranked cups second,
+  newest-first within each group; its detail sheet shows the winner's complete
+  approved campaign, including losses, and never treats a skipped fixture as a
+  walkover result.
 - Keep Zeus outside the text navigation as a permanent top-right 44px avatar
   action; its rust badge appears only when unread messages exist.
 - Dashed borders identify people and actions outside the Ciabatta ladder.

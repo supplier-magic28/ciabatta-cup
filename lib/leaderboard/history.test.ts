@@ -3,7 +3,7 @@ import { deriveLeaderboardHistory, type LeaderboardMatchRow } from "./history";
 
 const players = ["alice", "bob", "carol"];
 const tournaments = [
-  { id: "ranked-cup", counts_as: "ranked", trophy_key:"claymore", trophy_name:"The Claymore", starts_at:"2026-07-18T00:00:00Z" },
+  { id: "ranked-cup", counts_as: "ranked", trophy_key:"claymore", trophy_name:"The Claymore", starts_at:"2026-07-18T00:00:00Z", timezone:"Australia/Melbourne" },
   { id: "friendly-cup", counts_as: "exhibition" },
 ];
 const fixtures = [
@@ -33,7 +33,7 @@ describe("leaderboard history", () => {
       { player_id: "bob", tournament_id: "ranked-cup", placement: 2 },
     ], tournaments, fixtures);
     expect(history.get("alice")?.trophies).toBe(1);
-    expect(history.get("alice")?.trophyAwards).toEqual([{key:"claymore",name:"The Claymore",year:2026}]);
+    expect(history.get("alice")?.trophyAwards).toEqual([{tournamentId:"ranked-cup",key:"claymore",name:"The Claymore",startsAt:"2026-07-18T00:00:00Z",timezone:"Australia/Melbourne",named:true}]);
     expect(history.get("bob")?.trophies).toBe(0);
   });
 
