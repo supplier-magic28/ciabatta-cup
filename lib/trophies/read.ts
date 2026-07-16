@@ -2,7 +2,8 @@ import "server-only";
 
 import { displayName } from "@/lib/auth/displayName";
 import { createClient } from "@/lib/supabase/server";
-import { buildTrophyDetails, deriveTrophyAwards, type TrophyDetail, type TrophyEventRow, type TrophyFixtureRow, type TrophyMatchRow } from "./model";
+import { getRegisteredTrophyAsset } from "./assets";
+import { buildTrophyDetails, deriveTrophyAwards, deriveTrophyEngravings, type TrophyDetail, type TrophyEngravingTournamentRow, type TrophyEventRow, type TrophyFixtureRow, type TrophyMatchRow } from "./model";
 export type { TrophyDetail } from "./model";
 
 export type TournamentListRow = {
@@ -32,4 +33,23 @@ export async function loadTrophyExperience(playerId:string){
   const participants=participantData??[];const fixtures=(fixtureData??[]) as TrophyFixtureRow[];const matches=(matchData??[]) as TrophyMatchRow[];
   const details:TrophyDetail[]=buildTrophyDetails(playerId,awards,tournaments as TrophyEventRow[],participants,fixtures,matches,players);
   return{tournaments,awards,details};
+}
+
+export async function loadOwnedTrophyViewer(playerId:string,tournamentId:string){
+  const experience=await loadTrophyExperience(playerId);
+  const award=experience.awards.find((candidate)=>candidate.tournamentId===tournamentId&&candidate.named);
+  const detail=experience.details.find((candidate)=>candidate.award.tournamentId===tournamentId);
+  const asset=award?getRegisteredTrophyAsset(award.key):null;
+  if(!award||!detail||!asset)return null;
+
+  const db=await createClient();
+  const {data:tournamentData}=await db.from("tournaments").select("id,name,status,counts_as,trophy_key,starts_at,timezone,location_name").eq("trophy_key",award.key).eq("counts_as","ranked").eq("status","completed");
+  const tournaments=(tournamentData??[]) as TrophyEngravingTournamentRow[];
+  const ids=tournaments.map((tournament)=>tournament.id);
+  if(!ids.length)return{award,detail,asset,engravings:[]};
+  const {data:placementData}=await db.from("tournament_placements").select("player_id,tournament_id,placement").in("tournament_id",ids).eq("placement",1);
+  const playerIds=[...new Set((placementData??[]).map((placement)=>placement.player_id))];
+  const {data:playerData}=playerIds.length?await db.from("players").select("id,first_name,last_name,nickname,use_nickname,avatar_url").in("id",playerIds):{data:[]};
+  const players=(playerData??[]).map((player)=>({id:player.id,name:displayName({firstName:player.first_name,lastName:player.last_name,nickname:player.nickname,useNickname:player.use_nickname}),avatarUrl:player.avatar_url}));
+  return{award,detail,asset,engravings:deriveTrophyEngravings(award.key,tournamentId,tournaments,placementData??[],players)};
 }

@@ -1,11 +1,13 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ClaymoreCupIcon } from "@/components/brand/ClaymoreCupIcon";
 import { RankedCupIcon } from "@/components/brand/RankedCupIcon";
 import { PlayerAvatar } from "@/components/players/PlayerAvatar";
+import { getRegisteredTrophyAsset } from "@/lib/trophies/assets";
 import {
   TrophySoundPlayer,
   safelyPlayTrophySound,
@@ -155,6 +157,7 @@ export function TrophyCase({ awards, details, playerName, initialTrophyId }: { a
 
 function TrophyDetailSheet({ detail, playerName, close, sheetRef, dragStartRef }: { detail:TrophyDetail;playerName:string;close:()=>void;sheetRef:React.RefObject<HTMLDivElement|null>;dragStartRef:React.MutableRefObject<number|null> }) {
   const ratio = trophyCoverRatio(detail.coverFrameShape);
+  const asset = getRegisteredTrophyAsset(detail.award.key);
   return <div className={styles.backdrop} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) close(); }}>
     <div ref={sheetRef} role="dialog" aria-modal="true" aria-labelledby="trophy-sheet-title" className={styles.sheet}>
       <header className={styles.sheetHeader} onPointerDown={(event) => { dragStartRef.current = event.clientY; }} onPointerUp={(event) => { if (dragStartRef.current !== null && shouldCloseTrophySheet(dragStartRef.current, event.clientY)) close(); dragStartRef.current = null; }}>
@@ -165,7 +168,7 @@ function TrophyDetailSheet({ detail, playerName, close, sheetRef, dragStartRef }
         {detail.coverImageUrl && <div className={styles.coverFrame} style={{ aspectRatio:String(ratio), width:`min(100%, calc(38dvh * ${ratio}))` }}><Image src={detail.coverImageUrl} alt={`${detail.tournamentName} tournament day`} fill sizes="(max-width: 640px) 100vw, 768px" className="object-cover" style={{ transform:`translate(${detail.coverOffsetX / 2}%,${detail.coverOffsetY / 2}%) scale(${detail.coverZoom})` }}/></div>}
         <dl className="mt-5 grid grid-cols-1 overflow-hidden rounded-[7px] border-2 border-ink bg-surface sm:grid-cols-2"><Meta label="Date" value={new Intl.DateTimeFormat("en-AU", { dateStyle:"medium",timeZone:detail.award.timezone }).format(new Date(detail.award.startsAt))}/><Meta label="Location" value={detail.locationName}/><Meta label="Surface" value={detail.surface ?? "Not recorded"} dot={detail.surface ? surfaceTone[detail.surface] : undefined}/><Meta label="Field" value={detail.fieldLabel}/></dl>
         <div className="mt-6"><p className="font-mono text-[9px] uppercase tracking-[2px] text-muted">The run · {detail.run.length} matches</p><ul className="mt-2">{detail.run.map((row) => <li key={row.matchId} className={`${styles.runRow} ${row.isFinal ? styles.finalRow : ""}`}><span className="font-mono text-[9px] font-bold uppercase">{row.stageLabel}</span><PlayerAvatar name={row.opponentName} avatarUrl={row.opponentAvatarUrl} size={32}/><span className="min-w-0 truncate font-heading text-sm font-bold"><i className={`mr-2 not-italic ${row.won ? "text-green" : "text-rust"}`}>{row.won ? "W" : "L"}</i>vs {row.opponentName}</span><span className={styles.runScore}>{row.score || "Score unavailable"}</span></li>)}</ul></div>
-        <button type="button" disabled aria-disabled="true" className="mt-6 flex min-h-16 w-full flex-col items-start gap-2 border-2 border-ink bg-chartreuse px-5 py-3 text-left opacity-70 shadow-[4px_4px_0_var(--color-ink)] sm:flex-row sm:items-center sm:gap-4"><span aria-hidden="true" className="font-mono text-2xl">◇</span><span><b className="block font-heading text-lg">See my trophy · Coming soon</b><small className="font-mono text-[8px] uppercase tracking-[1.4px]">3D and camera experience in development</small></span></button>
+        {asset?<Link href={`/tournaments/${detail.award.tournamentId}/trophy`} className="mt-6 flex min-h-16 w-full flex-col items-start gap-2 border-2 border-ink bg-chartreuse px-5 py-3 text-left shadow-[4px_4px_0_var(--color-ink)] transition-transform active:translate-x-1 active:translate-y-1 active:shadow-none sm:flex-row sm:items-center sm:gap-4"><span aria-hidden="true" className="font-mono text-2xl">◇</span><span><b className="block font-heading text-lg">See my trophy in 3D</b><small className="font-mono text-[8px] uppercase tracking-[1.4px]">Explore it here · place it with supported Android AR</small></span></Link>:<button type="button" disabled aria-disabled="true" className="mt-6 flex min-h-16 w-full flex-col items-start gap-2 border-2 border-ink bg-chartreuse px-5 py-3 text-left opacity-70 shadow-[4px_4px_0_var(--color-ink)] sm:flex-row sm:items-center sm:gap-4"><span aria-hidden="true" className="font-mono text-2xl">◇</span><span><b className="block font-heading text-lg">See my trophy · Coming soon</b><small className="font-mono text-[8px] uppercase tracking-[1.4px]">This physical trophy does not have a registered 3D model yet</small></span></button>}
         <p className="mt-5 text-center font-mono text-[8px] uppercase tracking-[1.5px] text-muted">Swipe down or press Escape to close</p>
       </div>
     </div>

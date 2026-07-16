@@ -33,7 +33,7 @@ test("the install manifest and Android icons are public", async ({ request }) =>
   }
 });
 
-for (const route of ["/tournaments", "/admin/tournaments/new", "/admin/health", "/profile"]) {
+for (const route of ["/tournaments", "/tournaments/example/trophy", "/admin/tournaments/new", "/admin/health", "/profile"]) {
   test(`anonymous visitors cannot open ${route}`, async ({ page }) => {
     await page.goto(route);
     await expect(page).toHaveURL((url) => url.pathname === "/sign-in" && url.searchParams.get("next") === route);

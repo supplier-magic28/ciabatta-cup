@@ -82,9 +82,11 @@ npm run db:lint
 ```
 
 `npm run verify` is the required pre-push aggregate: lint, TypeScript, unit
-tests, documentation structure/impact, production build, UI performance
-contracts, and browser smoke tests. Run the database commands for schema, RLS,
-RPC, or migration work after `npm run db:start`.
+tests, registered trophy-asset conformance/budgets, documentation
+structure/impact, production build, UI performance contracts, and browser
+smoke tests. Run the database commands for schema, RLS, RPC, or migration work
+after `npm run db:start`. The Blender rebuild and physical Android AR matrix are
+documented in [`docs/TROPHY_ASSETS.md`](docs/TROPHY_ASSETS.md).
 
 CI repeats these checks, applies migrations from scratch, and exercises the
 authenticated ranked lifecycle on a disposable Supabase stack. Documentation

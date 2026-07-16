@@ -47,8 +47,13 @@ model in `docs/SCHEMA.md`, and decision history in the ADR index.
   campaign are derived read-only from existing placement and match facts; the
   cabinet now completes a brightened, audible-when-enabled selection shake
   before opening its browser-zoom-safe sheet. Synthesized cabinet sound is
-  persistently mutable, reduced-motion selection opens immediately, and the
-  3D/AR action remains visibly deferred until final model assets exist.
+  persistently mutable and reduced-motion selection opens immediately. A
+  registered Claymore action now opens an owned full-screen viewer backed by a
+  validated versioned GLB and a chronological engraving ledger derived across
+  every completed event sharing its physical `trophy_key`. Supported Android
+  devices may hand off to WebXR or Scene Viewer without a paid AR service or a
+  direct camera stream; generic trophies remain 2D and iPhone Quick Look stays
+  disabled until physical-device testing is available.
 
 ## Latest verification
 
@@ -61,17 +66,22 @@ syntax issue recorded below.
 | --- | --- |
 | Aggregate application preflight | Passed on the current tree; every `npm run verify` constituent is green |
 | ESLint / TypeScript | Passed / passed |
-| Vitest | 280 tests passed; one fresh-Supabase integration test skipped by design |
+| Vitest | 285 tests passed; one fresh-Supabase integration test skipped by design |
 | Documentation gates | `docs:check` and `docs:impact` passed; structural fixtures 16/16 and impact fixtures 8/8 passed |
 | Production build | Passed |
-| UI performance contracts | 9/9 passed; these are geometry/query-shape contracts only |
-| Browser smoke | 7/7 passed on a runner-owned dynamic port with exact preserved `next` destinations |
+| UI performance contracts | 11/11 passed; these are geometry/query-shape contracts only |
+| Browser smoke | 8/8 passed on a runner-owned dynamic port with exact preserved `next` destinations |
 | Database pgTAP/lint | All 256 declared pgTAP assertions passed locally and on a fresh CI stack (27+21+18+10+50+56+74); database lint passed after clean migration application |
 | Authenticated ranked integration | Passed on a disposable Node 24/Supabase stack: ranked submit, opponent confirm, organiser approve, cache rebuild, and exact ladder/profile agreement |
 | Production post-129 health | Operator-reported zero drift, no integrity issues, 18 sent deliveries, and no actionable deliveries |
 
 ## Active risks
 
+- Android camera permission, plane detection, placement/scale, WebXR, and Scene
+  Viewer fallback require the production-HTTPS physical-device smoke in
+  `docs/TROPHY_ASSETS.md`; automation validates the viewer and capability
+  boundaries but cannot certify those device-owned behaviors. iPhone AR is
+  intentionally disabled and unverified.
 - The genuine production ranked submit -> opponent confirm -> organiser approve
   -> notification/email -> automatic rebuild -> exact ladder/profile agreement
   loop is still awaiting a credentialed smoke test.

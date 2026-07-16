@@ -14,6 +14,7 @@ import {
   ProfileTabSkeleton,
   TournamentBoardSkeleton,
   TournamentListSkeleton,
+  TrophyViewerSkeleton,
 } from "../../components/loading/PageSkeletons";
 
 function findCss(directory: string): string[] {
@@ -54,6 +55,7 @@ const skeletons = [
   ["profile-tab", createElement(ProfileTabSkeleton)],
   ["tournaments", createElement(TournamentListSkeleton)],
   ["tournament-board", createElement(TournamentBoardSkeleton)],
+  ["trophy-viewer", createElement(TrophyViewerSkeleton)],
 ] as const;
 
 for (const viewport of [{ width: 390, height: 844 }, { width: 1440, height: 1000 }]) {
@@ -112,3 +114,7 @@ for (const [shape, ratio] of [["wide",16/7],["square",1],["three_two",3/2]] as c
     expect(box!.height).toBeLessThanOrEqual(500 * 0.38 + 2);
   });
 }
+
+test("trophy viewer remains usable in a short narrow viewport",async({page})=>{await page.setViewportSize({width:320,height:500});const viewerCss=readFileSync(path.join(process.cwd(),"components/trophies/TrophyViewer.module.css"),"utf8");await page.setContent(`<style>${productionCss()}${viewerCss}</style><main class="viewer"><header class="header"><div><p class="eyebrow">Your trophy</p><h1>The Claymore</h1></div><a id="close" class="close">×</a></header><div class="layout"><section class="stagePanel"><div class="modelStage"><p class="gestureHint">Drag to inspect</p></div></section><aside class="story"><ol class="engravings"><li><span>A long champion name</span><b>Champion · 2027</b><small>A long tournament and location name</small></li></ol></aside></div></main>`);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);const close=await page.locator("#close").boundingBox();expect(close!.width).toBeGreaterThanOrEqual(44);expect(close!.height).toBeGreaterThanOrEqual(44);expect((await page.locator(".stagePanel").boundingBox())!.width).toBeLessThanOrEqual(320);});
+
+test("Android AR integration excludes iOS Quick Look and direct camera capture",()=>{const source=readFileSync(path.join(process.cwd(),"components/trophies/TrophyModelStage.tsx"),"utf8");expect(source).toContain('"ar-modes":"webxr scene-viewer"');expect(source).toContain("canActivateAR");expect(source).toContain("activateAR");expect(source).not.toContain("quick-look");expect(source).not.toContain("getUserMedia");});

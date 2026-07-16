@@ -132,7 +132,13 @@ of Done (`CLAUDE.md`).
   visible selection shake before opening, and offers persistently mutable
   synthesized cabinet sounds. Its viewport-bounded sheet handles browser zoom
   and short screens, disables motion when requested, and keeps the future AR
-  action explicitly inert.
+  action explicitly inert when its physical trophy has no registered model.
+- `trophies/TrophyViewer` — owned full-screen physical-cup story with a
+  chronological derived engraving ledger, stable close destination, and a
+  lazy client-only 3D stage.
+- `trophies/TrophyModelStage` — registered GLB renderer and Android-only
+  WebXR/Scene Viewer launcher with capability, load/error, permission-failure,
+  poster, and reduced-motion states; it never captures the camera directly.
 - `tournament/CupInviteConsole` — organiser bench multi-invite and RSVP status
   surface; it submits the browser timezone offset with the local deadline,
   preserves accepted responses across delivery retry, and keeps responses

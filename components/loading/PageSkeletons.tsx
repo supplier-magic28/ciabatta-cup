@@ -140,3 +140,5 @@ export function TournamentBoardSkeleton({ admin = false }: { admin?: boolean }) 
     </LoadingRegion>
   );
 }
+
+export function TrophyViewerSkeleton(){return <LoadingRegion className="min-h-dvh bg-ink px-4 py-5 text-cream"><div className="mx-auto flex w-full max-w-6xl items-center justify-between"><div><Skeleton className="h-3 w-36 bg-muted-dark"/><Skeleton className="mt-3 h-10 w-52 bg-muted-dark"/></div><Skeleton className="h-11 w-11 rounded-full bg-muted-dark"/></div><div className="mx-auto mt-5 grid w-full max-w-6xl gap-4 md:grid-cols-[minmax(0,1.55fr)_minmax(19rem,.8fr)]"><Skeleton className="min-h-[65dvh] border-2 border-muted bg-muted-dark"/><div className="border-2 border-muted p-5"><Skeleton className="h-8 w-3/4 bg-muted-dark"/><Skeleton className="mt-5 h-24 w-full bg-muted-dark"/><Skeleton className="mt-3 h-24 w-full bg-muted-dark"/></div></div></LoadingRegion>}

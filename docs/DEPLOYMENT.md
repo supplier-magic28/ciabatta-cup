@@ -240,3 +240,12 @@ after password persistence. Request recovery from `/forgot-password`, follow
 the recovery callback, update the password, and sign in again. Confirm safe
 internal `next` paths survive authentication while external/protocol-relative
 destinations are rejected.
+
+## 8. Trophy 3D and Android AR verification
+
+Trophy GLBs and posters are versioned static files served by the existing
+Vercel deployment; they require no provider account or environment variable.
+Run `npm run assets:trophies:check` before deployment and follow the production
+device matrix in [`docs/TROPHY_ASSETS.md`](TROPHY_ASSETS.md). Android placement
+is not released until that physical smoke passes. iPhone Quick Look remains
+disabled until a separate real-iPhone smoke is recorded.
