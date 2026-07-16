@@ -19,8 +19,10 @@ npm run db:lint
 Do not merge when a required check is skipped. GitHub branch protection for
 `main` must require the application verification, database-from-scratch,
 documentation-impact, and authenticated integration jobs. The integration job
-uses disposable player/opponent/admin accounts and proves ranked submit ->
-confirm -> approve -> cache rebuild -> exact ladder/profile agreement.
+is pinned to Node.js 24 because the Supabase Realtime client requires a native
+WebSocket. It uses disposable player/opponent/admin accounts and proves ranked
+submit -> confirm -> approve -> cache rebuild -> exact ladder/profile
+agreement.
 
 ## 2. Environment and providers
 

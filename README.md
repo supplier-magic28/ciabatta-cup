@@ -14,7 +14,9 @@ history behind the ladder.
 
 ## Local development
 
-Requirements: Node.js 20+ and a Supabase project.
+Requirements: Node.js 20+ and a Supabase project. Use Node.js 24 for the
+database-backed authenticated integration test; its Supabase Realtime client
+depends on the native WebSocket provided by Node 22 and newer.
 
 ```bash
 npm install

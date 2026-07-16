@@ -89,7 +89,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Supabase Realtime requires the native WebSocket available in
+          # Node 22+ when createClient initializes the integration clients.
+          node-version: 24
           cache: npm
       - name: Install dependencies
         run: npm ci
