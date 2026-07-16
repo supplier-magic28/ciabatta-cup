@@ -86,7 +86,9 @@ tests, registered trophy-asset conformance/budgets, documentation
 structure/impact, production build, UI performance contracts, and browser
 smoke tests. Run the database commands for schema, RLS, RPC, or migration work
 after `npm run db:start`. The Blender rebuild and physical Android AR matrix are
-documented in [`docs/TROPHY_ASSETS.md`](docs/TROPHY_ASSETS.md).
+documented in [`docs/TROPHY_ASSETS.md`](docs/TROPHY_ASSETS.md). Registered GLB
+and USDZ files are public, immutable static assets for platform AR handoff;
+authenticated routes still enforce trophy ownership and derive engravings.
 
 CI repeats these checks, applies migrations from scratch, and exercises the
 authenticated ranked lifecycle on a disposable Supabase stack. Documentation

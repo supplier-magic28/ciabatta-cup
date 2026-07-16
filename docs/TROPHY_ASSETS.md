@@ -1,38 +1,45 @@
 # Trophy 3D asset and Android AR runbook
 
-The first release uses a registered, read-only physical-trophy asset. It does
+The release uses registered, read-only physical-trophy assets. It does
 not use an AR SaaS account, API key, Supabase bucket, custom camera stream, or
 iOS Quick Look. `trophy_key` is the durable identity: every completed ranked
 tournament carrying `claymore` adds its first-place winner to the same derived
-engraving ledger.
+engraving ledger. The registered `ranked_cup` geometry is event-specific: each
+unnamed ranked win uses its tournament name plus `Cup` and shows only that
+event's first-place engraving.
 
-## Rebuild the Claymore
+## Rebuild the trophy assets
 
 Install Blender, then run from the repository root:
 
 ```powershell
 blender --background --python scripts/trophies/build_claymore.py
+blender --background --python scripts/trophies/build_ranked_cup.py
 npm run assets:trophies:check
 ```
 
-The script is the reproducible source for
-`design-reference/trophy-model-sources/claymore-v1.blend`,
-`public/trophies/claymore-v1.glb`, and the WebP poster. It uses real-world
-metres, a bottom-centred plinth, +Y-up glTF export, five PBR materials, and no
-baked floor shadow. Keep each version below 5 MB, 100,000 triangles, and ten
-materials. Version filenames whenever geometry or materials change; never
-replace a deployed version in place because trophy assets are cached as
-immutable for one year.
+The scripts are the reproducible sources for the editable files under
+`design-reference/trophy-model-sources/`, versioned GLBs under
+`public/trophies/`, and their WebP posters. Both builders use real-world metres,
+a bottom-centred plinth, +Y-up glTF export, PBR materials, and no baked floor
+shadow. Keep each version below 5 MB, 100,000 triangles, and ten materials.
+Version filenames whenever geometry or materials change; never replace a
+deployed version in place because trophy assets are cached as immutable for one
+year.
 
 Register a future physical cup in `lib/trophies/assets.ts` only after its model,
-poster, editable source, and validator contract exist. Unregistered and generic
-ranked awards remain in the 2D cabinet with a disabled 3D action.
+poster, editable source, and validator contract exist. Set `engravingMode` to
+`lineage` for a reused physical cup or `event` for distinct awards that share a
+model family. Unregistered awards remain in the 2D cabinet with a disabled 3D
+action.
 
 ## Android release smoke
 
 Use the production HTTPS origin on a real supported Android phone:
 
-1. Open an owned Claymore detail sheet and confirm the 3D CTA enters the viewer.
+1. Open the owned Ciabatta Qualifier Cup detail sheet and confirm the renamed
+   award and enabled 3D CTA enter the viewer. Repeat with an owned Claymore when
+   available to cover its lineage ledger.
 2. Confirm the poster resolves into the model, drag rotates it, pinch zooms it,
    the engraving ledger is chronological, and Close returns to the same sheet.
 3. Select **Place in your space**, accept camera access, detect a horizontal

@@ -37,13 +37,15 @@ export async function loadTrophyExperience(playerId:string){
 
 export async function loadOwnedTrophyViewer(playerId:string,tournamentId:string){
   const experience=await loadTrophyExperience(playerId);
-  const award=experience.awards.find((candidate)=>candidate.tournamentId===tournamentId&&candidate.named);
+  const award=experience.awards.find((candidate)=>candidate.tournamentId===tournamentId);
   const detail=experience.details.find((candidate)=>candidate.award.tournamentId===tournamentId);
   const asset=award?getRegisteredTrophyAsset(award.key):null;
   if(!award||!detail||!asset)return null;
 
   const db=await createClient();
-  const {data:tournamentData}=await db.from("tournaments").select("id,name,status,counts_as,trophy_key,starts_at,timezone,location_name").eq("trophy_key",award.key).eq("counts_as","ranked").eq("status","completed");
+  let tournamentQuery=db.from("tournaments").select("id,name,status,counts_as,trophy_key,starts_at,timezone,location_name").eq("counts_as","ranked").eq("status","completed");
+  tournamentQuery=asset.engravingMode==="event"?tournamentQuery.eq("id",tournamentId):tournamentQuery.eq("trophy_key",award.key);
+  const {data:tournamentData}=await tournamentQuery;
   const tournaments=(tournamentData??[]) as TrophyEngravingTournamentRow[];
   const ids=tournaments.map((tournament)=>tournament.id);
   if(!ids.length)return{award,detail,asset,engravings:[]};
@@ -51,5 +53,5 @@ export async function loadOwnedTrophyViewer(playerId:string,tournamentId:string)
   const playerIds=[...new Set((placementData??[]).map((placement)=>placement.player_id))];
   const {data:playerData}=playerIds.length?await db.from("players").select("id,first_name,last_name,nickname,use_nickname,avatar_url").in("id",playerIds):{data:[]};
   const players=(playerData??[]).map((player)=>({id:player.id,name:displayName({firstName:player.first_name,lastName:player.last_name,nickname:player.nickname,useNickname:player.use_nickname}),avatarUrl:player.avatar_url}));
-  return{award,detail,asset,engravings:deriveTrophyEngravings(award.key,tournamentId,tournaments,placementData??[],players)};
+  return{award,detail,asset,engravings:deriveTrophyEngravings(award.key,tournamentId,tournaments,placementData??[],players,asset.engravingMode)};
 }

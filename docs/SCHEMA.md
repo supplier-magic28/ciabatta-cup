@@ -41,6 +41,9 @@ are fully rebuildable:
   approval rules in `docs/WORKFLOWS.md`.
 - **Facts are preserved.** Approved/reviewed facts are immutable. Derived
   histories and reigns are replaceable caches, not append-only authorities.
+- **Static trophy models contain no private facts.** Versioned GLB/USDZ geometry
+  is publicly cacheable for platform AR handoff (ADR-0044); authenticated
+  viewer routes derive ownership and engraving overlays from placement facts.
 
 ---
 

@@ -74,6 +74,11 @@ remain safe wrappers over current implementations. See ADR-0042, ADR-0043, and
 - `TOURNAMENT_EMAIL_FROM` — verified sender identity, for example
   `Ciabatta Cup <cup@example.com>`.
 
+Trophy GLB/USDZ files are versioned application assets, not Supabase Storage
+objects. They deliberately contain no player or tournament facts and bypass the
+application auth proxy so Android Scene Viewer can fetch them without browser
+cookies (ADR-0044). Ownership and engravings remain authenticated server reads.
+
 ## Inviting players (Supabase project config)
 
 Admin invites call `inviteUserByEmail` with a `redirectTo` of

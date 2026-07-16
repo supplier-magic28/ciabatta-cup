@@ -50,6 +50,7 @@ the ADR files, while **Domain** is a navigation aid.
 | [ADR-0041](0041-recursive-documentation-and-workflow-registry.md) | Recursive documentation and a canonical workflow registry | Accepted | Documentation, process | - | - |
 | [ADR-0042](0042-unified-custom-email-outbox.md) | One durable outbox for custom product email | Accepted | Email, reliability | ADR-0022 / ADR-0037 (custom-email scopes) | - |
 | [ADR-0043](0043-workflow-consistency-and-tournament-atomicity.md) | Workflow consistency, precise scoring versions, and atomic cup completion | Accepted | Authorization, reliability, scoring, tournaments | ADR-0015 (deletion-eligibility dependency scope) | - |
+| [ADR-0044](0044-public-versioned-trophy-assets-for-ar.md) | Public versioned trophy assets for AR handoff | Accepted | Auth, static assets, AR | - | - |
 
 ## Adding a decision
 

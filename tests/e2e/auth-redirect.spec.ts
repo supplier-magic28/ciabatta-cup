@@ -33,6 +33,14 @@ test("the install manifest and Android icons are public", async ({ request }) =>
   }
 });
 
+test("3D trophy assets are public for Android AR handoff", async ({ request }) => {
+  const modelResponse = await request.get("/trophies/ranked-cup-v1.glb");
+  expect(modelResponse.ok()).toBe(true);
+  expect(modelResponse.headers()["content-type"]).toContain("model/gltf-binary");
+  expect(modelResponse.headers()["cache-control"]).toContain("immutable");
+  expect((await modelResponse.body()).byteLength).toBeGreaterThan(0);
+});
+
 for (const route of ["/tournaments", "/tournaments/example/trophy", "/admin/tournaments/new", "/admin/health", "/profile"]) {
   test(`anonymous visitors cannot open ${route}`, async ({ page }) => {
     await page.goto(route);

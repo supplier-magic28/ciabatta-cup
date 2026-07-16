@@ -14,9 +14,15 @@ export type TrophyAward = {
 
 export type TrophyPlacementRow = { player_id: string; tournament_id: string; placement: number };
 export type TrophyTournamentRow = {
-  id: string; counts_as: string; starts_at?: string | null; timezone?: string | null;
+  id: string; name?: string | null; counts_as: string; starts_at?: string | null; timezone?: string | null;
   trophy_key?: string | null; trophy_name?: string | null;
 };
+
+export function eventTrophyName(tournamentName?: string | null): string {
+  const name = tournamentName?.trim();
+  if (!name) return GENERIC_TROPHY_NAME;
+  return /\bcup$/i.test(name) ? name : `${name} Cup`;
+}
 
 export function deriveTrophyAwards(playerId: string, placements: readonly TrophyPlacementRow[], tournaments: readonly TrophyTournamentRow[]): TrophyAward[] {
   const tournamentById = new Map(tournaments.map((tournament) => [tournament.id, tournament]));
@@ -25,7 +31,7 @@ export function deriveTrophyAwards(playerId: string, placements: readonly Trophy
     if (placement.player_id !== playerId || placement.placement !== 1 || tournament?.counts_as !== "ranked") return [];
     const named = Boolean(tournament.trophy_key && tournament.trophy_name);
     return [{ tournamentId: tournament.id, key: named ? tournament.trophy_key! : GENERIC_TROPHY_KEY,
-      name: named ? tournament.trophy_name! : GENERIC_TROPHY_NAME, startsAt: tournament.starts_at ?? "1970-01-01T00:00:00.000Z",
+      name: named ? tournament.trophy_name! : eventTrophyName(tournament.name), startsAt: tournament.starts_at ?? "1970-01-01T00:00:00.000Z",
       timezone: tournament.timezone ?? "Australia/Melbourne", named }];
   }).sort((left, right) => Number(right.named) - Number(left.named) || right.startsAt.localeCompare(left.startsAt));
 }
@@ -73,18 +79,19 @@ export function buildTrophyDetails(playerId:string,awards:readonly TrophyAward[]
   return awards.flatMap((award)=>{const tournament=tournaments.find((row)=>row.id===award.tournamentId);if(!tournament)return[];const participantCount=participants.filter((row)=>row.tournament_id===tournament.id).length;const format=tournament.championship_path==="top_four_finals"?"round robin + finals":tournament.championship_path==="top_two_final"?"round robin + final":tournament.structure.replaceAll("_"," ");return [{award,tournamentName:tournament.name,locationName:tournament.location_name,surface:tournament.default_surface,fieldLabel:`${participantCount} players · ${format}`,participantCount,coverImageUrl:tournament.cover_image_url,coverFrameShape:tournament.cover_frame_shape,coverZoom:Number(tournament.cover_zoom),coverOffsetX:Number(tournament.cover_offset_x),coverOffsetY:Number(tournament.cover_offset_y),run:deriveTrophyRun(playerId,tournament.id,fixtures,matches,players)}]});
 }
 
-export function deriveTrophyEngravings(trophyKey:string,selectedTournamentId:string,tournaments:readonly TrophyEngravingTournamentRow[],placements:readonly TrophyPlacementRow[],players:readonly TrophyPlayerRow[]):TrophyEngraving[]{
+export function deriveTrophyEngravings(trophyKey:string,selectedTournamentId:string,tournaments:readonly TrophyEngravingTournamentRow[],placements:readonly TrophyPlacementRow[],players:readonly TrophyPlayerRow[],engravingMode:"lineage"|"event"="lineage"):TrophyEngraving[]{
   const winnerByTournament=new Map(placements.filter((placement)=>placement.placement===1).map((placement)=>[placement.tournament_id,placement.player_id]));
   const playerById=new Map(players.map((player)=>[player.id,player]));
   return tournaments.flatMap((tournament)=>{
-    if(tournament.trophy_key!==trophyKey||tournament.counts_as!=="ranked"||tournament.status!=="completed")return[];
+    const belongsToTrophy=engravingMode==="event"?tournament.id===selectedTournamentId:tournament.trophy_key===trophyKey;
+    if(!belongsToTrophy||tournament.counts_as!=="ranked"||tournament.status!=="completed")return[];
     const winnerId=winnerByTournament.get(tournament.id);if(!winnerId)return[];
     return [{tournamentId:tournament.id,winnerId,winnerName:playerById.get(winnerId)?.name??"Champion",year:eventYear({startsAt:tournament.starts_at,timezone:tournament.timezone}),eventName:tournament.name,locationName:tournament.location_name,startsAt:tournament.starts_at,selected:tournament.id===selectedTournamentId}];
   }).sort((left,right)=>left.startsAt.localeCompare(right.startsAt)||left.tournamentId.localeCompare(right.tournamentId));
 }
 
 export function resolveOwnedTrophyViewer(requested:string,awards:readonly TrophyAward[],registeredKeys:ReadonlySet<string>):TrophyAward|null{
-  return awards.find((award)=>award.tournamentId===requested&&award.named&&registeredKeys.has(award.key))??null;
+  return awards.find((award)=>award.tournamentId===requested&&registeredKeys.has(award.key))??null;
 }
 
 export function resolveTrophyDeepLink(requested:string|null,awards:readonly TrophyAward[]):string|null{return requested&&awards.some((award)=>award.tournamentId===requested)?requested:null}

@@ -10,6 +10,12 @@ const assets = [
     poster: "public/trophies/claymore-v1.webp",
     source: "design-reference/trophy-model-sources/claymore-v1.blend",
   },
+  {
+    key: "ranked_cup",
+    model: "public/trophies/ranked-cup-v1.glb",
+    poster: "public/trophies/ranked-cup-v1.webp",
+    source: "design-reference/trophy-model-sources/ranked-cup-v1.blend",
+  },
 ];
 const MAX_BYTES = 5 * 1024 * 1024;
 const MAX_TRIANGLES = 100_000;

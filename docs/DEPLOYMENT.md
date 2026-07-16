@@ -249,3 +249,5 @@ Run `npm run assets:trophies:check` before deployment and follow the production
 device matrix in [`docs/TROPHY_ASSETS.md`](TROPHY_ASSETS.md). Android placement
 is not released until that physical smoke passes. iPhone Quick Look remains
 disabled until a separate real-iPhone smoke is recorded.
+GLB and USDZ paths must remain outside the authentication proxy because Android
+Scene Viewer fetches the model independently of the signed-in browser session.

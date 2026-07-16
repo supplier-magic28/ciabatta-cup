@@ -7,6 +7,7 @@ export type TrophyAssetDefinition = {
   heightMeters: number;
   androidAr: boolean;
   iosAr: boolean;
+  engravingMode: "lineage" | "event";
 };
 
 const TROPHY_ASSETS: Readonly<Record<string, TrophyAssetDefinition>> = {
@@ -19,6 +20,18 @@ const TROPHY_ASSETS: Readonly<Record<string, TrophyAssetDefinition>> = {
     heightMeters: 0.7,
     androidAr: true,
     iosAr: false,
+    engravingMode: "lineage",
+  },
+  ranked_cup: {
+    key: "ranked_cup",
+    name: "Ranked Cup",
+    modelSrc: "/trophies/ranked-cup-v1.glb",
+    posterSrc: "/trophies/ranked-cup-v1.webp",
+    version: 1,
+    heightMeters: 0.52,
+    androidAr: true,
+    iosAr: false,
+    engravingMode: "event",
   },
 };
 

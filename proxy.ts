@@ -11,6 +11,6 @@ export const config = {
      * Match all request paths except static assets and image files, so session
      * refresh + auth gating run on every real page/route.
      */
-    "/((?!_next/static|_next/image|favicon.ico|manifest.json|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|manifest.json|.*\\.(?:svg|png|jpg|jpeg|gif|webp|glb|usdz)$).*)",
   ],
 };

@@ -134,8 +134,10 @@ of Done (`CLAUDE.md`).
   and short screens, disables motion when requested, and keeps the future AR
   action explicitly inert when its physical trophy has no registered model.
 - `trophies/TrophyViewer` — owned full-screen physical-cup story with a
-  chronological derived engraving ledger, stable close destination, and a
-  lazy client-only 3D stage.
+  lineage or event-scoped derived engraving ledger, stable close destination,
+  and a lazy client-only 3D stage. Unnamed ranked wins use their tournament
+  name plus `Cup` and share the registered ranked-cup geometry without sharing
+  engraving history.
 - `trophies/TrophyModelStage` — registered GLB renderer and Android-only
   WebXR/Scene Viewer launcher with capability, load/error, permission-failure,
   poster, and reduced-motion states; it never captures the camera directly.
