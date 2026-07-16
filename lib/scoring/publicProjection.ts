@@ -34,3 +34,13 @@ const loadProjection = cache(async (playerIdsKey: string, asOfDate: string) => {
 export async function loadPublicLadderProjection(playerIds: string[], asOfDate = dateKeyInZone(new Date())) {
   return loadProjection([...new Set(playerIds)].sort().join(","), asOfDate);
 }
+
+/** Route contract for the public ladder. Kept explicit so integration tests exercise the loader the home screen owns. */
+export async function loadLeaderboardProjection(playerIds: string[], asOfDate = dateKeyInZone(new Date())) {
+  return loadPublicLadderProjection(playerIds, asOfDate);
+}
+
+/** Route contract for player profiles. Its projection must remain exact with the ladder for the same date. */
+export async function loadPlayerProfileProjection(playerIds: string[], asOfDate = dateKeyInZone(new Date())) {
+  return loadPublicLadderProjection(playerIds, asOfDate);
+}

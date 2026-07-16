@@ -173,7 +173,7 @@ export function LogMatchForm({
         ? await submitExternalMatch(submission as ExternalMatchSubmission)
         : await submitMatch(submission as MatchSubmission);
       if (result.ok) {
-        setWarning(result.warning ?? null);
+        setWarning(result.warning ?? result.deliveryWarning?.message ?? null);
         setSubmitted(true);
       } else {
         setError(result.error);

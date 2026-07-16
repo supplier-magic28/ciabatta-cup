@@ -67,13 +67,14 @@ export function toScoringMatches(rows: ScoringMatchRow[]): Match[] {
 }
 
 /**
- * Compute the complete, rebuildable cache for a known player roster, combining
- * ordinary-match Elo with derived tournament placement awards.
+ * Compute both rebuildable scoring projections for a known player roster:
+ * public activity points (matches, placements, practice, play days, and decay)
+ * plus the separate ordinary-ranked Elo history.
  *
  * The scoring engine derives its roster from match facts. The database also has
  * players who have never logged a match, so seed those known ids at zero here.
- * This function remains pure so both the database writer and read surfaces use
- * exactly the same interpretation of the facts.
+ * This function remains pure so the cache writer, ladder, profile, and Elo
+ * projection all interpret the same canonical facts consistently.
  */
 export function buildRatingCache(playerIds: string[], rows: ScoringMatchRow[], awards: TournamentPlacementRow[] = [], practices: PracticeFact[] = [], playDays: PlayDayFact[] = [], asOfDate = latestActivityDate(rows, awards, practices, playDays)): RatingCache {
   const computed = computeRankings(toScoringMatches(rows));

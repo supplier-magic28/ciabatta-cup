@@ -10,6 +10,7 @@ export type CourtActionResult = { ok: true; courtId?: string } | { ok: false; er
 export async function resolveCourtName(name: string): Promise<CourtActionResult> {
   const player = await getSessionPlayer();
   if (!player) return { ok: false, error: "Sign in first." };
+  if (player.status !== "active") return { ok: false, error: "You need an active account." };
   const trimmed = name.trim();
   if (!trimmed) return { ok: true };
   if (trimmed.length > 160) return { ok: false, error: "Court name must be 160 characters or fewer." };
@@ -27,6 +28,7 @@ export async function tagMatchMetadata(input: {
 }): Promise<CourtActionResult> {
   const player = await getSessionPlayer();
   if (!player) return { ok: false, error: "Sign in first." };
+  if (player.status !== "active") return { ok: false, error: "You need an active account." };
   if (input.surface && !SURFACES.includes(input.surface)) return { ok: false, error: "Choose a valid surface." };
   let courtId = input.courtId || undefined;
   if (input.courtName.trim() && !courtId) {
@@ -41,8 +43,8 @@ export async function tagMatchMetadata(input: {
     p_surface: input.surface || null,
   });
   if (error) return { ok: false, error: "You can't tag that match." };
-  const { count } = await db.from("matches").select("id", { count: "exact", head: true }).eq("status", "approved").or(`player1_id.eq.${player.id},player2_id.eq.${player.id}`).or("court_id.is.null,surface.is.null");
-  if (!count) await db.from("notifications").update({ read_at: new Date().toISOString() }).eq("player_id", player.id).eq("kind", "untagged_matches_nudge").is("read_at", null);
+  const { error: dismissError } = await db.rpc("dismiss_untagged_notification_v1");
+  if (dismissError) console.error("Could not reconcile the untagged-match nudge", dismissError);
   for (const path of ["/matches/untagged", "/matches", "/profile", "/notifications", "/"]) revalidatePath(path);
   return { ok: true, courtId };
 }
@@ -52,7 +54,7 @@ export async function mergeCourts(
   formData: FormData,
 ): Promise<CourtActionResult> {
   const player = await getSessionPlayer();
-  if (!player || player.role !== "admin") return { ok: false, error: "Only organisers can merge courts." };
+  if (!player || player.role !== "admin" || player.status !== "active") return { ok: false, error: "Only active organisers can merge courts." };
   const sourceId = String(formData.get("sourceId") ?? "");
   const targetId = String(formData.get("targetId") ?? "");
   if (!sourceId || !targetId || sourceId === targetId) return { ok: false, error: "Choose two different courts." };

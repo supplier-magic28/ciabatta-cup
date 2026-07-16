@@ -58,7 +58,7 @@ function form({ nickname = "", useNickname = "real-name", avatar, removeAvatar =
 describe("updateProfileSettings", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.getSessionPlayer.mockResolvedValue({ id: "player-1", role: "player" });
+    mocks.getSessionPlayer.mockResolvedValue({ id: "player-1", role: "player", status: "active" });
   });
 
   it("rejects unauthenticated profile changes", async () => {

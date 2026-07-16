@@ -11,7 +11,7 @@ export type ActionableDelivery = {
   playerId: string | null;
   entityType: string;
   entityId: string | null;
-  status: "pending" | "failed";
+  status: "pending" | "processing" | "failed";
   attemptCount: number;
   lastError: string | null;
   updatedAt: string;
@@ -43,6 +43,17 @@ export const RETRYABLE_DELIVERY_KINDS = new Set([
   "practice_rejected",
   "planned_locked",
   "planned_confirmed",
+  "tournament_locked_in",
+  "tournament_game_day",
+  "tournament_result_1st",
+  "tournament_result_2nd",
+  "tournament_result_3rd",
+  "tournament_result_4th",
+  "tournament_result_5th",
+  "tournament_result_6th",
+  "tournament_result_7th",
+  "tournament_result_8th",
+  "tournament_invite",
 ]);
 
 export function isRetryableDeliveryKind(kind: string) {
@@ -56,6 +67,6 @@ export function healthTone(health: BackendHealth): HealthTone {
   if (health.cache.drift !== 0 || health.integrityIssues.length > 0 || !infrastructureHealthy || hasFailedDelivery) {
     return "red";
   }
-  if (health.actionableDeliveries.some((delivery) => delivery.stale)) return "amber";
+  if (health.actionableDeliveries.some((delivery) => delivery.status !== "failed")) return "amber";
   return "green";
 }

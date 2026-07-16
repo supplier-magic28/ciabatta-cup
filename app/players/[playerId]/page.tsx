@@ -7,7 +7,7 @@ import { getSessionPlayer } from "@/lib/auth/session";
 import { formatScore } from "@/lib/match/score";
 import { indexEmbeddedScoreSets } from "@/lib/match/embeddedSets";
 import { derivePlayerProfile, type ProfileMatch } from "@/lib/players/profile";
-import { loadPublicLadderProjection } from "@/lib/scoring/publicProjection";
+import { loadPlayerProfileProjection } from "@/lib/scoring/publicProjection";
 import { deriveLeaderboardHistory, type LeaderboardFixtureRow, type LeaderboardMatchRow, type LeaderboardTournamentRow } from "@/lib/leaderboard/history";
 import { createClient } from "@/lib/supabase/server";
 import { BackLink } from "@/components/ui/BackLink";
@@ -109,7 +109,7 @@ export default async function PlayerProfilePage({
     return records;
   }, new Map<string, { opponentName: string; won: number; lost: number }>()).values()]
     .sort((a, b) => (b.won + b.lost) - (a.won + a.lost) || a.opponentName.localeCompare(b.opponentName));
-  const projection = await loadPublicLadderProjection(players.map((player) => player.id));
+  const projection = await loadPlayerProfileProjection(players.map((player) => player.id));
   const cache = projection.cache;
   const standing = cache.rankings.find((ranking) => ranking.playerId === playerId);
   const activityTimeline = cache.activityTimelines.get(playerId) ?? [];

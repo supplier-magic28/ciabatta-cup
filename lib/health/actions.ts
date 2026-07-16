@@ -10,6 +10,8 @@ import { renderExternalMatchEmail } from "@/lib/match/external-email";
 import { renderPracticeEmail } from "@/lib/practice/email";
 import { sendPlannedLifecycleEmail } from "@/lib/planned/delivery";
 import { sendTournamentEmail } from "@/lib/tournament/email";
+import { deliverTournamentLifecycleEmails, deliverTournamentResultEmails } from "@/lib/tournament/delivery";
+import { deliverCupInviteEmails } from "@/lib/tournament/invite-delivery";
 import { isRetryableDeliveryKind } from "./types";
 
 type RetryResult = { ok: true } | { ok: false; error: string };
@@ -20,7 +22,7 @@ type DeliveryRow = {
   player_id: string | null;
   entity_type: string;
   entity_id: string | null;
-  status: "pending" | "sent" | "failed";
+  status: "pending" | "processing" | "sent" | "failed";
   updated_at: string;
 };
 
@@ -55,7 +57,7 @@ function playerLabel(player: { first_name: string | null; last_name: string | nu
 
 export async function refreshBackendHealth(): Promise<RetryResult> {
   const organiser = await getSessionPlayer();
-  if (!organiser || organiser.role !== "admin") return { ok: false, error: "Only organisers can inspect backend health." };
+  if (!organiser || organiser.role !== "admin" || organiser.status !== "active") return { ok: false, error: "Only organisers can inspect backend health." };
   revalidatePath("/admin/health");
   return { ok: true };
 }
@@ -137,12 +139,14 @@ async function retryPracticeDelivery(delivery: DeliveryRow) {
   if (!delivery.entity_id || !delivery.player_id) throw new Error("Delivery is missing its practice or recipient.");
   const admin = createAdminClient();
   const [{ data: practice }, { data: player }] = await Promise.all([
-    admin.from("practice_sessions").select("id,player_id,activity,minutes,practiced_on").eq("id", delivery.entity_id).single(),
+    admin.from("practice_sessions").select("id,player_id,activity,minutes,practiced_on,status").eq("id", delivery.entity_id).single(),
     admin.from("players").select("id,email,first_name").eq("id", delivery.player_id).single(),
   ]);
   if (!practice || !player || practice.player_id !== player.id) throw new Error("Practice delivery facts are no longer available.");
   const kind = delivery.kind.replace("practice_", "");
   if (kind !== "logged" && kind !== "approved" && kind !== "rejected") throw new Error("This practice email kind cannot be reconstructed.");
+  if (kind !== "logged" && practice.status !== kind) throw new Error("Practice delivery no longer matches its canonical review fact.");
+  const deliveryKind = `practice_${kind}` as "practice_logged" | "practice_approved" | "practice_rejected";
   await sendTournamentEmail(
     player.email,
     renderPracticeEmail({
@@ -153,30 +157,60 @@ async function retryPracticeDelivery(delivery: DeliveryRow) {
       practiceDate: practice.practiced_on,
     }),
     delivery.idempotency_key,
-    { kind: delivery.kind, playerId: player.id, entityType: "practice", entityId: practice.id },
+    { kind: deliveryKind, playerId: player.id, entityType: "practice", entityId: practice.id },
   );
 }
 
 export async function retryLifecycleDelivery(idempotencyKey: string): Promise<RetryResult> {
   const organiser = await getSessionPlayer();
-  if (!organiser || organiser.role !== "admin") return { ok: false, error: "Only organisers can retry deliveries." };
+  if (!organiser || organiser.role !== "admin" || organiser.status !== "active") return { ok: false, error: "Only organisers can retry deliveries." };
   if (!idempotencyKey || idempotencyKey.length > 300) return { ok: false, error: "Delivery not found." };
 
   const admin = createAdminClient();
   const { data } = await admin
-    .from("lifecycle_email_deliveries")
+    .from("custom_email_outbox")
     .select("idempotency_key,kind,player_id,entity_type,entity_id,status,updated_at")
     .eq("idempotency_key", idempotencyKey)
     .single();
   const delivery = data as DeliveryRow | null;
   if (!delivery) return { ok: false, error: "Delivery not found." };
-  const stale = delivery.status === "pending"
+  const stale = delivery.status === "processing"
     && Date.now() - new Date(delivery.updated_at).getTime() >= 15 * 60 * 1000;
-  if (delivery.status !== "failed" && !stale) return { ok: false, error: "This delivery is not ready to retry." };
+  if (delivery.status !== "pending" && delivery.status !== "failed" && !stale) return { ok: false, error: "This delivery is not ready to retry." };
   if (!isRetryableDeliveryKind(delivery.kind)) return { ok: false, error: "This delivery needs manual recovery." };
 
   try {
-    if (delivery.kind.startsWith("planned_")) {
+    if (delivery.kind === "tournament_invite") {
+      if (!delivery.entity_id || !delivery.player_id) throw new Error("Cup invitation delivery facts are incomplete.");
+      const { data: invite } = await admin.from("tournament_invites")
+        .select("generation,status")
+        .eq("tournament_id", delivery.entity_id)
+        .eq("player_id", delivery.player_id)
+        .single();
+      if (!invite || !["sent", "opened"].includes(invite.status)) throw new Error("Cup invitation is no longer deliverable.");
+      const batch = await deliverCupInviteEmails(delivery.entity_id, [{
+        playerId: delivery.player_id,
+        generation: Number(invite.generation),
+      }], delivery.idempotency_key);
+      if (batch.failed) throw new Error("Cup invitation email retry failed.");
+    } else if (delivery.kind === "tournament_locked_in" || delivery.kind === "tournament_game_day") {
+      if (!delivery.entity_id || !delivery.player_id) throw new Error("Tournament delivery facts are incomplete.");
+      const batch = await deliverTournamentLifecycleEmails(
+        delivery.entity_id,
+        delivery.kind === "tournament_locked_in" ? "locked_in" : "game_day",
+        delivery.player_id,
+        delivery.idempotency_key,
+      );
+      if (batch.failed) throw new Error("Tournament lifecycle email retry failed.");
+    } else if (delivery.kind.startsWith("tournament_result_")) {
+      if (!delivery.entity_id || !delivery.player_id) throw new Error("Tournament result delivery facts are incomplete.");
+      const batch = await deliverTournamentResultEmails(
+        delivery.entity_id,
+        delivery.player_id,
+        delivery.idempotency_key,
+      );
+      if (batch.failed) throw new Error("Tournament result email retry failed.");
+    } else if (delivery.kind.startsWith("planned_")) {
       if (!delivery.entity_id || !delivery.player_id) throw new Error("Planned delivery facts are incomplete.");
       const kind = delivery.kind === "planned_locked" ? "locked" : "confirmed";
       const expectedKey = `planned/${delivery.entity_id}/${kind}/${delivery.player_id}`;

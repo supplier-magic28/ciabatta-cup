@@ -29,6 +29,7 @@ function mockClient({ coverImageUrl = null as string | null, uploadError = null 
   tournamentQuery.single = vi.fn().mockResolvedValue({ data: { id: "tournament-1", cover_image_url: coverImageUrl }, error: null });
   const updateBuilder = { eq: vi.fn().mockResolvedValue({ error: null }) };
   const update = vi.fn(() => updateBuilder);
+  const rpc = vi.fn().mockResolvedValue({ error: null });
   const storageApi = {
     upload: vi.fn().mockResolvedValue({ error: uploadError }),
     getPublicUrl: vi.fn((path: string) => ({ data: { publicUrl: `https://cdn.test/${path}` } })),
@@ -36,6 +37,7 @@ function mockClient({ coverImageUrl = null as string | null, uploadError = null 
   };
   return {
     from: vi.fn(() => ({ select: () => tournamentQuery, update })),
+    rpc,
     storage: { from: vi.fn(() => storageApi) },
     update,
     storageApi,
@@ -45,7 +47,7 @@ function mockClient({ coverImageUrl = null as string | null, uploadError = null 
 describe("updateTournamentPhoto", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.getSessionPlayer.mockResolvedValue({ id: "admin-1", role: "admin" });
+    mocks.getSessionPlayer.mockResolvedValue({ id: "admin-1", role: "admin", status: "active" });
   });
 
   it("rejects non-admin uploads before database access", async () => {
@@ -66,7 +68,7 @@ describe("updateTournamentPhoto", () => {
       message: "Tournament photo saved.",
     });
     expect(client.storageApi.upload).toHaveBeenCalledOnce();
-    expect(client.update).toHaveBeenCalledWith(expect.objectContaining({ cover_image_url: expect.stringContaining("tournament-1") }));
+    expect(client.rpc).toHaveBeenCalledWith("update_tournament_cover_v1", expect.objectContaining({ p_cover_image_url: expect.stringContaining("tournament-1") }));
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/tournaments");
   });
 
@@ -78,7 +80,7 @@ describe("updateTournamentPhoto", () => {
       ok: false,
       error: "Couldn't upload that photo. Please try again.",
     });
-    expect(client.update).not.toHaveBeenCalled();
+    expect(client.rpc).not.toHaveBeenCalled();
   });
 
   it("removes an existing tournament photo", async () => {
@@ -88,7 +90,7 @@ describe("updateTournamentPhoto", () => {
       ok: true,
       message: "Tournament photo removed.",
     });
-    expect(client.update).toHaveBeenCalledWith(expect.objectContaining({ cover_image_url: null }));
+    expect(client.rpc).toHaveBeenCalledWith("update_tournament_cover_v1", expect.objectContaining({ p_cover_image_url: null }));
     expect(client.storageApi.remove).toHaveBeenCalledWith(["tournament-1/old.webp"]);
   });
 });

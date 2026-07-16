@@ -2,6 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-07-11
+- **Superseded by:** ADR-0042 (custom lifecycle-email ledger/retry scope only)
 
 ## Context
 

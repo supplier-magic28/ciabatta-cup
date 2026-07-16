@@ -2,6 +2,7 @@
 
 - **Status:** Accepted (implements ADR-0002's invite path)
 - **Date:** 2026-07-10
+- **Superseded by:** ADR-0013 (deferred password-step consequence only)
 
 ## Context
 

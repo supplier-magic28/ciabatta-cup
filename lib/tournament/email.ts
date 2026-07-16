@@ -3,8 +3,38 @@ import "server-only";
 import { renderGameDayEmail, renderLockedInEmail, type RenderedEmail } from "./email-templates";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export type TournamentEmailKind = "locked_in" | "game_day" | "result_1st" | "result_2nd" | "result_3rd" | "result_4th";
+export type TournamentEmailKind =
+  | "locked_in"
+  | "game_day"
+  | "result_1st"
+  | "result_2nd"
+  | "result_3rd"
+  | "result_4th"
+  | "result_5th"
+  | "result_6th"
+  | "result_7th"
+  | "result_8th";
 export type LifecycleEmailKind = Extract<TournamentEmailKind, "locked_in" | "game_day">;
+
+export type CustomEmailKind =
+  | "ranked_match_logged"
+  | "external_match_logged"
+  | "practice_logged"
+  | "practice_approved"
+  | "practice_rejected"
+  | "planned_locked"
+  | "planned_confirmed"
+  | "tournament_locked_in"
+  | "tournament_game_day"
+  | "tournament_result_1st"
+  | "tournament_result_2nd"
+  | "tournament_result_3rd"
+  | "tournament_result_4th"
+  | "tournament_result_5th"
+  | "tournament_result_6th"
+  | "tournament_result_7th"
+  | "tournament_result_8th"
+  | "tournament_invite";
 
 type TournamentEmail = {
   kind: LifecycleEmailKind;
@@ -34,25 +64,65 @@ export function renderTournamentEmail(input: TournamentEmail): RenderedEmail {
 }
 
 export type LifecycleDeliveryContext = {
-  kind: string;
-  playerId?: string;
+  kind: CustomEmailKind;
+  playerId: string;
   entityType: string;
-  entityId?: string;
+  entityId: string;
 };
 
-export async function sendTournamentEmail(to: string, email: RenderedEmail, idempotencyKey: string, delivery?: LifecycleDeliveryContext) {
-  const ledger = delivery ? createAdminClient() : null;
-  if (ledger && delivery) {
-    const { data: existing } = await ledger.from("lifecycle_email_deliveries").select("status,attempt_count,provider_message_id").eq("idempotency_key", idempotencyKey).maybeSingle();
-    if (existing?.status === "sent" && existing.provider_message_id) return existing.provider_message_id;
-    const { error } = await ledger.from("lifecycle_email_deliveries").upsert({
-      idempotency_key:idempotencyKey, kind:delivery.kind, player_id:delivery.playerId??null,
-      entity_type:delivery.entityType, entity_id:delivery.entityId??null, status:"pending",
-      attempt_count:(existing?.attempt_count??0)+1, provider_message_id:null, last_error:null,
-      updated_at:new Date().toISOString(),
-    });
-    if (error) console.error("Could not persist pending lifecycle email delivery", { idempotencyKey, error });
+type ClaimResult = {
+  claimed?: boolean;
+  status?: "pending" | "processing" | "sent" | "failed" | "superseded";
+  providerMessageId?: string;
+};
+
+/**
+ * Deliver one reconstructable custom application email.
+ *
+ * Every call must identify the canonical recipient and entity. The outbox owns
+ * claim/retry state; the supplied address is checked against the current player
+ * fact before it can leave the application. Supabase Auth mail does not use
+ * this function.
+ */
+export async function sendTournamentEmail(
+  to: string,
+  email: RenderedEmail,
+  idempotencyKey: string,
+  delivery: LifecycleDeliveryContext,
+) {
+  const ledger = createAdminClient();
+  const { data: recipient, error: recipientError } = await ledger
+    .from("players")
+    .select("email")
+    .eq("id", delivery.playerId)
+    .single();
+  if (recipientError || !recipient?.email) {
+    throw new Error("Custom email recipient is no longer available.");
   }
+  if (recipient.email.trim().toLowerCase() !== to.trim().toLowerCase()) {
+    throw new Error("Custom email recipient does not match its delivery context.");
+  }
+
+  const { error: enqueueError } = await ledger.rpc("enqueue_custom_email_v1", {
+    p_idempotency_key: idempotencyKey,
+    p_kind: delivery.kind,
+    p_player_id: delivery.playerId,
+    p_entity_type: delivery.entityType,
+    p_entity_id: delivery.entityId,
+  });
+  if (enqueueError) throw new Error("Custom email intent could not be persisted.");
+
+  const { data: claimData, error: claimError } = await ledger.rpc("claim_custom_email_v1", {
+    p_idempotency_key: idempotencyKey,
+  });
+  if (claimError) throw new Error("Custom email delivery could not be claimed.");
+  const claim = claimData as ClaimResult | null;
+  if (!claim?.claimed) {
+    if (claim?.status === "sent" && claim.providerMessageId) return claim.providerMessageId;
+    if (claim?.status === "superseded") throw new Error("Custom email delivery has been superseded.");
+    throw new Error("Custom email delivery is already in progress.");
+  }
+
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.TOURNAMENT_EMAIL_FROM;
   try {
@@ -65,10 +135,19 @@ export async function sendTournamentEmail(to: string, email: RenderedEmail, idem
     if (!response.ok) throw new Error(`Email provider returned ${response.status}.`);
     const result = await response.json() as { id?: string };
     if (!result.id) throw new Error("Email provider did not return a message id.");
-    if (ledger) await ledger.from("lifecycle_email_deliveries").update({ status:"sent",provider_message_id:result.id,sent_at:new Date().toISOString(),updated_at:new Date().toISOString(),last_error:null }).eq("idempotency_key",idempotencyKey);
+    const { error: sentError } = await ledger.rpc("mark_custom_email_sent_v1", {
+      p_idempotency_key: idempotencyKey,
+      p_provider_message_id: result.id,
+    });
+    if (sentError) throw new Error("Provider accepted the email, but its delivery receipt was not saved.");
     return result.id;
   } catch (error) {
-    if (ledger) await ledger.from("lifecycle_email_deliveries").update({ status:"failed",last_error:error instanceof Error?error.message.slice(0,500):"Unknown delivery failure",updated_at:new Date().toISOString() }).eq("idempotency_key",idempotencyKey);
+    const message = error instanceof Error ? error.message.slice(0, 500) : "Unknown delivery failure";
+    const { error: failedError } = await ledger.rpc("mark_custom_email_failed_v1", {
+      p_idempotency_key: idempotencyKey,
+      p_last_error: message,
+    });
+    if (failedError) console.error("Could not persist failed custom email delivery", { idempotencyKey, failedError });
     throw error;
   }
 }

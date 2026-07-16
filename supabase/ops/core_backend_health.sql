@@ -2,7 +2,7 @@
 -- One result row keeps every signal visible in the dashboard's final grid.
 
 with health as (
-  select public.core_backend_health_v2() as snapshot
+  select public.core_backend_health_v5() as snapshot
 )
 select
   snapshot->'cache' as scoring_cache,

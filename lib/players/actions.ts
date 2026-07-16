@@ -27,7 +27,7 @@ const UUID_PATTERN =
  */
 export async function inviteUser(_prev: InviteState, formData: FormData): Promise<InviteState> {
   const player = await getSessionPlayer();
-  if (!player || player.role !== "admin") {
+  if (!player || player.role !== "admin" || player.status !== "active") {
     return { error: "Only admins can invite players." };
   }
 
@@ -69,13 +69,13 @@ export async function inviteUser(_prev: InviteState, formData: FormData): Promis
   return { sent: email };
 }
 
-/** Permanently remove a player only when no immutable match facts reference them. */
+/** Permanently remove only a genuinely fact-free identity. */
 export async function deletePlayer(
   _previous: DeletePlayerState,
   formData: FormData,
 ): Promise<DeletePlayerState> {
   const actor = await getSessionPlayer();
-  if (!actor || actor.role !== "admin") {
+  if (!actor || actor.role !== "admin" || actor.status !== "active") {
     return { error: "Only admins can delete players." };
   }
 
@@ -95,18 +95,16 @@ export async function deletePlayer(
   }
   if (!target) return { error: "That player no longer exists." };
 
-  const { count, error: matchError } = await admin
-    .from("matches")
-    .select("id", { count: "exact", head: true })
-    .or(
-      `player1_id.eq.${playerId},player2_id.eq.${playerId},winner_id.eq.${playerId},submitted_by.eq.${playerId}`,
-    );
-  if (matchError) {
-    console.error("Could not check player match history before deletion", matchError);
-    return { error: "Couldn't check that player's match history." };
+  const { data: blockers, error: blockerError } = await admin.rpc(
+    "player_deletion_blockers_v1",
+    { p_player_id: playerId },
+  );
+  if (blockerError) {
+    console.error("Could not check player history before deletion", blockerError);
+    return { error: "Couldn't check that player's history." };
   }
-  if ((count ?? 0) > 0) {
-    return { error: "Players with match history cannot be deleted. Deactivate them instead." };
+  if (Array.isArray(blockers) && blockers.length > 0) {
+    return { error: "Players with historical activity cannot be deleted. Deactivate them instead." };
   }
 
   const { error: deleteError } = await admin.auth.admin.deleteUser(playerId);

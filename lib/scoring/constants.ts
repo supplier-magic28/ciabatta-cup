@@ -1,8 +1,9 @@
 /**
- * Elo scoring parameters (docs/SCHEMA.md "Points system", ADR-0007).
+ * Scoring projection parameters (docs/SCHEMA.md "Scoring projections",
+ * ADR-0007 and ADR-0043).
  *
  * These are deliberately a single source of truth: the group is expected to
- * argue about and rebalance the formula, and because scoring is a pure function
+ * argue about and rebalance the formulas, and because scoring is a pure function
  * of immutable facts (ADR-0001), changing a constant and re-running is all it
  * takes — no data migration.
  */

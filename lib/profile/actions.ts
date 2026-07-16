@@ -36,6 +36,7 @@ export async function updateProfileSettings(
 ): Promise<ProfileActionState> {
   const player = await getSessionPlayer();
   if (!player) return { ok: false, error: "You need to be signed in to update your profile." };
+  if (player.status !== "active") return { ok: false, error: "You need an active account to update your profile." };
 
   const nickname = String(formData.get("nickname") ?? "").trim();
   const useNickname = formData.get("useNickname") === "nickname";
@@ -108,6 +109,7 @@ export async function setPlayedToday(
 ): Promise<ProfileActionState> {
   const player = await getSessionPlayer();
   if (!player) return { ok: false, error: "You need to be signed in." };
+  if (player.status !== "active") return { ok: false, error: "You need an active account." };
   const today = dateKeyInZone(new Date());
   const remove = formData.get("mode") === "remove";
   const supabase = await createClient();

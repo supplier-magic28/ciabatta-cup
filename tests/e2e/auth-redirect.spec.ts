@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test("anonymous visitors are redirected to the sign-in screen", async ({ page }) => {
   await page.goto("/");
 
-  await expect(page).toHaveURL(/\/sign-in$/);
+  await expect(page).toHaveURL((url) => url.pathname === "/sign-in" && url.searchParams.get("next") === "/");
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
 });
 
@@ -36,7 +36,7 @@ test("the install manifest and Android icons are public", async ({ request }) =>
 for (const route of ["/tournaments", "/admin/tournaments/new", "/admin/health", "/profile"]) {
   test(`anonymous visitors cannot open ${route}`, async ({ page }) => {
     await page.goto(route);
-    await expect(page).toHaveURL(/\/sign-in$/);
+    await expect(page).toHaveURL((url) => url.pathname === "/sign-in" && url.searchParams.get("next") === route);
     await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
   });
 }

@@ -2,6 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-07-10
+- **Superseded by:** ADR-0043 (deletion-eligibility dependency scope only)
 
 ## Context
 

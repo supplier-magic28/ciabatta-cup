@@ -3,6 +3,7 @@
 - **Status:** Accepted
 - **Date:** 2026-07-11
 - **Supersedes:** the tournament-scoring consequence in ADR-0016
+- **Superseded by:** ADR-0025 (1000-point baseline only)
 
 ## Context
 

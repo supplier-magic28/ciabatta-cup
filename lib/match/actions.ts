@@ -13,10 +13,11 @@ import { sendTournamentEmail } from "@/lib/tournament/email";
 import { renderRankedMatchLoggedEmail } from "./submission-email";
 import { displayName } from "@/lib/auth/displayName";
 import { sendLifecycleEmail } from "@/lib/planned/actions";
+import { committedEmailWarning, type CommittedEmailWarning } from "@/lib/email/delivery";
 
-export type SubmitResult = { ok: true; matchId: string; warning?: string } | { ok: false; error: string };
+export type SubmitResult = { ok: true; matchId: string; warning?: string; deliveryWarning?: CommittedEmailWarning } | { ok: false; error: string };
 
-export type MatchActionResult = { ok: true; warning?: string } | { ok: false; error: string };
+export type MatchActionResult = { ok: true; warning?: string; deliveryWarning?: CommittedEmailWarning } | { ok: false; error: string };
 
 const SAVE_FAILED = "Couldn't save the match — please try again.";
 
@@ -28,18 +29,19 @@ async function resolveCourtId(db: Awaited<ReturnType<typeof createClient>>, loca
 }
 
 /**
- * Persist a submitted match as immutable facts (Phase 3c-part-1, ADR-0008).
+ * Submit a match through the transactional workflow boundary (ADR-0008,
+ * ADR-0036, WF-MATCH-001).
  *
- * Writes `matches` (status `pending_confirmation`), its `match_sets`, and the
- * submitter's `match_confirmations` row — nothing else. It does NOT auto-approve,
- * compute scoring, or touch ratings; the opponent's confirmation and admin
- * approval are later phases. All writes go through the caller's authenticated
- * client, so RLS applies; validation is re-run server-side (never trust the
- * client). Server Functions are reachable by direct POST, so we re-check auth.
+ * `submit_match_v3` atomically validates the active actor, creates the match,
+ * sets, initial confirmation, Zeus events, and durable email intents. Ranked
+ * submissions await opponent confirmation and organiser approval; exhibition
+ * follows its documented automatic terminal path. Derived scoring is rebuilt
+ * only after an authoritative scoring transition commits.
  */
 export async function submitMatch(input: MatchSubmission): Promise<SubmitResult> {
   const player = await getSessionPlayer();
   if (!player) return { ok: false, error: "You need to be signed in to log a match." };
+  if (player.status !== "active") return { ok: false, error: "You need an active account to log a match." };
 
   const validated = validateSubmission(input, player.id);
   if (!validated.ok) return { ok: false, error: validated.error };
@@ -54,6 +56,7 @@ export async function submitMatch(input: MatchSubmission): Promise<SubmitResult>
   if(matchError||typeof matchId!=="string")return {ok:false,error:SAVE_FAILED};
 
   let warning: string | undefined;
+  let deliveryWarning: CommittedEmailWarning | undefined;
   if (match.type === "ranked") {
     const { data: opponent } = await supabase.from("players").select("email, first_name, last_name, nickname, use_nickname").eq("id", match.opponentId).single();
     const selfName = displayName({ firstName: player.firstName, lastName: player.lastName, email: player.email });
@@ -63,20 +66,27 @@ export async function submitMatch(input: MatchSubmission): Promise<SubmitResult>
     const score = formatScore(match.sets.map((set) => ({ p1Games: set.selfGames, p2Games: set.opponentGames, tiebreakP1: set.selfTiebreak, tiebreakP2: set.opponentTiebreak })));
     const base = process.env.NEXT_PUBLIC_SITE_URL ?? "";
     try {
+      if (!opponent?.email) throw new Error("The complete ranked-match email recipient set is unavailable.");
       await Promise.all([
         sendTournamentEmail(player.email, renderRankedMatchLoggedEmail({ firstName: player.firstName ?? "Player", winnerName, loserName, score, matchDate: match.playedAt.slice(0, 10) }), `ranked-match/logged/${matchId}/${player.id}`, {kind:"ranked_match_logged",playerId:player.id,entityType:"match",entityId:matchId}),
-        opponent?.email ? sendTournamentEmail(opponent.email, renderRankedMatchLoggedEmail({ firstName: opponent.first_name ?? "Player", winnerName, loserName, score, matchDate: match.playedAt.slice(0, 10), confirmUrl: `${base}/matches` }), `ranked-match/logged/${matchId}/${match.opponentId}`, {kind:"ranked_match_logged",playerId:match.opponentId,entityType:"match",entityId:matchId}) : Promise.resolve(),
+        sendTournamentEmail(opponent.email, renderRankedMatchLoggedEmail({ firstName: opponent.first_name ?? "Player", winnerName, loserName, score, matchDate: match.playedAt.slice(0, 10), confirmUrl: `${base}/matches` }), `ranked-match/logged/${matchId}/${match.opponentId}`, {kind:"ranked_match_logged",playerId:match.opponentId,entityType:"match",entityId:matchId}),
       ]);
-    } catch { warning = "Match logged, but one or more result emails could not be sent."; }
+    } catch {
+      warning = "Match logged, but one or more result emails could not be sent.";
+      deliveryWarning = committedEmailWarning(warning, [
+        `ranked-match/logged/${matchId}/${player.id}`,
+        `ranked-match/logged/${matchId}/${match.opponentId}`,
+      ]);
+    }
   }
 
   revalidatePath("/matches");
-  return { ok: true, matchId, warning };
+  return { ok: true, matchId, warning, deliveryWarning };
 }
 
 export async function adminLogMatch(input: AdminMatchSubmission): Promise<SubmitResult> {
   const player = await getSessionPlayer();
-  if (!player || player.role !== "admin") return { ok: false, error: "Only admins can directly log matches." };
+  if (!player || player.role !== "admin" || player.status !== "active") return { ok: false, error: "Only active admins can directly log matches." };
   const validated = validateAdminSubmission(input);
   if (!validated.ok) return validated;
   const match = validated.value;
@@ -138,6 +148,7 @@ export async function submitExternalMatch(input: ExternalMatchSubmission): Promi
   });
   if (error || typeof matchId !== "string") return { ok: false, error: SAVE_FAILED };
   let warning = await rebuildScoringAfterCommit(matchId, "log_external_match");
+  let deliveryWarning: CommittedEmailWarning | undefined;
   try {
     const score = formatScore(match.sets.map((set) => ({
       p1Games: set.selfGames, p2Games: set.opponentGames,
@@ -149,11 +160,15 @@ export async function submitExternalMatch(input: ExternalMatchSubmission): Promi
     }), `external-match/${matchId}/${player.id}`, {kind:"external_match_logged",playerId:player.id,entityType:"match",entityId:matchId});
   } catch {
     warning = [warning, "The match was saved, but its result email could not be sent."].filter(Boolean).join(" ");
+    deliveryWarning = committedEmailWarning(
+      "The match was saved, but its result email needs recovery.",
+      [`external-match/${matchId}/${player.id}`],
+    );
   }
 
   revalidatePath("/matches");
   revalidateRatingSurfaces();
-  return { ok: true, matchId, warning };
+  return { ok: true, matchId, warning, deliveryWarning };
 }
 
 export async function deleteExternalMatch(
@@ -162,6 +177,7 @@ export async function deleteExternalMatch(
 ): Promise<{ error?: string; warning?: string } | undefined> {
   const player = await getSessionPlayer();
   if (!player) return { error: "You need to be signed in." };
+  if (player.status !== "active") return { error: "You need an active account." };
   const matchId = String(formData.get("matchId") ?? "");
   if (!matchId) return { error: "Match not found." };
   const supabase = await createClient();
@@ -174,21 +190,21 @@ export async function deleteExternalMatch(
 }
 
 /**
- * Confirm a match you're a participant in (Phase 3c-part-2, ADR-0010). Inserts
- * the caller's `match_confirmations` row — RLS enforces that they are a
- * participant of a `pending_confirmation` match. Once both participants have
- * confirmed, the `advance_on_confirmation` trigger moves the status forward
- * (ranked → `pending_approval`, exhibition → `approved`). No scoring here.
+ * Confirm through the row-locking `confirm_match_v1` boundary (ADR-0010).
+ * The RPC validates actor and status, records confirmation idempotently, and
+ * performs the allowed transition atomically. An exhibition approval changes
+ * scoring facts, so its rebuild is a separate reconstructable post-commit step.
  */
 export async function confirmMatch(matchId: string): Promise<MatchActionResult> {
   const player = await getSessionPlayer();
   if (!player) return { ok: false, error: "You need to be signed in." };
+  if (player.status !== "active") return { ok: false, error: "You need an active account." };
 
   const supabase = await createClient();
   const { data: status, error } = await supabase.rpc("confirm_match_v1", { p_match_id: matchId });
 
   if (error) {
-    // RLS denial, already-confirmed (PK), or no-longer-pending.
+    // Preserve the transactional boundary's unavailable/already-complete result.
     return { ok: false, error: "Couldn't confirm this match — it may already be confirmed." };
   }
 
@@ -203,7 +219,7 @@ export async function confirmMatch(matchId: string): Promise<MatchActionResult> 
 }
 
 export async function resubmitQueriedMatch(matchId:string,input:MatchSubmission):Promise<MatchActionResult>{
-  const player=await getSessionPlayer();if(!player)return {ok:false,error:"Sign in first."};const db=await createClient();
+  const player=await getSessionPlayer();if(!player||player.status!=="active")return {ok:false,error:"You need an active account."};const db=await createClient();
   const {data:match}=await db.from("matches").select("id,player1_id,player2_id,submitted_by,status,planned_match_id").eq("id",matchId).single();
   if(!match||match.status!=="queried"||match.submitted_by!==player.id||match.planned_match_id)return {ok:false,error:"This queried match cannot be edited."};
   const opponentId=match.player1_id===player.id?match.player2_id:match.player1_id;const checked=validateSubmission({...input,opponentId},player.id);if(!checked.ok)return checked;
@@ -214,17 +230,16 @@ export async function resubmitQueriedMatch(matchId:string,input:MatchSubmission)
 }
 
 /**
- * Admin-only transition of a `pending_approval` match to a terminal decision.
- * Admin-gated in code (Server Actions are POST-reachable) and at the DB by the
- * `matches_update_admin` (`is_admin()`) RLS policy. Ranked approval then rebuilds
- * the derived rating cache from the complete set of immutable match facts.
+ * Active-organiser transition through the row-locking `review_match_v2` RPC.
+ * The authoritative decision and lifecycle notifications commit together;
+ * public activity points and the separate Elo projection rebuild afterward.
  */
 async function adminSetStatus(
   matchId: string,
   to: "approved" | "queried" | "rejected",
 ): Promise<MatchActionResult> {
   const player = await getSessionPlayer();
-  if (!player || player.role !== "admin") {
+  if (!player || player.role !== "admin" || player.status !== "active") {
     return { ok: false, error: "Only admins can review matches." };
   }
 
@@ -244,15 +259,16 @@ async function adminSetStatus(
   if (error) return { ok: false, error: "Couldn't update this match — please try again." };
 
   let warning: string | undefined;
+  let deliveryWarning: CommittedEmailWarning | undefined;
   if (to === "approved") {
     warning = await rebuildScoringAfterCommit(matchId, "review_match");
-    if (match.planned_match_id) await sendLifecycleEmail(match.planned_match_id, "confirmed", matchId);
+    if (match.planned_match_id) deliveryWarning = await sendLifecycleEmail(match.planned_match_id, "confirmed", matchId);
   }
 
   revalidatePath("/admin/approvals");
   revalidatePath("/matches");
   revalidateRatingSurfaces();
-  return { ok: true, warning };
+  return { ok: true, warning, deliveryWarning };
 }
 
 function revalidateRatingSurfaces() {
@@ -260,10 +276,10 @@ function revalidateRatingSurfaces() {
   revalidatePath("/players/[playerId]", "page");
 }
 
-/** Rebuild all derived rating data; an admin recovery path after deployment. */
+/** Rebuild public activity points and the separate Elo projection. */
 export async function rebuildRatings(): Promise<MatchActionResult> {
   const player = await getSessionPlayer();
-  if (!player || player.role !== "admin") {
+  if (!player || player.role !== "admin" || player.status !== "active") {
     return { ok: false, error: "Only admins can rebuild ratings." };
   }
 

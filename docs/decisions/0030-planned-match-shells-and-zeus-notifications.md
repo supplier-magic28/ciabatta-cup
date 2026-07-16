@@ -2,6 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-07-14
+- **Superseded by:** ADR-0033 (partial transition mechanics only)
 
 ## Context
 

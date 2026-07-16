@@ -2,6 +2,7 @@
 
 - **Status:** Accepted (refines ADR-0007, ADR-0011, and ADR-0012)
 - **Date:** 2026-07-10
+- **Superseded by:** ADR-0025 (baseline and floor only)
 
 ## Context
 

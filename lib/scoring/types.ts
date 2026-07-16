@@ -39,7 +39,7 @@ export interface Match {
   status: MatchStatus;
   /** ISO-8601 timestamp; defines the chronological scoring order. */
   playedAt: string;
-  /** Tournament-linked matches are records, but placement awards replace their Elo effect. */
+  /** Tournament-linked matches are records; official placements provide their public activity points. */
   tournamentId?: string | null;
 }
 
@@ -47,7 +47,7 @@ export interface Match {
 export interface PlayerRating {
   /** Player id this standing is for. */
   playerId: string;
-  /** Current Elo rating, or zero before the first approved ranked result. */
+  /** Current public activity points, or zero before the first scoring fact. */
   rating: number;
   /** Internal ordinary-match Elo retained for seeding and history. */
   eloRating?: number;

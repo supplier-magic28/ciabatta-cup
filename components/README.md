@@ -7,6 +7,11 @@ of Done (`CLAUDE.md`).
 
 ## Inventory
 
+**Design system**
+- `tokens` — the code-native colour, spacing, shadow, type, and motion constants
+  consumed by shared components; change the vocabulary here instead of copying
+  page-local values.
+
 **Brand**
 - `brand/LoafBadge` — the Ciabatta loaf (SVG), the current-holder trophy motif.
 - `brand/TrophyBadge` — compact earned-tournament trophy icon used in ladder rows.
@@ -51,11 +56,13 @@ of Done (`CLAUDE.md`).
 
 **Layout**
 - `layout/SiteHeader` — responsive three-area header with the wordmark,
-  wrapping primary navigation, and a permanent top-right Zeus inbox action.
-- `practice/PracticeForm` — owner solo-practice claim form with activity, duration, date, notes, approval callout, and pending result state.
+  wrapping navigation for tournaments, matches, admin tools, and sign-out, plus
+  a permanent top-right Zeus inbox action.
+- `practice/PracticeForm` — owner solo-practice claim form with one stable
+  server-rendered form retry key, activity, duration, date, notes, approval
+  callout, and pending result state.
 - `practice/PracticeApprovalActions` — organiser approve +5/reject controls for
   pending practice claims, including committed-with-recovery warnings.
-  tournaments, matches, admin tools, and sign-out.
 
 **Courts and surfaces**
 - `courts/CourtPicker` — shared saved-court typeahead with match counts,
@@ -106,7 +113,9 @@ of Done (`CLAUDE.md`).
 - `players/InvitePlayerForm` — admin invite form (design screen 08): name + email
   → `inviteUser` server action (`useActionState`).
 - `players/DeletePlayerButton` — confirmed admin hard-delete for unused players;
-  the server refuses self-deletion and any player referenced by a match.
+  the server refuses self-deletion and any player referenced by sporting,
+  practice, play-day, cup, planned-match, placement, invitation, notification,
+  or delivery history.
 - `players/PlayerAvatar` — Supabase Storage avatar with deterministic initials
   fallback; used by leaderboard and profiles.
 - `players/ReignSummary` — hydrated current-holder duration measured by
@@ -116,7 +125,9 @@ of Done (`CLAUDE.md`).
 
 **Tournaments**
 - `tournament/CupInviteConsole` — organiser bench multi-invite and RSVP status
-  surface; responses remain separate from the final roster.
+  surface; it submits the browser timezone offset with the local deadline,
+  preserves accepted responses across delivery retry, and keeps responses
+  separate from the final roster.
 - `tournament/CupInvitePanel` — invited-player commitment action with explicit
   organiser final-field authority and stable pending feedback.
 - `tournament/NewTournamentForm` — partial cup creation with required schedule,
@@ -154,8 +165,9 @@ of Done (`CLAUDE.md`).
 - `auth/UpdatePasswordForm` - recovery-link password replacement; invited
   profiles activate only after the password update succeeds.
 
-Planned next (from ARCHITECTURE.md): `Card`, `RankBadge`, `StatBlock`.
-# Test inventory
+Deferred until a concrete route needs them: `Card`, `RankBadge`, `StatBlock`.
+
+## Component-focused test examples
 
 - `calendar/CalendarEventVisual.test` - cup imagery plus paired member and
   neutral external-opponent visual contract coverage.

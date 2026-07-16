@@ -2,6 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-07-09
+- **Superseded by:** ADR-0005 (bootstrap mechanism only)
 
 ## Context
 

@@ -1,39 +1,46 @@
 # Ciabatta Cup — Data Schema (authoritative)
 
-Derived from the approved screen designs (`design-reference/`). This is the
-**authoritative data-model reference**; the copy under
-`design-reference/design_handoff_ciabatta_cup/SCHEMA.md` is the raw handoff
-artifact and is preserved unchanged. Field names are suggestions; relationships
-and enums are the contract.
+This is the **authoritative conceptual data-model reference** for the schema
+implemented by the ordered SQL under `supabase/migrations/`. The database and
+its contract tests are enforced truth; this document explains current entity
+roles and cross-table invariants. Committed design handoffs are historical
+inputs, not a competing schema authority.
 
-> **Built in phases.** The full model below is the destination, not a single
-> migration. Players, match facts, confirmations, ratings, reigns, and the first
-> round-robin tournament spine are implemented in migration form. Activity and
-> additional tournament structures land in later phases. See ADR-0003,
-> ADR-0011, and ADR-0016.
+Applied migrations are immutable. A correction always arrives as a new,
+forward-only migration and updates this document in the same task. See
+ADR-0003, ADR-0036, and ADR-0041.
 
 ## Reconciliation with ADR-0001 (read this)
 
-ADR-0001 states that points and rankings are **never stored** — they are computed
-from immutable match facts by a pure function. `rating_points`, `rating_history`,
-and `ciabatta_reigns` below appear to persist derived data. They are reconciled
-as follows (ADR-0003 refines ADR-0001; it does not supersede it):
+ADR-0001 states that scoring projections are computed from facts rather than
+treated as facts themselves. Persisted projections are allowed only when they
+are fully rebuildable:
 
-- **Match facts (`matches` + `match_sets`) are the source of truth.** Immutable,
-  append-only.
-- **`rating_history` is a persisted *materialisation*** of the pure Elo function
-  over approved ranked matches — kept for audit, movement arrows, and read
-  performance, but fully **rebuildable** by recomputing forward from match facts.
-- **`rating_points` is a denormalised cache** of the latest `rating_history`
-  entry per player — **rebuildable** from `rating_history`.
-- Neither is authoritative over match facts; both can be dropped and recomputed.
-  The pure scoring function in `lib/scoring/` is what produces them, preserving
-  ADR-0001's "change the formula fearlessly" seam.
+- Approved `matches` + `match_sets`, approved practice, play days, and official
+  tournament placements are the canonical scoring inputs for their domains.
+- `players.rating_points` is the rebuildable snapshot of **public activity
+  points**, not Elo and not an independently editable player attribute.
+- `rating_history` is a legacy-shaped, rebuildable per-match **activity award**
+  cache used by match-history reads. It is not Elo and it is not the complete
+  public points timeline; practice, placements, and decay live in the canonical
+  transient activity ledger.
+- `ciabatta_reigns` is the rebuildable holder history from the same public
+  activity-points timeline as the ladder.
+- `scoring_cache_state` versions points-affecting facts and prevents a stale
+  rebuild from overwriting a newer projection.
 
 ## Design principles
-- **Two match classes**: `ranked` (moves points, needs admin approval) and `exhibition` (record only). Never mix them in stats — the UI always shows the two records separately.
-- **Approval pipeline**: a submitted result → confirmed by both players → approved by an admin → points applied. Each stage is visible in the UI.
-- **Everything is append-only where stats depend on it** (matches, rating history, reigns) so historical data ("cool data over time") is never lost.
+
+- **Public points are activity points.** Ranked, exhibition, external, practice,
+  placement, play-day, and decay rules share one pure ledger projection.
+- **Elo is separate.** Only approved, ordinary, non-tournament ranked results
+  feed Elo; it remains useful for analysis and seeding.
+- **Approval varies deliberately by workflow.** Ordinary ranked results require
+  participant confirmation and organiser approval; exhibition, external,
+  organiser-entered, and tournament result paths have explicit immediate-
+  approval rules in `docs/WORKFLOWS.md`.
+- **Facts are preserved.** Approved/reviewed facts are immutable. Derived
+  histories and reigns are replaceable caches, not append-only authorities.
 
 ---
 
@@ -66,14 +73,16 @@ with their Auth identity.
 | role | enum: player, admin | admin = tournament director |
 | status | enum: invited, active, inactive | invited = signup link sent, not yet registered |
 | invited_at / joined_at | timestamptz | |
-| rating_points | int, default 0 | **denormalised cache**; zero-based ordinary Elo plus cumulative ranked tournament awards (ADR-0003, ADR-0025) |
+| rating_points | int, default 0 | **rebuildable snapshot of public activity points** as of the last successful cache build; ordinary Elo is separate (ADR-0029, ADR-0034) |
 
 _(`password_hash` from the original handoff is intentionally removed — see ADR-0002.)_
 
 Players may edit only their own nickname, nickname preference, and avatar URL.
 Nicknames are display labels and are intentionally not unique. The avatar URL
 points to a public object in the `avatars` Storage bucket; upload, replacement,
-and deletion are restricted to the owning player's `<player_id>/` folder.
+and deletion are restricted to an **active** owning player in the
+`<player_id>/` folder. Final Storage policies enforce the active-member check
+independently of the Server Action.
 
 ### matches _(Phase 3a — implemented)_
 Immutable match facts (ADR-0001). Once `status = approved` a row is frozen by a
@@ -84,6 +93,7 @@ partial index permits only one match fact per fixture (ADR-0016).
 |---|---|---|
 | id | uuid PK | |
 | operation_key | uuid nullable, unique when present | stable retry identity for RPC-created facts |
+| lifecycle_revision | bigint, default 0 | increments on each status change so a correction cycle gets new transactional notification identities while retries of the same state do not |
 | type | enum: ranked, exhibition | |
 | format | enum: one_set, best_of_3, pro_set_8, custom | custom carries free-form `format_note` |
 | format_note | text nullable | |
@@ -172,9 +182,16 @@ Once both rows exist, a database trigger advances a ranked result to
 Tournament status is operational state. Progress and the champion are derived
 from linked immutable matches rather than stored on this row.
 
+Cover/crop mutation is owned by `update_tournament_cover_v1`; authenticated
+clients have no direct tournament-table write grant after RPC enforcement.
+
 ### `tournament_email_deliveries`
 
-Idempotency ledger for director-triggered lifecycle messages (ADR-0022).
+Legacy idempotency ledger for director-triggered lifecycle messages
+(ADR-0022). Migration `20260718127000_unified_email_delivery_outbox.sql`
+backfills reconstructable rows into `custom_email_outbox`; new delivery work
+uses the unified table. Keep this table for historical diagnostics until a
+separate, verified retirement migration exists.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -185,8 +202,10 @@ Idempotency ledger for director-triggered lifecycle messages (ADR-0022).
 
 ### `tournament_placements`
 
-Rebuildable official placement awards derived after tournament completion
-(ADR-0024).
+Official placement facts derived from completed fixtures (ADR-0024). They can be
+recomputed from immutable tournament results, but completion and the complete
+1-N set are now committed atomically by `finalize_tournament_v1`; a completed
+cup without exactly one placement per participant is an integrity failure.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -195,20 +214,81 @@ Rebuildable official placement awards derived after tournament completion
 | points | int | 100 / 50 / 20 / 10 for positions 1–4, zero thereafter |
 | awarded_at | timestamptz | rating/reign event timestamp |
 
+`canonical_tournament_placements_v1` derives the sole valid ordered placement
+set from the locked cup, complete approved fixtures, configured championship
+path, canonical standings, and any required decider/finals. The application
+supplies the same set only as an idempotency checksum; it never chooses which
+placement facts the finalizer inserts. Direct placement writes and direct
+completed/completion-path updates are rejected outside the finalizer's
+transaction-local marker.
+
 ### tournament_participants _(Phase 4 — implemented)_
 | tournament_id FK, player_id FK, seed int, entered_at | composite identity; seed is unique within a tournament and drives deterministic generation |
 
 Organisers atomically replace the complete ordered roster before draw lock or
 the first result. Active unique players must fit the 2–8 seats; permanent draw
-lock rejects empty seats and freezes the order.
+lock rejects empty seats and freezes the order. `replace_tournament_group_draw_v1`
+validates and replaces the complete circle-schedule pairing set in one locked
+transaction. `replace_tournament_participant_v2` preserves the outgoing seed,
+validates the regenerated complete group draw, and commits roster plus fixtures
+together. Direct authenticated participant/fixture writes are revoked after the
+application moves to those RPCs.
 
 ### `tournament_invites`
 
 Cup RSVP records are separate from the organiser-owned participant roster.
-Sent invitations may be opened, accepted, or expire at their response deadline.
-Acceptance records player intent but never consumes a seat or confirms the
-field; the organiser selects the roster and the permanent draw lock remains the
-only final confirmation. RSVP records survive permitted pre-lock changes.
+Each `(tournament_id, player_id)` row stores `sent`, `opened`, `accepted`, or
+`expired` state, `hold_until`, lifecycle timestamps, and a positive
+`generation`. A first invitation starts at generation 1 and re-inviting an
+expired RSVP advances it. Accepted is terminal. Re-sending an unexpired
+`sent`/`opened` RSVP preserves its deadline, timestamps, state, and generation;
+delivery retry changes only the outbox. Generation-specific Zeus and email keys
+dedupe new invitations and retry attempts. Acceptance records player intent but
+never consumes a seat or confirms the field; the organiser selects the roster
+and permanent draw lock is the only final confirmation.
+
+The invitation-history trigger prevents any accepted-row mutation, generation
+rollback/jumps, and a new generation unless the predecessor is expired. Response
+RPCs lock the tournament before the RSVP row so draw lock and acceptance use one
+serialization order; an already-accepted retry remains accepted even after the
+draw subsequently locks.
+
+### `custom_email_outbox`
+
+The service-role-only durable intent and delivery state for all custom product
+email. Supabase Auth confirmation/invite/recovery mail is intentionally
+provider-owned and excluded.
+
+| Column | Type | Notes |
+|---|---|---|
+| idempotency_key | text PK | stable provider and application retry identity |
+| kind | constrained text | reconstructable template/event kind |
+| player_id | FK players, restrict delete | canonical recipient identity |
+| entity_type / entity_id | text / uuid | canonical reconstruction context |
+| status | pending, processing, sent, failed, superseded | atomic delivery state machine; `superseded` is terminal non-actionable audit state |
+| attempt_count | int | increments on a successful claim |
+| provider_message_id / last_error | text nullable | provider receipt or bounded safe diagnostic |
+| created_at / updated_at / claimed_at / sent_at / superseded_at | timestamptz | stale-claim, terminal outcome, and operator diagnostics |
+
+`enqueue_custom_email_v1` rejects incomplete or conflicting delivery context.
+`claim_custom_email_v1` atomically claims pending/failed or fifteen-minute-stale
+work and refuses terminal sent/superseded rows. `mark_custom_email_sent_v1` and
+`mark_custom_email_failed_v1` close an attempt. `supersede_custom_email_v1`
+terminally closes pending, failed, or fifteen-minute-stale obsolete work while
+preserving sent receipts; a live processing claim blocks supersession. Health
+counts superseded audit rows separately but never presents them as actionable.
+Match, planned-match, practice, draw-lock, RSVP, and tournament-completion
+transitions create intent transactionally. Explicit game-day or locked-in
+resend commands first enqueue the complete active-roster batch in one RPC.
+Provider delivery occurs only after the intent transaction commits.
+
+A repeated sent acknowledgement is valid only with the same provider receipt;
+a different receipt cannot rewrite a terminal sent row. During upgrade,
+`reconcile_legacy_email_outbox_v1` imports missing legacy rows, promotes
+conflicting legacy `sent`/`failed` outcomes into outbox rows that migration 127
+already created, and preserves recent legacy claims as `processing` rather than
+exposing them immediately for duplicate recovery. The unified and legacy ledgers are select-only outside
+their security-definer claim/mark/reconciliation interfaces after enforcement.
 
 ### fixtures _(Phase 4 — implemented for round robin)_
 | field | type | notes |
@@ -229,22 +309,33 @@ match result. Odd-field rests are derived as the participant absent from that
 round rather than stored as fake fixtures. Future bracket wiring remains
 deferred.
 
+Post-group tiebreak, semifinal, final, and playoff fixtures are installed by
+`install_tournament_stage_v1`, which locks the cup, validates active lifecycle,
+participant membership, complete approved group prerequisites, the configured
+qualification path, exact canonical pairings/schedule slots, and prerequisite
+decider/semifinal winners. It returns safely only when the already-installed
+stage exactly matches the retry payload. Application code may display pairings
+but cannot partially write an authoritative championship stage.
+
 ### rating_history _(Phase 3d — implemented)_
-Persisted materialisation of the pure scoring function. It is a rebuildable
-cache, not a source of truth; match facts remain authoritative.
+Persisted, legacy-shaped materialisation of public award movement caused by
+approved ordinary match facts. It is a rebuildable match-history cache, not
+ordinary Elo, not the complete public activity timeline, and not a source of
+truth. Match facts remain authoritative; the canonical ledger separately
+includes practice, placement, play-day, and decay effects.
 | field | type | notes |
 |---|---|---|
 | id | uuid PK | |
 | player_id | FK | |
-| match_id | FK | the approved ranked match that caused the change |
+| match_id | FK | the approved ordinary ranked, exhibition, or external match that caused the award |
 | points_before / points_after | int | delta derivable |
 | rank_before / rank_after | int | powers the ▲/▼ movement arrows |
 | created_at | timestamptz | |
 
-Rebuilt from every approved ranked match whenever one is approved. This keeps
-the history correct even if an old result is approved late; the database write
-is a single cache-replacement transaction (ADR-0011). Its intentional
-whole-table replacement uses an explicit `where true` predicate so hosted
+Rebuilt from every approved ordinary match whenever a scoring fact changes.
+This keeps match-award history correct even if an old result is approved late;
+the database write is a single cache-replacement transaction (ADR-0011). Its
+intentional whole-table replacement uses an explicit `where true` predicate so hosted
 safe-update enforcement accepts the operation without weakening that guard.
 
 ### ciabatta_reigns _(Phase 3e — implemented)_
@@ -260,21 +351,24 @@ ahead. Tournament placement points are replayed on the tournament date.
 
 ---
 
-## Derived data (compute, don't store — or materialise as views)
-- **Leaderboard**: order active players by the pure scoring output. The current
-  root route derives this from match facts; `rating_points` is a rebuildable
-  cache for later read surfaces. Movement, streak, and last-five remain
-  progressive display features derived from approved ranked matches.
+## Derived data (compute, don't store — or materialise as rebuildable caches)
+
+- **Public leaderboard**: order active players by the canonical activity-points
+  replay at an explicit Melbourne as-of date. The leaderboard, player profiles,
+  calendar scorecard, points history, cache build, and Ciabatta holder consume
+  the same source-aware ledger.
 - **Records**: ranked W–L and exhibition W–L are always separate; sets/games totals from match_sets.
 - **Head-to-head**: per player-pair W–L over approved matches (filterable ranked/exhibition).
-- **Tournament standings** (round robin): W–L, game difference, head-to-head,
-  then seed from fixtures→approved matches. A tie on wins crossing second/third
-  creates an on-court decider. The director may make that table final or continue
-  to a final and third-place match; `completion_path` records which facts derive
-  the official placements.
-- **Ladder ratings**: ordinary approved ranked matches use Elo. Tournament-linked
-  matches do not move Elo; completed tournament placements add fixed cumulative
-  awards to the player's existing ladder rating.
+- **Tournament standings** (round robin): `tournament_standings_v1` is the one
+  database definition used by stage and placement validation. It orders wins,
+  game difference, head-to-head wins within an otherwise equal wins/game-
+  difference cohort, seed, then UUID. A wins tie across the configured
+  qualification cutoff requires an on-court decider. The director may make
+  standings final or continue through the configured final stage;
+  `completion_path` records which facts derive the official placements.
+- **Ordinary Elo**: only non-tournament approved ranked matches participate.
+  Tournament fixtures never move Elo. Placement awards belong only to the
+  activity-points projection.
 - **Surface records**: per-surface W–L, win percentage, and match count over
   approved tagged ranked and tournament facts. Untagged eligible facts are
   excluded and counted separately.
@@ -316,24 +410,41 @@ organiser awaiting a ranked review, terminal decisions, planned corrections,
 and final planned confirmation. Repeatable result approvals dedupe by proposal
 revision rather than only by planned shell.
 
-## Points system
-Ordinary Elo uses K=32 with a zero entry baseline and zero floor. An equal first
-match gives the winner 16 and leaves the loser at zero. Only non-tournament
-`ranked` + `approved` matches move Elo; ranked tournament placements add fixed
-100/50/20/10 awards directly. The calculation stays pure and rebuildable from
-facts in `lib/scoring/computeRankings` and `buildRatingCache` (ADR-0025).
+## Scoring projections
+
+The public ladder uses the activity economy defined in ADR-0029: ranked
+participation +15 and win +15; exhibition and external participation +10;
+approved practice +5; tournament placements 100/50/20/10 for places 1-4 and
+zero thereafter; permanent Melbourne-day daily and drought decay; and a zero
+floor. Manual play days award no points but reset drought timing.
+
+Ordinary Elo is a separate pure K=32 projection with zero entry and zero floor.
+Only non-tournament `ranked` + `approved` matches move it. An equal first match
+gives the winner 16 and leaves the loser at zero. `computeRankings` owns Elo;
+`buildRatingCache` owns the public activity ledger, activity snapshot, and
+reigns. Tournament fixtures never receive ordinary match awards or Elo in
+addition to their official placement award.
 
 ## Auth & permissions
 - **Supabase Auth** (email + password managed by Supabase; **no `password_hash` in our schema**). `players.id` = `auth.users.id`. Invited players are created via Supabase Auth invite (tokenised link); `players.status`: invited → active on registration. See ADR-0002.
-- `player`: submit/confirm casual matches, read tournaments, and edit **own
-  profile only** (not role/status/rating_points).
+- `player`: an **active** player may submit/confirm casual matches, respond to
+  invitations, and edit the allowed fields of their own profile. Invited and
+  inactive identities retain only the reads required for activation/history;
+  they cannot perform domain mutations.
 - `admin`: everything + approve/query results, create/manage tournaments,
   atomically record tournament fixtures, and invite/deactivate players. Admin
   approval UI expects both-confirmed player submissions surfaced oldest-first;
   director-recorded tournament matches are approved inside their transaction.
-- Admins may hard-delete only unused player identities with no match references;
-  historical players must be deactivated so immutable facts retain their
+- Admins may hard-delete only unused, non-self identities with no match,
+  practice, play-day, tournament, planned-match, placement, invitation, or
+  other historical fact references; historical players must be deactivated so
+  immutable facts retain their
   participant identity (ADR-0015).
+- RLS policy and SQL privilege are separate gates. Migration 129 supplies the
+  exact clean-stack read/rolling-write grants required by the compatible app;
+  migration 130 then revokes direct practice, RSVP, legacy email-ledger,
+  tournament, participant, fixture, and placement mutation grants. Canonical
+  security-definer RPCs retain explicit execute grants and own those writes.
 
 ## Non-Ciabatta opponents _(Phase 6 — implemented)_
 
@@ -370,7 +481,7 @@ Manual streak marks only; match-derived days are never copied here.
 The streak projection unions these marks with every participating match except
 rejected submissions. H2H and history projections continue to use approved
 facts only. No current streak, best streak, or H2H aggregate is stored.
-## Admin match logging and public projection (2026-07-17)
+## Admin match logging and public projection
 
 `matches.admin_logged_by` identifies an organiser who used the guarded
 `admin_log_match_v2` RPC to record a match for any two active members. The RPC
@@ -384,11 +495,22 @@ play-day facts. Only derived totals/events leave that boundary. Leaderboard and
 public profiles use the same career projection; exhibition W-L is the all-time
 non-ranked record and external opponent identities remain owner-private.
 
-# Activity-points delta (2026-07-13)
+## Canonical activity-points inputs
 
 `players.rating_points` is a rebuildable snapshot of public activity points, not authoritative Elo. Public points are derived from approved ordinary matches (+15 participation each, +15 winner bonus), approved exhibition/external participation (+10), approved `practice_sessions` (+5), tournament placements, and permanent derived inactivity deductions. Ordinary Elo remains a separate pure projection for seeding/history.
 
-`practice_sessions` stores an owner claim (`serves`, `wall_hits`, or `other`), 1–300 minutes, Melbourne-calendar practice date, optional 500-character note, and pending/approved/rejected review metadata. Owners insert/select their own pending facts; organisers select and terminally review all. Reviewed facts are immutable.
+`practice_sessions` stores an owner claim (`serves`, `wall_hits`, or `other`),
+1–300 minutes, Melbourne-calendar practice date, optional 500-character note,
+pending/approved/rejected review metadata, and a nullable `operation_key`.
+`(player_id, operation_key)` is unique when a key exists. The practice page
+generates one stable UUID for the rendered form and `submit_practice_v1` returns
+the same pending fact for an identical retry by that owner; the insert trigger
+therefore creates only one `practice_logged` intent. Reusing the key with a
+different activity, duration, date, or normalized note is rejected. The
+nullable key preserves rolling
+compatibility with the previously deployed direct-insert client. Owners select
+their own claims; organisers select and terminally review all. Reviewed facts
+are immutable.
 
 `play_days` marks are tennis dates for streak and decay purposes but carry no point award. Decay begins at first tennis activity, charges −1 per missed Melbourne day plus stacked −10 per completed seven-day stretch and −30 per completed thirty-day stretch, and is floored at zero.
 
@@ -402,40 +524,54 @@ addition to placement points.
 
 ## Core reliability boundaries (ADR-0036)
 
-`matches.operation_key` and `planned_matches.operation_key` provide stable,
-unique retry identities for creation RPCs. Ordinary, organiser, external, and
-planned result paths call `assert_standard_match_payload_v1`, which enforces
+`matches.operation_key`, `planned_matches.operation_key`, and the player-scoped
+`practice_sessions.operation_key` provide stable retry identities for creation
+RPCs. Ordinary, organiser, external, and planned result paths call
+`assert_standard_match_payload_v1`, which enforces
 sequential unique sets, score bounds, paired tie-breaks, an overall winner,
 declared-winner agreement, Melbourne played-date gating, and custom-format
 notes. Database triggers guard ordinary-match, planned-shell, and proposal
 status graphs; approved result facts remain terminal and immutable.
 
 `scoring_cache_state` is a singleton containing `fact_version`,
-`built_version`, and the last successful rebuild time. Statement triggers
-increment the fact version for points-affecting match, placement, practice, and
-play-day changes. `replace_rating_cache_with_reigns_v2` takes an advisory lock
-and refuses a snapshot built from a stale version.
+`built_version`, and the last successful rebuild time. Triggers increment the
+fact version only when the canonical activity projection changes: an approved
+match enters/leaves or changes a scoring input, approved practice enters/leaves
+or changes its player/date, a placement changes, or a play day changes. Pending
+submissions, lifecycle status noise, and court/surface metadata do not create
+false drift. `replace_rating_cache_with_reigns_v2` takes an advisory lock and
+refuses a snapshot built from a stale version.
 
-`lifecycle_email_deliveries` records each provider idempotency key, entity,
-recipient, pending/sent/failed status, attempt count, provider ID, and bounded
-safe error. It is service-role-only and diagnostic; email remains a synchronous
-non-blocking secondary effect after the lifecycle commits.
+`lifecycle_email_deliveries` is the legacy match/planned/practice diagnostic
+ledger. Reconstructable rows are backfilled into `custom_email_outbox`; when a
+migration-127 trigger has already created the same key, migration 129 promotes
+the legacy `sent` receipt or `failed` diagnostic into that existing row instead
+of leaving delivered mail actionable. A receipt already recorded as `sent` by
+the unified outbox remains immutable. New delivery state is written only
+through the unified claim/sent/failed RPCs. Email remains a synchronous
+non-blocking provider attempt today, while the durable intent permits a future
+worker without changing lifecycle transactions.
 
-The additive migration keeps old RPCs available for rolling deployment. The
-enforcement migration removes authenticated direct-write policies and revokes
-obsolete creation paths only after the application is deployed on the new
-RPCs.
+Migrations 127-129 are the additive boundary. Because migration 127 begins
+unified intent writes before the legacy application stops acknowledging its own
+ledger, production mutations remain frozen across the three migrations and the
+application cutover. Migration 130 is the deliberately separate enforcement
+boundary: it removes direct
+practice/RSVP and broad cup writes, makes legacy and unified email ledgers
+read-only outside RPCs, and guards stage/placement/completion mutations with
+transaction-local markers set only by validated RPCs.
 
 ## Organiser health and recovery (ADR-0037)
 
-`core_backend_health_v1()` is an authenticated organiser-only, read-only JSON
-projection over cache versions, lifecycle inconsistencies, actionable email
+`core_backend_health_v5()` is the current authenticated organiser-only,
+read-only JSON projection over cache versions, lifecycle inconsistencies,
+completed-cup participant/placement **set equality**, unified actionable email
 deliveries, required triggers, and notification Realtime publication. The SQL
 Editor may call the same function in its trusted postgres context. The payload
 contains entity identifiers and bounded delivery errors but excludes email
 addresses, practice notes, and external-opponent identities.
 
-Failed and fifteen-minute-stale `lifecycle_email_deliveries` rows can be retried
+Pending, failed, and fifteen-minute-stale `custom_email_outbox` rows can be retried
 from `/admin/health` only for known reconstructable kinds. The server reloads
 canonical entity and recipient facts and reuses the row's idempotency key; no
 message body or destination is stored in the ledger or accepted from the

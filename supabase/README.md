@@ -5,129 +5,59 @@ Database migrations for Ciabatta Cup. The authoritative data model is
 
 ## Migrations
 
-`migrations/` holds ordered SQL files applied in filename order.
+`migrations/` is append-only and applies in exact filename order. This inventory
+is intentionally exact; never edit an applied file or move a filename.
 
-- `20260718125000_cup_trophy_invite_types.sql` adds the invite notification and
-  RSVP status enums in their own transaction.
-- `20260718126000_cup_trophies_and_invites.sql` adds reusable trophy identity to
-  ordinary cups, owner-private RSVP invitations, Zeus delivery, and guarded
-  organiser/player RPCs. Responses remain separate from the organiser-selected
-  roster; draw lock is still the only final-field boundary (ADR-0040).
+1. `20260709000000_players_spine.sql` - player spine, roles/status, RLS, and admin helper.
+2. `20260709010000_handle_new_user.sql` - Auth-to-player trigger and activation guard.
+3. `20260709020000_guard_exempt_backend.sql` - trusted backend bootstrap exemption.
+4. `20260710000000_matches_spine.sql` - immutable matches, sets, confirmations, RLS.
+5. `20260710010000_invited_profile_status.sql` - invited Auth profile status.
+6. `20260710020000_advance_on_confirmation.sql` - ranked/exhibition confirmation advance.
+7. `20260710030000_rating_cache.sql` - rebuildable Elo history and points snapshot seam.
+8. `20260710040000_ciabatta_reigns.sql` - rebuildable holder-history cache.
+9. `20260710050000_fix_invited_profile_status_cast.sql` - explicit invite-status enum cast.
+10. `20260710060000_unranked_players_zero_points.sql` - zero baseline for unranked players.
+11. `20260710070000_tournament_day_release.sql` - tournament/participant/fixture spine and result RPC.
+12. `20260710090000_profile_settings_and_avatars.sql` - profile preferences and avatar storage.
+13. `20260710100000_tournament_cover_photos.sql` - tournament cover storage.
+14. `20260710110000_tournament_draw_lock_and_emails.sql` - draw lock and legacy tournament email ledger.
+15. `20260710120000_optional_round_robin_completion.sql` - standings completion and skipped fixtures.
+16. `20260710130000_tournament_placement_awards.sql` - placement awards and result-email kinds.
+17. `20260710140000_safe_rating_cache_rebuild.sql` - safe full cache replacement.
+18. `20260712090000_external_match_type.sql` - external match enum value.
+19. `20260712100000_non_ciabatta_opponents.sql` - private opponents and atomic external results.
+20. `20260712110000_delete_own_external_matches.sql` - owner deletion of external test facts.
+21. `20260712120000_profile_play_days.sql` - manual Melbourne tennis-day facts.
+22. `20260713120000_ladder_points_practice.sql` - public activity points and practice review.
+23. `20260714120000_planned_matches_notifications.sql` - planned shells, proposals, and Zeus inbox.
+24. `20260715120000_courts_surfaces_zeus_inbox.sql` - canonical courts, metadata tags, and destinations.
+25. `20260715121000_seed_untagged_notifications.sql` - initial missing-metadata nudges.
+26. `20260715122000_reliable_realtime_notifications.sql` - transactional dedupe and Realtime publication.
+27. `20260716120000_match_workflow_repair_types.sql` - correction states and notification links.
+28. `20260716121000_atomic_match_workflows.sql` - row-locking planned/ordinary workflow RPCs.
+29. `20260717120000_admin_match_logging.sql` - audited organiser-entered results.
+30. `20260718120000_core_backend_hardening.sql` - operation keys, shared validation, cache versioning, diagnostics.
+31. `20260718121000_core_backend_enforcement.sql` - lifecycle guards and retired direct writes.
+32. `20260718122000_admin_health_recovery.sql` - organiser health and reconstructable recovery.
+33. `20260718122500_configurable_cup_enums.sql` - configurable cup enums.
+34. `20260718123000_configurable_cup_builder.sql` - 2-8 seats, formats, atomic draw, placements, health v2.
+35. `20260718124000_configurable_cup_builder_enforcement.sql` - retire superseded cup RPC grants.
+36. `20260718125000_cup_trophy_invite_types.sql` - trophy/RSVP enum additions.
+37. `20260718126000_cup_trophies_and_invites.sql` - trophy identity and v1 RSVP facts/RPCs.
+38. `20260718127000_unified_email_delivery_outbox.sql` - unified custom-email intent, claim, recovery, and health v3.
+39. `20260718128000_workflow_consistency_hardening.sql` - active actors, fact-safe deletion, precise scoring triggers, idempotent practice submission, safe RSVP generations, tournament atomicity, and health v4.
+40. `20260718129000_transaction_invariant_repairs.sql` - clean-stack grants, deterministic cup standings/placements, payload-safe retries, lifecycle revisions, atomic draw/replacement/cover RPCs, legacy outbox reconciliation, and health v5.
+41. `20260718130000_rpc_mutation_path_enforcement.sql` - revoke direct practice, RSVP, email-ledger, cup, placement, and championship-stage writes after callers use the canonical RPCs.
 
-- `20260709000000_players_spine.sql` — **Phase 2 spine**: the `players` table,
-  the `is_admin()` helper, RLS policies, and a privilege-escalation guard.
-- `20260709010000_handle_new_user.sql` — **Phase 2 auth**: `handle_new_user()`
-  trigger that auto-creates a `players` profile on signup, plus a widening of the
-  privilege guard to allow self `invited → active` (ADR-0004).
-- `20260709020000_guard_exempt_backend.sql` — exempt trusted backend contexts
-  (service role / SQL editor, where `auth.uid()` is null) from the privilege
-  guard, so the first admin can be seeded with a plain `update` (ADR-0005).
-- `20260710000000_matches_spine.sql` — **Phase 3a spine**: the `matches`,
-  `match_sets`, and `match_confirmations` tables, their RLS policies, and the
-  immutable-facts triggers that seal a match (and its sets/confirmations) once it
-  is approved (ADR-0001, ADR-0006). `tournament_id`/`fixture_id` are nullable
-  plain-uuid columns until those tables land.
-- `20260710010000_invited_profile_status.sql` — redefine `handle_new_user` so an
-  **invited** auth user (`invited_at` set) gets a `players` row at status
-  `invited`, while self-signups stay `active` (ADR-0009). Supersedes the
-  profile-status logic in `20260709010000`.
-- `20260710020000_advance_on_confirmation.sql` documents the confirmation
-  trigger: ranked results await admin approval and exhibitions are approved
-  automatically (ADR-0010).
-- `20260710030000_rating_cache.sql` adds the rebuildable `rating_history`
-  materialisation and the service-role-only cache replacement RPC that refreshes
-  `players.rating_points` (ADR-0011).
-- `20260710040000_ciabatta_reigns.sql` adds the rebuildable holder-history cache
-  and a compatible three-payload replacement RPC that refreshes ratings,
-  history, and reigns together (ADR-0012). ADR-0035 later defines those rows as
-  the canonical Melbourne-day activity-ladder lead, with incumbent retention
-  on ties.
-- `20260710050000_fix_invited_profile_status_cast.sql` fixes Auth invite
-  creation by explicitly casting the `handle_new_user()` status branch to the
-  `player_status` enum.
-- `20260710060000_unranked_players_zero_points.sql` changes the public/cache
-  default to zero until a player's first approved ranked match and backfills
-  existing unranked players (ADR-0014).
-- `20260710070000_tournament_day_release.sql` adds tournaments, ordered
-  participants, fixtures, authenticated-read/admin-write RLS, the deferred match
-  foreign keys, and the admin-only atomic tournament-result RPC (ADR-0016).
-- `20260710090000_profile_settings_and_avatars.sql` adds the self-owned
-  `use_nickname` preference, the public `avatars` bucket, and owner-only Storage
-  write/delete policies (ADR-0020).
-- `20260710100000_tournament_cover_photos.sql` adds the optional tournament
-  cover URL and the admin-managed public `tournament-images` Storage bucket
-  (ADR-0021).
-- `20260710110000_tournament_draw_lock_and_emails.sql` adds the irreversible
-  draw lock, database-enforced field/draw freezing, and the idempotent
-  lifecycle-email delivery ledger (ADR-0022).
-- `20260710120000_optional_round_robin_completion.sql` adds the explicit
-  completion path, preserved skipped fixtures, and the atomic admin-only
-  round-robin completion RPC (ADR-0023).
-- `20260710130000_tournament_placement_awards.sql` adds derived placement
-  awards and the four idempotent result-email delivery kinds (ADR-0024).
-- `20260710140000_safe_rating_cache_rebuild.sql` makes the intentional
-  full-table rating-history and reign-cache replacements explicit with
-  `where true`, satisfying production safe-update enforcement.
-
-- `20260712090000_external_match_type.sql` adds the external match enum value in
-  its own transaction so subsequent schema changes can use it safely.
-- `20260712100000_non_ciabatta_opponents.sql` adds owner-private saved names
-  and match details, external match facts, and the atomic authenticated logging
-  RPC used for immediate approval. It also adds optional match location storage;
-  played date remains compulsory through the existing non-null `played_at` fact.
-- `20260712110000_delete_own_external_matches.sql` permits authenticated owners
-  to delete only their own Non-Ciabatta facts; all league and tournament facts
-  remain immutable, and the app rebuilds derived ratings afterward.
-- `20260712120000_profile_play_days.sql` adds owner-only, Melbourne-today-only
-  manual tennis-day marks. Match-derived play days and all streak statistics
-  remain computed rather than stored.
-- `20260715120000_courts_surfaces_zeus_inbox.sql` adds shared canonical courts,
-  optional per-match surfaces, structured court links across planned matches
-  and tournaments, metadata-only retro tagging/audit, organiser merges, and
-  general Zeus notification destinations (ADR-0031).
-- `20260715121000_seed_untagged_notifications.sql` runs after the enum change
-  and must be followed by `20260715122000_reliable_realtime_notifications.sql`
-  for transactional planned-match fan-out and receiver-live badge updates.
-  commits and seeds one Zeus nudge for players with historical untagged facts.
-- `20260716120000_match_workflow_repair_types.sql` commits the correction and
-  complete notification enum values plus proposal-revision/match-link columns.
-- `20260716121000_atomic_match_workflows.sql` must follow it. It installs the
-  authenticated row-locking planned/ordinary workflow RPCs, complete receiver
-  fan-out, and idempotent backfill for currently actionable work (ADR-0033).
-- `20260718120000_core_backend_hardening.sql` is the additive ADR-0036 rollout:
-  shared score validation, idempotent creation keys, RPC lifecycle boundaries,
-  scoring-fact versioning, guarded cache replacement, delivery diagnostics,
-  and the backend health surface. Apply it before the matching application
-  deploy while legacy RPCs remain available.
-- `20260718121000_core_backend_enforcement.sql` is the post-deploy enforcement
-  step. It installs lifecycle graph guards, removes participant direct-write
-  policies, and revokes obsolete creation RPCs. Apply it only after the new
-  application paths pass authenticated smoke tests.
-- `20260718122000_admin_health_recovery.sql` adds the privacy-safe organiser
-  health snapshot used by `/admin/health`. It follows enforcement and must be
-  applied before deploying that route (ADR-0037).
-- `20260718122500_configurable_cup_enums.sql` commits new rulesets separately;
-  `20260718123000_configurable_cup_builder.sql` adds 2–8 seats, crop state,
-  schedule/configuration/roster RPCs, atomic N-player draw lock, multi-set
-  validation, 1–N placements, and expanded health (ADR-0039).
-- `20260718124000_configurable_cup_builder_enforcement.sql` revokes the old
-  one-set result and draw-lock RPCs only after the application smoke test.
-
-The ordered 2–8 seat roster is replaceable atomically before draw lock or the
-first result. Schedule lock is reversible before permanent draw lock, which
-requires a full field and cover and freezes schedule, roster, formats, and path.
-
-Tournament cover photos use the public `tournament-images` bucket. Only admins
-may write or delete objects there; players receive read-only public images on
-the tournament list and detail pages. New cups retain a normalized source plus
-frame shape, 100–250% zoom, and offsets so presentation remains editable. The
-browser reduces the complete source to a maximum 2048px edge and 1.5 MB WebP
-before submission; the 3 MB Server Action allowance leaves room for multipart
-fields while staying below the hosting request limit.
-
-The player, match, confirmation, rating-history, reign, tournament, participant,
-fixture, court, notification, and minimal metadata-audit tables exist in
-migration form. A broader admin activity feed remains a later phase.
+The final four migrations are one compatible rollout chain. Apply the additive
+outbox, workflow, and invariant migrations (127-129) in order, deploy the
+application that uses their canonical RPCs, prove the smoke/health contracts,
+and only then apply enforcement migration 130. Migration 129 supplies explicit
+clean-stack SQL grants needed by the rolling application; migration 130 removes
+the obsolete direct mutation paths. V1 RSVP and standings-completion signatures
+remain safe wrappers over current implementations. See ADR-0042, ADR-0043, and
+`docs/WORKFLOWS.md`.
 
 ## Environment variables
 
@@ -139,7 +69,8 @@ migration form. A broader admin activity feed remains a later phase.
   it; `.env*` is git-ignored.
 - `NEXT_PUBLIC_SITE_URL` — canonical invite origin. Set it to
   `https://ciabatta-cup.app` in production.
-- `RESEND_API_KEY` — server-only Resend key for tournament lifecycle mail.
+- `RESEND_API_KEY` — server-only Resend key for custom match, practice,
+  planned-match, RSVP, and tournament mail.
 - `TOURNAMENT_EMAIL_FROM` — verified sender identity, for example
   `Ciabatta Cup <cup@example.com>`.
 
@@ -167,20 +98,41 @@ Apply migrations in filename order. Either:
 - **Supabase CLI:** `supabase db push` (requires `supabase link` to the project).
 - **Dashboard:** paste each file's SQL into the SQL Editor and run them in order.
 
-For ADR-0036 production rollout, use this exact sequence:
+For a fresh project, apply the complete inventory once. For a production
+project already through the cup/RSVP migration, use this exact sequence:
 
-1. Run `ops/planned_match_workflow_audit.sql` read-only.
-2. Apply `20260718120000_core_backend_hardening.sql`.
-3. Deploy the application and smoke-test ordinary, admin, external, planned,
-   correction, practice, and notification paths.
-4. Apply `20260718121000_core_backend_enforcement.sql`.
-5. Run `ops/core_backend_health.sql`, then use the organiser rating rebuild once.
+1. Preserve the migration-126 health snapshot with
+   `select public.core_backend_health_v2();`. Do not use
+   `ops/core_backend_health.sql` yet because it targets v5 from migration 129.
+2. Freeze domain mutations/custom-email actions and drain in-flight requests.
+3. Apply `20260718127000_unified_email_delivery_outbox.sql`,
+   `20260718128000_workflow_consistency_hardening.sql`, and
+   `20260718129000_transaction_invariant_repairs.sql` consecutively in that
+   order. Migration 129 reconciles both missing legacy rows and conflicts where
+   migration 127 already created a pending intent before the old sender recorded
+   `sent` or `failed`.
+4. Run `ops/core_backend_health.sql` and require healthy v5 infrastructure with
+   no delivered legacy receipt left actionable.
+5. Deploy the application that uses `submit_practice_v1`, v2 RSVP, atomic group
+   draw/participant replacement/stage/finalisation/cover RPCs, unified email
+   claims, and `core_backend_health_v5`; ensure every old instance has drained.
+6. While general writes remain frozen, run the health, ranked, practice, RSVP,
+   cup, cache, and delivery smoke tests.
+7. Apply `20260718130000_rpc_mutation_path_enforcement.sql` only after those
+   checks are green. Repeat them against the enforced boundary, then reopen
+   mutations.
 
-After ADR-0036 is verified, apply
-`20260718122000_admin_health_recovery.sql` before deploying `/admin/health`.
-The route mirrors the consolidated SQL report and adds guarded cache and email
-recovery controls. A failed or fifteen-minute-stale email can be retried only
-when its canonical entity facts can reconstruct the original delivery.
+Do not run a plain `supabase db push` from the four-file release because it will
+also apply migration 130 before its smoke gate. When the SQL Editor is used,
+run each complete file separately and then record successful application with
+`supabase migration repair --linked --status applied` for timestamps 127-129;
+record 130 separately after enforcement.
+
+New work reads `core_backend_health_v5()`. Pending, failed, and fifteen-minute-
+stale custom delivery can be retried only when canonical entity and recipient
+facts reconstruct the original message. Superseded rows remain audit history
+but are not actionable. Supabase Auth mail remains outside this outbox and is
+recovered through the provider configuration.
 
 ## Local database validation
 
@@ -196,6 +148,19 @@ npm run db:lint
 `supabase/config.toml` defines the isolated local ports. The database tests live
 under `supabase/tests/database` and are also run by CI. Keep `.env.local` valid
 dotenv syntax because the CLI parses it during local commands.
+
+The committed pgTAP inventory and declared assertion plans are exact:
+
+1. `core_backend_hardening.test.sql` - 27 assertions.
+2. `core_workflows.test.sql` - 21 assertions.
+3. `20260718123000_configurable_cup_builder.test.sql` - 18 assertions.
+4. `20260718126000_cup_trophies_invites.test.sql` - 10 assertions.
+5. `20260718127000_unified_email_outbox.test.sql` - 50 assertions.
+6. `20260718128000_workflow_consistency_hardening.test.sql` - 56 assertions.
+7. `20260718129000_transaction_invariants.test.sql` - 71 assertions.
+
+`npm run db:test` executes that filename order. The declared total is 253;
+record an actual pass count only from command output for the current tree.
 
 ## Password recovery
 
@@ -252,39 +217,16 @@ which lets the SQL editor past the privilege guard — see ADR-0005):
 
 That is it — you are now the tournament director and can manage everyone else.
 
-_(Alternative without signing up first: create the auth user in
-Dashboard → Authentication → Add user, then `insert` the `players` row with
-`role = 'admin'` using that user's id.)_
+Do not bootstrap by disabling integrity triggers. If the trusted SQL Editor
+update fails, stop and reconcile the full ordered migration history first.
 
-> **If you have not yet applied `20260709020000`** and are blocked by the guard,
-> either apply it now, or do a one-off with the trigger disabled:
->
-> ```sql
-> begin;
-> alter table public.players disable trigger enforce_player_self_update;
-> update public.players set role='admin', status='active'
-> where email='ringo@spectoolbox.com';
-> alter table public.players enable trigger enforce_player_self_update;
-> commit;
-> ```
-# Activity points and practice
+## Operational contracts
 
-## Planned matches and Zeus notifications
-
-Apply `20260714120000_planned_matches_notifications.sql` after the activity-points migrations. It adds planned match shells, result proposals, Zeus notifications, and the nullable `matches.planned_match_id` link with participant/recipient RLS.
-
-Apply the two `2026071612*` repair migrations only after all three `2026071512*`
-inbox migrations. Before production cleanup, list shells joined to proposals,
-linked matches, sets, and notifications. A test shell may be hard-deleted only
-when a guarded transaction proves it has no approved linked match; delete the
-non-approved match first, then the shell so child rows cascade safely.
-Use `ops/planned_match_workflow_audit.sql` for the read-only preflight. The
-companion cleanup script aborts unless exactly two IDs are supplied and aborts
-again if either plan has an approved immutable fact.
-
-Apply `20260717120000_admin_match_logging.sql` after the two workflow-repair
-migrations. It adds the audited `admin_logged_by` field, the admin-only atomic
-entry RPC, and notification fan-out that skips confirmation/approval requests
-while informing both participants of the final organiser-entered result.
-
-Apply `20260712120000_profile_play_days.sql` before `20260713120000_ladder_points_practice.sql`. The latter adds organiser-reviewed `practice_sessions`, owner/admin RLS, field constraints, and reviewed-fact immutability. After deployment, use the existing admin rebuild control once so the persisted points snapshot matches the activity economy; read surfaces compute current Melbourne-day decay from facts.
+- `docs/SCHEMA.md` defines the current conceptual model and invariants.
+- `docs/WORKFLOWS.md` defines current actors, RPCs, transitions, notification,
+  email, scoring, idempotency, and recovery behaviour.
+- `docs/DEPLOYMENT.md` defines production migration order, configurable-cup
+  smoke tests, custom-email recovery, and Auth verification.
+- `ops/planned_match_workflow_audit.sql` and `ops/core_backend_health.sql` are
+  read-only operator diagnostics. Never delete an approved fact to clear an
+  audit; repair inconsistencies through a reviewed forward-only migration.

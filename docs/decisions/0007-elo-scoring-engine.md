@@ -2,6 +2,7 @@
 
 - **Status:** Accepted (implements ADR-0001/ADR-0003 for the scoring engine)
 - **Date:** 2026-07-10
+- **Superseded by:** ADR-0025 (baseline and floor only)
 
 ## Context
 

@@ -2,10 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { getSessionPlayer } from "@/lib/auth/session";
-import { displayName } from "@/lib/auth/displayName";
 import { rebuildRatingCache } from "@/lib/scoring/rebuild";
-import { renderResultEmail } from "./email-templates";
-import { renderTournamentEmail, sendTournamentEmail, type LifecycleEmailKind, type TournamentEmailKind } from "./email";
+import type { LifecycleEmailKind } from "./email";
+import { deliverTournamentLifecycleEmails, deliverTournamentResultEmails } from "./delivery";
+import { committedEmailWarning, type CommittedEmailWarning } from "@/lib/email/delivery";
 import { createClient } from "@/lib/supabase/server";
 import { applyBoundaryDecider, boundaryDecider, deriveTournamentStandings, generateRoundRobin, planTopFourSemifinals } from "./logic";
 import { validateTournamentScore } from "./score";
@@ -16,14 +16,14 @@ import { loadTournamentBoard } from "./read";
 import { SURFACES } from "@/lib/courts/types";
 
 export type TournamentActionState =
-  | { ok: true; message: string; tournamentId?: string; warnings?: string[] }
-  | { ok: false; error: string };
+  | { ok: true; message: string; tournamentId?: string; warnings?: string[]; deliveryWarning?: CommittedEmailWarning }
+  | { ok: false; error: string; deliveryWarning?: CommittedEmailWarning };
 
 const FORBIDDEN: TournamentActionState = { ok: false, error: "Only admins can manage tournaments." };
 
 async function requireAdmin() {
   const player = await getSessionPlayer();
-  return player?.role === "admin" ? player : null;
+  return player?.role === "admin" && player.status === "active" ? player : null;
 }
 
 function textValue(formData: FormData, key: string): string {
@@ -46,67 +46,47 @@ function invalidateTournament(tournamentId: string) {
 }
 
 async function sendTournamentEmails(tournamentId: string, kind: LifecycleEmailKind) {
-  const supabase = await createClient();
-  const [{ data: tournament }, { data: participants }] = await Promise.all([
-    supabase.from("tournaments").select("id, name, starts_at, timezone, location_name, draw_locked_at").eq("id", tournamentId).single(),
-    supabase.from("tournament_participants").select("player_id").eq("tournament_id", tournamentId),
-  ]);
-  if (!tournament) return { ok: false as const, error: "Tournament not found." };
-  if (!tournament.draw_locked_at) return { ok: false as const, error: "Lock the draw before sending tournament emails." };
-  const playerIds = (participants ?? []).map((participant) => participant.player_id);
-  const { data: players } = playerIds.length
-    ? await supabase.from("players").select("id, first_name, email, status").in("id", playerIds)
-    : { data: [] };
-  const recipients = (players ?? []).filter((player) => player.status === "active" && player.email);
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
-  if (!siteUrl) return { ok: false as const, error: "Tournament email is not configured." };
-
-  let sent = 0;
-  let skipped = 0;
-  let failed = 0;
-  for (const player of recipients) {
-    const { data: claimed, error: claimError } = await supabase.rpc("claim_tournament_email_delivery", {
-      p_tournament_id: tournamentId, p_player_id: player.id, p_kind: kind,
+  try {
+    const db = await createClient();
+    const { error: intentError } = await db.rpc("enqueue_tournament_lifecycle_email_batch_v1", {
+      p_tournament_id: tournamentId,
+      p_kind: kind,
     });
-    if (claimError) {
-      console.error("Tournament email claim failed", { tournamentId, playerId: player.id, kind, claimError });
-      failed++;
-      continue;
+    if (intentError) throw new Error(intentError.message ?? "Tournament email intents could not be recorded.");
+    const delivery = await deliverTournamentLifecycleEmails(tournamentId, kind);
+    if (delivery.failed > 0) {
+      const message = `The cup change committed; ${delivery.failed} email${delivery.failed === 1 ? "" : "s"} need recovery in System health.`;
+      return { ok: false as const, error:message, deliveryWarning:committedEmailWarning(message,delivery.deliveryKeys) };
     }
-    if (!claimed) {
-      skipped++;
-      continue;
-    }
-    try {
-      const messageId = await sendTournamentEmail(player.email, renderTournamentEmail({
-        kind,
-        firstName: player.first_name ?? "player",
-        tournamentName: tournament.name,
-        startsAt: tournament.starts_at,
-        timezone: tournament.timezone,
-        locationName: tournament.location_name,
-        playerCount: recipients.length,
-        tournamentUrl: `${siteUrl}/tournaments/${tournamentId}`,
-      }), `tournament/${tournamentId}/${kind}/${player.id}`);
-      await supabase.from("tournament_email_deliveries").update({
-        status: "sent", provider_message_id: messageId, sent_at: new Date().toISOString(),
-      }).eq("tournament_id", tournamentId).eq("player_id", player.id).eq("kind", kind);
-      sent++;
-    } catch (error) {
-      console.error("Tournament email delivery failed", { tournamentId, playerId: player.id, kind, error });
-      await supabase.from("tournament_email_deliveries").delete()
-        .eq("tournament_id", tournamentId).eq("player_id", player.id).eq("kind", kind);
-      failed++;
-    }
+    return {
+      ok: true as const,
+      message: `Delivery is complete for ${delivery.delivered} ${kind === "locked_in" ? "locked-in" : "game-day"} email${delivery.delivered === 1 ? "" : "s"}.`,
+    };
+  } catch (error) {
+    console.error("Tournament email reconstruction failed", { tournamentId, kind, error });
+    const message=error instanceof Error ? error.message : "Tournament email delivery is unavailable.";
+    return { ok: false as const, error:message, deliveryWarning:committedEmailWarning(message,[]) };
   }
-  if (failed > 0) return { ok: false as const, error: `Sent ${sent}; ${failed} failed. Click again to retry unsent emails.` };
-  return { ok: true as const, message: sent > 0 ? `Sent ${sent} ${kind === "locked_in" ? "locked-in" : "game-day"} emails.` : `Everyone has already received this email.`, skipped };
 }
 
-async function prepareTournamentPlacements(tournamentId: string) {
+async function loadTournamentPlacementProjection(
+  tournamentId: string,
+  completionPath?: "round_robin" | "final_stage",
+) {
   const board = await loadTournamentBoard(tournamentId);
-  if (!board || board.tournament.status !== "completed" || !board.tournament.completion_path) {
+  const effectivePath = completionPath ?? board?.tournament.completion_path;
+  if (!board || !effectivePath) {
     throw new Error("Tournament placements are not final.");
+  }
+  let standings = board.standings;
+  if (effectivePath === "round_robin") {
+    const pair = boundaryDecider(standings, "standings");
+    if (pair) {
+      const decider = board.fixtures.find((fixture) => fixture.stage === "tiebreak");
+      const winnerId = decider ? board.matchByFixture.get(decider.id)?.winner_id ?? null : null;
+      if (!winnerId) throw new Error("The championship decider is incomplete.");
+      standings = applyBoundaryDecider(standings, "standings", winnerId);
+    }
   }
   const supabase = await createClient();
   const { data: matches, error } = await supabase
@@ -116,25 +96,39 @@ async function prepareTournamentPlacements(tournamentId: string) {
   if (error) throw new Error("Couldn't load tournament results.");
   const rows = matches ?? [];
   const placements = deriveOfficialPlacements({
-    completionPath: board.tournament.completion_path,
-    standings: board.standings,
+    completionPath: effectivePath,
+    standings,
     fixtures: board.fixtures,
     matches: rows,
     sets: rows.flatMap((match) => match.match_sets ?? []),
   });
-  const awardedAt = board.tournament.starts_at;
-  const { error: placementError } = await supabase.from("tournament_placements").upsert(
-    placements.map((placement) => ({
-      tournament_id: tournamentId,
+  return { board, placements, supabase };
+}
+
+async function prepareTournamentPlacements(tournamentId: string) {
+  const prepared = await loadTournamentPlacementProjection(tournamentId);
+  if (prepared.board.tournament.status !== "completed") {
+    throw new Error("Tournament placements are not final.");
+  }
+  return prepared;
+}
+
+async function finalizeTournament(
+  tournamentId: string,
+  completionPath: "round_robin" | "final_stage",
+) {
+  const prepared = await loadTournamentPlacementProjection(tournamentId, completionPath);
+  const { error } = await prepared.supabase.rpc("finalize_tournament_v1", {
+    p_tournament_id: tournamentId,
+    p_completion_path: completionPath,
+    p_placements: prepared.placements.map((placement) => ({
       player_id: placement.playerId,
       placement: placement.placement,
       points: placement.points,
-      awarded_at: awardedAt,
     })),
-    { onConflict: "tournament_id,player_id", ignoreDuplicates: true },
-  );
-  if (placementError) throw new Error("Couldn't save tournament placements.");
-  return { board, placements, supabase };
+  });
+  if (error) throw new Error(error.message ?? "Couldn't complete the tournament.");
+  return prepared;
 }
 
 export async function sendTournamentResultEmails(
@@ -144,73 +138,24 @@ export async function sendTournamentResultEmails(
   if (!(await requireAdmin())) return FORBIDDEN;
   const tournamentId = textValue(formData, "tournamentId");
   if (!tournamentId) return { ok: false, error: "Tournament not found." };
-  let prepared: Awaited<ReturnType<typeof prepareTournamentPlacements>>;
   try {
-    prepared = await prepareTournamentPlacements(tournamentId);
+    await prepareTournamentPlacements(tournamentId);
     await rebuildRatingCache();
   } catch (error) {
     console.error("Tournament placement preparation failed", { tournamentId, error });
     return { ok: false, error: "Final placements are not ready to send." };
   }
-  const { board, placements, supabase } = prepared;
-  const playerIds = placements.map((placement) => placement.playerId);
-  const { data: players } = await supabase
-    .from("players")
-    .select("id, first_name, last_name, email, nickname, use_nickname, status")
-    .in("id", playerIds);
-  const playerById = new Map((players ?? []).map((player) => [player.id, player]));
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
-  if (!siteUrl) return { ok: false, error: "Tournament email is not configured." };
-  let sent = 0;
-  let failed = 0;
-  for (const placement of placements) {
-    if (placement.placement > 4) continue;
-    const player = playerById.get(placement.playerId);
-    if (!player?.email || player.status !== "active") continue;
-    const kind = `result_${["1st", "2nd", "3rd", "4th"][placement.placement - 1]}` as TournamentEmailKind;
-    const { data: claimed, error: claimError } = await supabase.rpc("claim_tournament_email_delivery", {
-      p_tournament_id: tournamentId, p_player_id: player.id, p_kind: kind,
-    });
-    if (claimError || !claimed) {
-      if (claimError) failed++;
-      continue;
-    }
-    try {
-      const email = renderResultEmail({
-        firstName: player.first_name ?? "player",
-        tournamentName: board.tournament.name,
-        startsAt: board.tournament.starts_at,
-        timezone: board.tournament.timezone,
-        locationName: board.tournament.location_name,
-        playerCount: placements.length,
-        tournamentUrl: `${siteUrl}/tournaments/${tournamentId}`,
-        assetBaseUrl: `${siteUrl}/emails`,
-        placement: placement.placement as 1|2|3|4,
-        points: placement.points,
-        matches: placement.matches.map((match) => {
-          const opponent = playerById.get(match.opponentId);
-          return {
-            opponentName: opponent ? displayName({ firstName: opponent.first_name, lastName: opponent.last_name, email: opponent.email, nickname: opponent.nickname, useNickname: opponent.use_nickname }) : "Opponent",
-            score: match.score,
-            won: match.won,
-          };
-        }),
-      });
-      const messageId = await sendTournamentEmail(player.email, email, `tournament/${tournamentId}/${kind}/${player.id}`);
-      await supabase.from("tournament_email_deliveries").update({ status: "sent", provider_message_id: messageId, sent_at: new Date().toISOString() })
-        .eq("tournament_id", tournamentId).eq("player_id", player.id).eq("kind", kind);
-      sent++;
-    } catch (error) {
-      console.error("Tournament result email failed", { tournamentId, playerId: player.id, error });
-      await supabase.from("tournament_email_deliveries").delete()
-        .eq("tournament_id", tournamentId).eq("player_id", player.id).eq("kind", kind);
-      failed++;
-    }
+  let delivery;
+  try {
+    delivery = await deliverTournamentResultEmails(tournamentId);
+  } catch (error) {
+    console.error("Tournament result email reconstruction failed", { tournamentId, error });
+    return { ok: false, error: "Official placements are saved, but their emails could not be prepared." };
   }
   invalidateTournament(tournamentId);
-  return failed > 0
-    ? { ok: false, error: `Sent ${sent}; ${failed} failed. Click again to retry unsent emails.` }
-    : { ok: true, message: sent > 0 ? `Sent ${sent} tournament result emails.` : "Everyone has already received their result email." };
+  return delivery.failed > 0
+    ? { ok: true, message: "Official placements are saved.", warnings: [`${delivery.failed} result email${delivery.failed === 1 ? "" : "s"} need recovery in System health.`], deliveryWarning:committedEmailWarning("Official placements committed, but result email delivery needs recovery.",delivery.deliveryKeys) }
+    : { ok: true, message: `Delivery is complete for ${delivery.delivered} official placement email${delivery.delivered === 1 ? "" : "s"}.` };
 }
 
 export async function lockTournamentDraw(
@@ -235,7 +180,7 @@ export async function lockTournamentDraw(
   if (error) return { ok: false, error: "Couldn't lock the draw. Generate and review it first." };
   invalidateTournament(tournamentId);
   const delivery = await sendTournamentEmails(tournamentId, "locked_in");
-  if (!delivery.ok) return { ok: true, message: "Draw locked permanently.", warnings:[delivery.error] };
+  if (!delivery.ok) return { ok: true, message: "Draw locked permanently.", warnings:[delivery.error], deliveryWarning:delivery.deliveryWarning };
   return { ok: true, message: `Draw locked. ${delivery.message}` };
 }
 
@@ -271,16 +216,12 @@ type TournamentSetup = {
 
 type TournamentParticipantRow = { player_id: string; seed: number };
 
-async function writeRoundRobinFixtures(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+function roundRobinFixturePayload(
   tournament: TournamentSetup,
-  tournamentId: string,
   participants: TournamentParticipantRow[],
 ) {
   const rounds = generateRoundRobin(participants.map((row) => row.player_id), tournament.courts);
-  return supabase.from("fixtures").insert(
-    rounds.flatMap((round) => round.fixtures.map((fixture) => ({
-      tournament_id: tournamentId,
+  return rounds.flatMap((round) => round.fixtures.map((fixture) => ({
       stage: "group",
       round_number: fixture.roundNumber,
       slot_number: fixture.slotNumber,
@@ -288,8 +229,7 @@ async function writeRoundRobinFixtures(
       ruleset: tournament.group_ruleset,
       player1_id: fixture.player1Id,
       player2_id: fixture.player2Id,
-    }))),
-  );
+    })));
 }
 
 export async function createTournament(
@@ -337,9 +277,10 @@ export async function createTournament(
       if(uploadError) warnings.push("Cup created, but the photo upload failed. Add it from the director console.");
       else {
         const url=`${storage.getPublicUrl(path).data.publicUrl}?v=${Date.now()}`;
-        const {error:photoError}=await supabase.from("tournaments").update({cover_image_url:url,
-          cover_frame_shape:textValue(formData,"coverFrameShape")||"wide",cover_zoom:Number(textValue(formData,"coverZoom")||"1"),
-          cover_offset_x:Number(textValue(formData,"coverOffsetX")||"0"),cover_offset_y:Number(textValue(formData,"coverOffsetY")||"0")}).eq("id",tournamentId);
+        const {error:photoError}=await supabase.rpc("update_tournament_cover_v1",{
+          p_tournament_id:tournamentId,p_cover_image_url:url,
+          p_frame_shape:textValue(formData,"coverFrameShape")||"wide",p_zoom:Number(textValue(formData,"coverZoom")||"1"),
+          p_offset_x:Number(textValue(formData,"coverOffsetX")||"0"),p_offset_y:Number(textValue(formData,"coverOffsetY")||"0")});
         if(photoError) warnings.push("Cup created, but the photo crop needs to be saved again.");
       }
     }
@@ -396,10 +337,10 @@ export async function updateTournamentPhoto(
     nextUrl = null;
   }
 
-  const { error: updateError } = await supabase
-    .from("tournaments")
-    .update({ cover_image_url: nextUrl,cover_frame_shape:frameShape,cover_zoom:zoom,cover_offset_x:offsetX,cover_offset_y:offsetY })
-    .eq("id", tournamentId);
+  const { error: updateError } = await supabase.rpc("update_tournament_cover_v1", {
+    p_tournament_id:tournamentId,p_cover_image_url:nextUrl,p_frame_shape:frameShape,
+    p_zoom:zoom,p_offset_x:offsetX,p_offset_y:offsetY,
+  });
   if (updateError) {
     if (uploadedPath) await storage.remove([uploadedPath]);
     return { ok: false, error: "Couldn't save the tournament photo." };
@@ -459,14 +400,13 @@ export async function generateTournamentFixtures(
   if ((matches ?? []).length > 0 || tournament.status === "live" || tournament.status === "completed") {
     return { ok: false, error: "The draw is locked after the first result." };
   }
-  if ((participants ?? []).length !== 4) return { ok: false, error: "The draw needs exactly four players." };
+  if ((participants ?? []).length < 2 || (participants ?? []).length > 8) return { ok: false, error: "The draw needs 2 to 8 players." };
 
-  const { error: deleteError } = await supabase.from("fixtures").delete().eq("tournament_id", tournamentId);
-  if (deleteError) return { ok: false, error: "Couldn't clear the existing draw." };
-  const { error } = await writeRoundRobinFixtures(supabase, tournament, tournamentId, participants ?? []);
+  const fixturePayload = roundRobinFixturePayload(tournament as TournamentSetup, (participants ?? []) as TournamentParticipantRow[]);
+  const { error } = await supabase.rpc("replace_tournament_group_draw_v1", {
+    p_tournament_id:tournamentId,p_group_fixtures:fixturePayload,
+  });
   if (error) return { ok: false, error: "Couldn't generate the draw." };
-
-  await supabase.from("tournaments").update({ status: "scheduled" }).eq("id", tournamentId);
   invalidateTournament(tournamentId);
   return { ok: true, message: "Draw generated and tournament scheduled." };
 }
@@ -492,13 +432,11 @@ export async function replaceTournamentParticipant(
     { data: tournament },
     { data: participants },
     { data: matches },
-    { data: fixtures },
     { data: replacement },
   ] = await Promise.all([
     supabase.from("tournaments").select("id, courts, group_ruleset, status, draw_locked_at").eq("id", tournamentId).single(),
     supabase.from("tournament_participants").select("player_id, seed").eq("tournament_id", tournamentId).order("seed"),
     supabase.from("matches").select("id").eq("tournament_id", tournamentId).limit(1),
-    supabase.from("fixtures").select("id").eq("tournament_id", tournamentId).limit(1),
     supabase.from("players").select("id, status").eq("id", replacementPlayerId).single(),
   ]);
 
@@ -512,52 +450,25 @@ export async function replaceTournamentParticipant(
   }
   const currentParticipants = (participants ?? []) as TournamentParticipantRow[];
   const outgoing = currentParticipants.find((participant) => participant.player_id === outgoingPlayerId);
-  if (!outgoing) return { ok: false, error: "That player is not in this tournament." };
-  if (currentParticipants.some((participant) => participant.player_id === replacementPlayerId)) {
+  const alreadyReplaced = !outgoing && currentParticipants.some((participant) => participant.player_id === replacementPlayerId);
+  if (!outgoing && !alreadyReplaced) return { ok: false, error: "That player is not in this tournament." };
+  if (outgoing && currentParticipants.some((participant) => participant.player_id === replacementPlayerId)) {
     return { ok: false, error: "That player is already in this tournament." };
   }
   if (!replacement || replacement.status !== "active") {
     return { ok: false, error: "Choose an active player as the replacement." };
   }
-  if (currentParticipants.length !== 4) {
-    return { ok: false, error: "This release requires exactly four tournament players." };
-  }
-
-  const hadFixtures = (fixtures ?? []).length > 0;
-  const { error: deleteError } = await supabase.from("fixtures").delete().eq("tournament_id", tournamentId);
-  if (deleteError) return { ok: false, error: "Couldn't clear the existing draw." };
-
-  const { error: participantError } = await supabase
-    .from("tournament_participants")
-    .update({ player_id: replacementPlayerId })
-    .eq("tournament_id", tournamentId)
-    .eq("player_id", outgoingPlayerId);
-  if (participantError) return { ok: false, error: "Couldn't replace that tournament player." };
-
   const updatedParticipants = currentParticipants.map((participant) =>
     participant.player_id === outgoingPlayerId
       ? { ...participant, player_id: replacementPlayerId }
       : participant,
   );
-  const { error: fixtureError } = await writeRoundRobinFixtures(
-    supabase,
-    tournament as TournamentSetup,
-    tournamentId,
-    updatedParticipants,
-  );
-  if (fixtureError) {
-    await supabase.from("fixtures").delete().eq("tournament_id", tournamentId);
-    await supabase
-      .from("tournament_participants")
-      .update({ player_id: outgoingPlayerId })
-      .eq("tournament_id", tournamentId)
-      .eq("player_id", replacementPlayerId);
-    return { ok: false, error: "Couldn't regenerate the draw, so the original field was restored." };
-  }
-
-  if (hadFixtures) {
-    await supabase.from("tournaments").update({ status: "scheduled" }).eq("id", tournamentId);
-  }
+  const fixturePayload = roundRobinFixturePayload(tournament as TournamentSetup, updatedParticipants);
+  const { error: replacementError } = await supabase.rpc("replace_tournament_participant_v2", {
+    p_tournament_id:tournamentId,p_outgoing_player_id:outgoingPlayerId,
+    p_replacement_player_id:replacementPlayerId,p_group_fixtures:fixturePayload,
+  });
+  if (replacementError) return { ok: false, error: "Couldn't replace that player and regenerate the draw." };
   invalidateTournament(tournamentId);
   return { ok: true, message: "Player replaced and the draw was regenerated." };
 }
@@ -605,7 +516,7 @@ export async function recordTournamentResult(
 
   invalidateTournament(fixture.tournament_id);
   revalidatePath("/players/[playerId]", "page");
-  return { ok: true, message: "Result approved and Elo rebuilt." };
+  return { ok: true, message: "Result approved and activity points rebuilt." };
 }
 
 async function loadTournamentResults(tournamentId: string) {
@@ -613,7 +524,7 @@ async function loadTournamentResults(tournamentId: string) {
   const [{ data: tournament }, { data: participants }, { data: fixtures }, { data: matches }] = await Promise.all([
     supabase.from("tournaments").select("id, status, playoff_ruleset, championship_path, courts").eq("id", tournamentId).single(),
     supabase.from("tournament_participants").select("player_id, seed").eq("tournament_id", tournamentId).order("seed"),
-    supabase.from("fixtures").select("id, stage, round_number, player1_id, player2_id").eq("tournament_id", tournamentId),
+    supabase.from("fixtures").select("id, stage, round_number, slot_number, court_number, player1_id, player2_id").eq("tournament_id", tournamentId).order("round_number").order("slot_number").order("court_number"),
     supabase.from("matches").select("id, fixture_id, player1_id, player2_id, winner_id, status").eq("tournament_id", tournamentId),
   ]);
   const approved = (matches ?? []).filter((match) => match.status === "approved");
@@ -637,6 +548,20 @@ async function loadTournamentResults(tournamentId: string) {
     }] : [];
   });
   return { supabase, tournament, participants: participants ?? [], fixtures: fixtures ?? [], resultByFixture, results };
+}
+
+async function installTournamentStage(
+  tournamentId: string,
+  transition: "tiebreak" | "semifinal" | "final_stage",
+  fixtures: Array<Record<string, unknown>>,
+) {
+  const db = await createClient();
+  const { error } = await db.rpc("install_tournament_stage_v1", {
+    p_tournament_id: tournamentId,
+    p_transition: transition,
+    p_fixtures: fixtures,
+  });
+  if (error) throw new Error(error.message ?? "Couldn't install the championship stage.");
 }
 
 export async function advanceTournament(
@@ -665,13 +590,9 @@ export async function advanceTournament(
 
   if (finalFixtures.length > 0) {
     if (finalFixtures.every((fixture) => state.resultByFixture.has(fixture.id))) {
-      const { error } = await state.supabase
-        .from("tournaments")
-        .update({ status: "completed", completion_path: "final_stage" })
-        .eq("id", tournamentId);
-      if (error) return { ok: false, error: "Couldn't complete the tournament." };
+      try { await finalizeTournament(tournamentId,"final_stage"); }
+      catch { return { ok:false,error:"Couldn't complete the tournament." }; }
       try {
-        await prepareTournamentPlacements(tournamentId);
         await rebuildRatingCache();
       } catch {
         invalidateTournament(tournamentId);
@@ -686,17 +607,10 @@ export async function advanceTournament(
   const maxGroupRound = Math.max(...groupFixtures.map((fixture) => fixture.round_number));
   const neededDecider=boundaryDecider(standings,path);
   if (neededDecider && !deciderFixture) {
-    const { error } = await state.supabase.from("fixtures").insert({
-      tournament_id: tournamentId,
-      stage: "tiebreak",
-      round_number: maxGroupRound + 1,
-      slot_number: 1,
-      court_number: 1,
-      ruleset: state.tournament.playoff_ruleset,
-      player1_id: neededDecider[0],
-      player2_id: neededDecider[1],
-    });
-    if (error) return { ok: false, error: "Couldn't create the qualification decider." };
+    try { await installTournamentStage(tournamentId,"tiebreak",[{
+      stage:"tiebreak",round_number:maxGroupRound+1,slot_number:1,court_number:1,
+      player1_id:neededDecider[0],player2_id:neededDecider[1],
+    }]); } catch { return { ok: false, error: "Couldn't create the qualification decider." }; }
     invalidateTournament(tournamentId);
     return { ok: true, message: "Qualification is tied. The decider is ready on Court 1." };
   }
@@ -709,35 +623,33 @@ export async function advanceTournament(
   }
 
   if(path==="standings"){
-    const {error}=await state.supabase.from("tournaments").update({status:"completed",completion_path:"round_robin"}).eq("id",tournamentId);
-    if(error)return {ok:false,error:"Couldn't complete the cup."};
-    try{await prepareTournamentPlacements(tournamentId);await rebuildRatingCache()}catch(error){console.error("Cup completion recovery required",{tournamentId,error});invalidateTournament(tournamentId);return {ok:true,message:"Standings are final.",warnings:["Run the organiser rating rebuild."]}}
+    try{await finalizeTournament(tournamentId,"round_robin")}catch{return {ok:false,error:"Couldn't complete the cup."}}
+    try{await rebuildRatingCache()}catch(error){console.error("Cup completion recovery required",{tournamentId,error});invalidateTournament(tournamentId);return {ok:true,message:"Standings are final.",warnings:["Run the organiser rating rebuild."]}}
     invalidateTournament(tournamentId);return {ok:true,message:"Tournament complete. The standings champion is official."};
   }
 
   if(path==="top_four_finals"){
-    if(semifinalFixtures.length===0){const semis=planTopFourSemifinals(ordered);const {error}=await state.supabase.from("fixtures").insert([
-      {tournament_id:tournamentId,stage:"semifinal",round_number:nextRound,slot_number:1,court_number:1,ruleset:state.tournament.playoff_ruleset,player1_id:semis.semifinal1[0],player2_id:semis.semifinal1[1]},
-      {tournament_id:tournamentId,stage:"semifinal",round_number:nextRound,slot_number:1,court_number:Math.min(2,state.tournament.courts),ruleset:state.tournament.playoff_ruleset,player1_id:semis.semifinal2[0],player2_id:semis.semifinal2[1]},
-    ]);if(error)return {ok:false,error:"Couldn't create the semifinals."};invalidateTournament(tournamentId);return {ok:true,message:"The semifinals are ready."}}
+    if(semifinalFixtures.length===0){const semis=planTopFourSemifinals(ordered);try{await installTournamentStage(tournamentId,"semifinal",[
+      {stage:"semifinal",round_number:nextRound,slot_number:1,court_number:1,player1_id:semis.semifinal1[0],player2_id:semis.semifinal1[1]},
+      {stage:"semifinal",round_number:nextRound,slot_number:state.tournament.courts===1?2:1,court_number:Math.min(2,state.tournament.courts),player1_id:semis.semifinal2[0],player2_id:semis.semifinal2[1]},
+    ])}catch{return {ok:false,error:"Couldn't create the semifinals."}}invalidateTournament(tournamentId);return {ok:true,message:"The semifinals are ready."}}
     const semifinalMatches=semifinalFixtures.map((fixture)=>state.resultByFixture.get(fixture.id));
     if(semifinalMatches.some((match)=>!match?.winner_id))return {ok:false,error:"Complete both semifinals first."};
     const winners=semifinalMatches.map((match)=>match!.winner_id!);const losers=semifinalMatches.map((match)=>match!.winner_id===match!.player1_id?match!.player2_id:match!.player1_id);
-    const {error}=await state.supabase.from("fixtures").insert([
-      {tournament_id:tournamentId,stage:"final",round_number:nextRound+1,slot_number:1,court_number:1,ruleset:state.tournament.playoff_ruleset,player1_id:winners[0],player2_id:winners[1]},
-      {tournament_id:tournamentId,stage:"playoff",round_number:nextRound+1,slot_number:1,court_number:Math.min(2,state.tournament.courts),ruleset:state.tournament.playoff_ruleset,player1_id:losers[0],player2_id:losers[1]},
-    ]);if(error)return {ok:false,error:"Couldn't create the championship matches."};invalidateTournament(tournamentId);return {ok:true,message:"The final and third-place match are ready."};
+    try{await installTournamentStage(tournamentId,"final_stage",[
+      {stage:"final",round_number:nextRound+1,slot_number:1,court_number:1,player1_id:winners[0],player2_id:winners[1]},
+      {stage:"playoff",round_number:nextRound+1,slot_number:state.tournament.courts===1?2:1,court_number:Math.min(2,state.tournament.courts),player1_id:losers[0],player2_id:losers[1]},
+    ])}catch{return {ok:false,error:"Couldn't create the championship matches."}}invalidateTournament(tournamentId);return {ok:true,message:"The final and third-place match are ready."};
   }
 
   const championshipFixtures:Array<Record<string,unknown>>=[
     {
-      tournament_id: tournamentId, stage: "final", round_number: nextRound, slot_number: 1, court_number: 1,
-      ruleset: state.tournament.playoff_ruleset, player1_id: ordered[0].playerId, player2_id: ordered[1].playerId,
+      stage: "final", round_number: nextRound, slot_number: 1, court_number: 1,
+      player1_id: ordered[0].playerId, player2_id: ordered[1].playerId,
     },
   ];
-  if(ordered.length>=4)championshipFixtures.push({tournament_id:tournamentId,stage:"playoff",round_number:nextRound,slot_number:1,court_number:Math.min(2,state.tournament.courts),ruleset:state.tournament.playoff_ruleset,player1_id:ordered[2].playerId,player2_id:ordered[3].playerId});
-  const { error } = await state.supabase.from("fixtures").insert(championshipFixtures);
-  if (error) return { ok: false, error: "Couldn't create the final stage." };
+  if(ordered.length>=4)championshipFixtures.push({stage:"playoff",round_number:nextRound,slot_number:state.tournament.courts===1?2:1,court_number:Math.min(2,state.tournament.courts),player1_id:ordered[2].playerId,player2_id:ordered[3].playerId});
+  try{await installTournamentStage(tournamentId,"final_stage",championshipFixtures)}catch{return { ok: false, error: "Couldn't create the final stage." };}
   invalidateTournament(tournamentId);
   return { ok: true, message: "The final and third-place match are ready." };
 }
@@ -749,8 +661,7 @@ export async function completeTournamentFromStandings(
   if (!(await requireAdmin())) return FORBIDDEN;
   const tournamentId = textValue(formData, "tournamentId");
   if (!tournamentId) return { ok: false, error: "Tournament not found." };
-  const supabase=await createClient();const {error}=await supabase.rpc("complete_tournament_from_standings_v2",{p_tournament_id:tournamentId});
-  if(error){const message=String(error.message??"");if(message.includes("round-robin"))return {ok:false,error:"Complete every round-robin fixture first."};if(message.includes("decider"))return {ok:false,error:"Complete the championship decider first."};return {ok:false,error:"This cup is not configured to finish from standings."}}
-  try{await prepareTournamentPlacements(tournamentId);await rebuildRatingCache()}catch(error){console.error("Standings completion recovery required",{tournamentId,error});invalidateTournament(tournamentId);return {ok:true,message:"Tournament complete from standings.",warnings:["Run the organiser rating rebuild before result emails."]}}
+  try{await finalizeTournament(tournamentId,"round_robin")}catch(error){const message=error instanceof Error?error.message:"";if(message.includes("round-robin"))return {ok:false,error:"Complete every round-robin fixture first."};if(message.includes("decider"))return {ok:false,error:"Complete the championship decider first."};return {ok:false,error:"This cup is not configured to finish from standings."}}
+  try{await rebuildRatingCache()}catch(error){console.error("Standings completion recovery required",{tournamentId,error});invalidateTournament(tournamentId);return {ok:true,message:"Tournament complete from standings.",warnings:["Run the organiser rating rebuild before result emails."]}}
   invalidateTournament(tournamentId);return {ok:true,message:"Tournament complete. The round-robin standings are final."};
 }

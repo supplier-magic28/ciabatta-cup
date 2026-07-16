@@ -1,158 +1,188 @@
-# Ciabatta Cup — Architecture & Operating Model
+# Ciabatta Cup - architecture and operating model
 
-This is the foundational document for the project. It describes **how we build here** and **how this documentation keeps itself current**. It is written for two readers: future-me, and any Claude Code session working in this repo. Read it before making architectural changes.
+This document describes the durable system shape and how the repository keeps
+that shape understandable. Read `STATUS.md` for current deployment and
+verification state, `docs/WORKFLOWS.md` for current lifecycle contracts, and
+the ADR index for decision history.
 
----
+## 1. Goal and principles
 
-## 1. Vision & guiding principles (rarely changes)
+Ciabatta Cup is a private, mobile-first tennis competition for a small group of
+friends. The engineering goal is **fearless iteration**: rules and presentation
+can change without losing the facts behind the ladder or wondering whether a
+workflow partially committed.
 
-The Ciabatta Cup is a mobile-first web app for tracking a tennis tournament among ~10 friends. One admin, the rest players. Video-game-inspired branding; the #1 ranked player wears "the Ciabatta" (a bread-loaf badge).
+- **Knowledge lives in the repository.** Types and schema define shape, tests
+  and database constraints enforce behaviour, ADRs preserve reasoning, and
+  current-state docs route future work.
+- **Facts before projections.** Store durable sporting and lifecycle facts once;
+  derive standings, points, Elo, history, and awards from them.
+- **One boundary per consequence.** A lifecycle transition that must succeed or
+  fail together crosses one row-locking PostgreSQL RPC.
+- **Retries are normal.** Creation and delivery operations have stable identities
+  so a browser retry or ambiguous provider response cannot duplicate facts.
+- **Secondary work cannot rewrite the truth.** Cache rebuild and email failures
+  produce explicit recovery warnings after a committed fact; they do not report
+  the authoritative transition as failed.
+- **Right-size complexity.** The product serves roughly ten people. Preserve
+  clean seams for growth, but add workers, caches, indexes, and monitoring only
+  after measuring a need.
 
-The overriding engineering goal is **fearless iteration**: I should be able to change anything, anytime, and know within seconds whether I broke something. We optimise for *ease of improvement over time*, not for hitting some notion of "perfect" or "done".
+## 2. System shape
 
-Principles:
+**Stack:** Next.js App Router and TypeScript on Vercel; PostgreSQL, Auth,
+Realtime, and Storage on Supabase; Resend for custom product email. GitHub is
+the source of truth and CI is the release gate.
 
-- **Knowledge lives in the repo, not in anyone's head.** Types hold correct shapes, tests hold correct behaviour, docs hold intent (the *why* and the *what next*). No decision should exist only in a chat log or a memory.
-- **Prefer enforced truth over written truth.** If code, types, schema, or a test can express something, let them — don't duplicate it in prose that will drift.
-- **Right-size the effort.** This is a 10-user app. Scaling is free (Supabase + Vercel). We do not build machinery we don't need; we leave *seams* so we can add it later cheaply.
-- **Leave the seam, skip the machinery.** Where future scale/perf might matter, structure the code so the change is small later — but don't pay for it now.
+```text
+Browser
+  -> Server Components: owner-safe reads and derived read models
+  -> Server Actions: authenticate, validate, call one RPC
+  -> PostgreSQL RPC: lock rows, enforce transition, commit facts + intents
+  -> post-commit coordinator: rebuild versioned projections, attempt email
+  -> explicit success or committed-with-recovery-warning
+```
 
----
+### Authoritative facts and rebuildable projections
 
-## 2. The self-perpetuating documentation system (the core of this repo)
+Approved match rows and sets are immutable sporting facts. Practice reviews,
+manual play days, tournament fixtures and placements, and invitation responses
+are authoritative only for their own domain. Current public points are a pure
+Melbourne-day activity projection over those sources:
 
-The problem this solves: docs that fall out of date are worse than no docs. Three mechanisms keep ours current.
+- ranked participation +15 and win +15;
+- exhibition or Non-Ciabatta participation +10;
+- approved practice +5;
+- tournament placement awards;
+- permanent derived daily and drought deductions, floored at zero.
 
-### 2a. Layer docs by rate of change
-| Doc | Changes | Job |
-|---|---|---|
-| `ARCHITECTURE.md` (this file) | Rarely | Vision, principles, how we build |
-| `docs/decisions/*.md` (ADRs) | Append-only | The dated *why* behind each decision |
-| `STATUS.md` | Every session | Short handover: what's built, what's next, known issues |
-| `CLAUDE.md` | Occasionally | Operating instructions the AI reads every session |
+Ordinary non-tournament ranked matches separately feed pure zero-floor Elo for
+analysis and tournament seeding. Public activity points and Elo must never be
+described as the same value. `players.rating_points`, `rating_history`, and
+`ciabatta_reigns` are replaceable materialisations, never source facts.
 
-Never mix these. Fast-changing state lives in `STATUS.md` and is treated as disposable, so it never makes the durable docs feel stale.
+The scoring cache is versioned. Points-affecting transactions increment
+`fact_version`; a rebuild installs a snapshot only when its source version is
+still current. A racing rebuild retries once, and an organiser can inspect and
+repair drift without altering source facts.
 
-### 2b. Decisions are append-only (they structurally can't lie)
-Architectural decisions are recorded as **ADRs** in `docs/decisions/`, one short file each: *Context → Decision → Consequences*, dated. **Never rewrite an old ADR.** If we change course, write a new ADR that supersedes it and mark the old one superseded. Because the record only ever accretes, it cannot fall out of date — it preserves the full history of reasoning, which is what future-me and future-Claude-Code need.
+### Lifecycle and integration boundaries
 
-### 2c. Docs update as part of "done", not as a chore
-`CLAUDE.md` encodes a **definition of done** that requires touching the relevant docs whenever a task completes. Because the AI reads `CLAUDE.md` every session, doc maintenance happens as a *byproduct of the work*, not something left to willpower. This is the recursion: each change improves the docs that frame the next change.
+Consequential mutation uses authenticated `security definer` RPCs with an empty
+`search_path`, explicit grants, actor/status validation, row locks, database
+state graphs, and immutable terminal facts. Creation RPCs accept operation keys.
+Notifications and custom-email intents are committed with the lifecycle they
+describe and deduped by stable recipient/event identities.
 
-> Honest scope note: "never out of date" is the aspiration. The real target is *cheap to keep current and structurally resistant to rot*. This system gets there with near-zero discipline.
+For tournaments, application-derived schedules and placement arrays are
+requests/checksums, not authority. PostgreSQL validates the complete group draw,
+uses one deterministic standings projection, derives the only valid placement
+order from approved fixtures, and commits stage/placement/completion facts in
+marked RPC transactions. Direct table writes to those boundaries are revoked or
+trigger-rejected after the compatible application rollout.
 
----
+The application coordinates only work that cannot belong to the fact
+transaction: provider delivery, cache materialisation, route invalidation, and
+presentation-specific file upload. Those stages return a common
+committed-with-warning result when recovery remains. The canonical current
+contract and deliberate exceptions live in `docs/WORKFLOWS.md`.
 
-## 3. Architecture overview
+### Reads, security, and privacy
 
-**Stack:** Next.js (App Router, TypeScript, Tailwind) · Supabase (Postgres + Auth + Storage) · Vercel (hosting, preview deploys per PR). GitHub is the source of truth; push → CI → preview → merge → production.
+Server Components are the default read boundary. Independent queries start
+together, and relations needed by one read model are embedded in the same query
+wave. A server-only projection service may read complete scoring facts, then
+returns only derived public output; it never leaks practice notes, manual-mark
+detail, email addresses, or private external-opponent identities.
 
-**The data model rule (see ADR-0001 and ADR-0003):** Match results are stored as
-**immutable facts** ("A beat B, 6-3 6-4, ranked, on this date"). Standings are
-always derived by the pure scoring function from those facts. `rating_history`,
-`rating_points`, and `ciabatta_reigns` may be persisted only as fully rebuildable
-materialisations; they are never authoritative. This lets the scoring formula evolve without
-migrating history and keeps ranked and exhibition records available as filtered
-views of the same facts.
+RLS is enabled by default, but policy and SQL privilege are separate gates:
+both must grant the minimum role/owner access. Authenticated domain mutations
+require an active player. Inactive members retain historical read access but
+cannot mutate league facts or exercise organiser authority. Direct table grants
+are removed where a validated RPC owns the mutation. The Supabase secret key is
+server-only and is used only for genuine administrative/integration boundaries.
 
-**Scoring is isolated and pure** in `lib/scoring/`. `computeRankings(matches)`
-derives ordinary-match Elo; `buildRatingCache` separately replays canonical
-activity points, their timeline, and activity-ladder Ciabatta reigns. An
-incumbent remains holder on equal points and changes only when another player
-moves strictly ahead (ADR-0035). These seams are kept pure and heavily tested.
-Cache materialisation is rebuilt after approval or tournament completion; read
-surfaces derive the ladder through the same adapter.
+### Presentation architecture
 
-The replay also emits a source-aware per-player activity ledger (ADR-0038).
-Leaderboard, profile history, versioned cache rebuilds, and the authenticated
-calendar consume it for awards, decay, applied zero-floor movement, and totals.
-Presentation routes may slice the ledger but never copy scoring constants or
-persist another score.
+Screens use shared primitives from `components/`, design tokens from
+`components/tokens.ts`, and the theme in `app/globals.css`. Route-shaped loading
+boundaries reserve final geometry. Mutations acknowledge input immediately but
+never optimistically present an immutable score, approval, or points change.
+This vocabulary is the consistency seam: change a token or primitive once,
+then verify all consuming routes.
 
-**Data fetching** defaults to Server Components (App Router default). Independent
-reads begin together, and relational data needed by one read model is embedded
-in that query instead of fetched in a dependent wave. App Router loading
-boundaries stream route-shaped skeletons while the server completes. **Images**
-(avatars/photos) go through Supabase Storage + Next `<Image>` — the only heavy
-asset, so worth doing right from the start.
+## 3. Patterns for consistency, scalability, and performance
 
-**UI is built from a small component vocabulary** (`components/`) driven by design tokens. Screens are assembled from shared primitives (Button, Card, `RankBadge`, Ciabatta badge, StatBlock, …). This is both what makes the UX feel consistent and what makes visual change cheap (edit a token, everything updates). Player-owned presentation settings are persisted on the profile row, while public labels are derived through the shared display-name helper. The component inventory is kept current per the definition of done.
+| Concern | Default pattern | Scale seam |
+| --- | --- | --- |
+| Domain integrity | Database constraints, guarded status graphs, row-locking RPCs | More callers can share the same contract without duplicating rules |
+| Client-derived tournament data | Validate full request against database standings/results; persist only inside marked RPC transaction | New tournament UIs cannot bypass canonical advancement or placement rules |
+| Retry safety | Operation keys, unique constraints, notification/email dedupe keys | Safe queue or webhook retries later |
+| Read consistency | One canonical projection per public concept | Materialise or cache behind the same adapter if measurements justify it |
+| Scoring changes | Pure replay from immutable facts | Change formula and rebuild; no historical data migration |
+| Secondary failure | Commit facts first; return structured recovery warning | Move the same durable email intents to a worker without changing callers |
+| Data fetching | Server Components, parallel independent reads, embedded relations | Add indexes/caching only from query plans and measured latency |
+| UI consistency | Tokens, shared primitives, route-shaped loading | Visual changes remain bounded and testable |
+| Operations | Privacy-safe health projection and guarded recovery actions | External monitoring can consume the same health contract later |
 
-**Security:** Supabase Row Level Security is on by default; every table is locked until an explicit policy grants access. The publishable key is browser-safe; the secret key never touches client code or the repo.
+Performance work is evidence-driven. The current Playwright performance suite
+checks UI geometry, pending-control stability, reduced motion, mobile overflow,
+and query-shape source contracts against a production build. It is **not** a
+latency, throughput, Core Web Vitals, or bundle-size benchmark. Add quantitative
+budgets only after a repeatable measurement and an ADR define the target.
 
----
+## 4. Verification strategy
 
-## 4. Testing strategy — a scalpel, not a blanket
+Tests concentrate on high-consequence boundaries:
 
-We deliberately **do not** pursue comprehensive coverage. We test the few things that are high-leverage: easy to get wrong, painful if broken, central.
+- Vitest covers pure scoring, validation, read-model, rendering, and action
+  coordination contracts.
+- pgTAP covers RLS/grants, status graphs, authorization, idempotency, immutable
+  facts, RPC transactions, scoring-version effects, and recovery metadata.
+- Playwright browser smoke tests cover protected-route redirects and critical
+  route behaviour; a disposable-stack integration job exercises authenticated
+  ranked submit -> confirm -> approve -> rebuild -> read-model agreement.
+- Documentation checks validate canonical files, local links, ordered migration
+  inventory, ADR metadata/supersession, route and component inventories,
+  workflow IDs, committed design references, and diff-mapped updates.
 
-- **Scoring function — the test spine.** Because it's pure and changes constantly, it gets a solid battery of unit tests (Vitest). This is what makes rewriting the formula fearless: tests instantly flag any ranking that changed unexpectedly. Highest-value tests in the project.
-- **Critical happy-path smoke tests** (Playwright, added once screens exist): e.g. log in → see leaderboard; submit a match. A handful, not exhaustive.
-- Everything else: rely on TypeScript + lint. Don't write tests for the sake of coverage.
+`npm run verify` is the local aggregate preflight. Database changes additionally
+run `npm run db:test` and `npm run db:lint`. Production rollout then uses the
+smoke and health checks in `docs/DEPLOYMENT.md`.
 
-**CI (GitHub Actions):** lint, typecheck, Vitest, documentation checks, a
-production build, Playwright performance budgets, and browser smoke tests run on
-every push and PR. Combined with Vercel's per-PR preview deploys, the loop is:
-push → checks green → eyeball preview → merge → auto-deploy. Deployments get
-*safer and more automated* over time without extra effort.
+## 5. Recursive documentation system
 
----
+Documentation is layered by job:
 
-## 5. Performance principles
+| Document | Job | Update cadence |
+| --- | --- | --- |
+| `ARCHITECTURE.md` | Durable system shape and patterns | Rare |
+| `docs/SCHEMA.md` | Current conceptual data model and invariants | Every data-contract change |
+| `docs/WORKFLOWS.md` | Current lifecycle, notification, email, and recovery contracts | Every consequential workflow change |
+| `docs/decisions/*.md` | Append-only decision history | Every durable decision |
+| `docs/decisions/README.md` | Current ADR navigation and explicit supersession | Every ADR |
+| `STATUS.md` | Deployment, latest verification, risks, next work | Every functional task |
+| `CLAUDE.md` | Start/finish operating rules and impact mapping | When process learns |
 
-At this scale, performance is a non-problem unless we do something pathological. The three defaults that matter:
+Every task starts by classifying its impact and reading the mapped current docs
+and newest ADR chain. Every task finishes by asking what a future session should
+not have to rediscover. The durable answer becomes a document, test, invariant,
+or automated check. `docs:impact` enforces the update mapping against the merge
+base, so documentation quality improves recursively as the application changes.
 
-1. **Fetch on the server** (Server Components), start independent reads
-   together, and embed child rows needed by the same read model.
-2. **Optimise images** (Next `<Image>` + Supabase Storage) — the one heavy asset.
-3. **Acknowledge work immediately** with stable pending controls and
-   route-shaped loading boundaries, without optimistically changing immutable
-   facts.
-4. **Keep scoring swappable** — materialised ratings remain rebuildable from
-   raw facts. A committed lifecycle reports success even if its versioned cache
-   rebuild fails, and returns an explicit organiser-recovery warning instead.
+Only tracked, maintained files can be canonical. Raw committed handoffs are
+preserved inputs; untracked ZIPs and missing external bundles are never part of
+the authority chain. Promote anything durable they reveal into maintained docs,
+tokens, tests, or an intentionally committed extracted artifact.
 
-Do not add caching, edge tricks, indexes, or background jobs speculatively. Add
-them only in response to a *measured* problem, recorded in an ADR. Browser
-budgets enforce stable loading and pending UI against compiled production CSS;
-see ADR-0017.
+## 6. Document map
 
----
-
-## 6. Definition of done (mirrored in CLAUDE.md)
-
-A task is not complete until:
-
-1. Lint, typecheck, Vitest, and `docs:check` all pass.
-2. `STATUS.md` reflects what changed and what's next.
-3. An **ADR is appended** if any architectural decision was made.
-4. The **component inventory** in this file (or `components/README`) is updated if components were added.
-5. New logic that is pure and consequential (anything scoring-related) has tests.
-
-Following this is what keeps the documentation system — and therefore the ability to improve this app forever — alive.
-
-## 6a. Documentation impact matrix
-
-| When work changes | Update before completion |
-|---|---|
-| Schema, RLS, migration, or security | `docs/SCHEMA.md`, `supabase/README.md`, and an ADR for a durable decision |
-| Current product workflow or blocker | `STATUS.md`, plus `docs/DESIGN.md` for a handoff screen |
-| Shared UI component, token, or visual pattern | `components/README.md` and `docs/DESIGN.md` |
-| Setup, environment, deployment, or operator process | Root `README.md` and/or `supabase/README.md` |
-
-This is intentionally a small matrix. It makes the documentation update a
-predictable part of every implementation task instead of a separate cleanup.
-
----
-
-## 7. Document map
-
-- `ARCHITECTURE.md` — this file (vision, how we build)
-- `docs/SCHEMA.md` — authoritative data model and implementation phase of each entity
-- `docs/decisions/` — ADRs (append-only decision history); `ADR-0001` = immutable-facts + computed-scoring
-- `STATUS.md` — current handover (what's built, what's next, known issues)
-- `docs/DESIGN.md` — maintained implementation coverage for the immutable design handoff
-- `docs/DEPLOYMENT.md` — account-bound production rollout and smoke-test runbook
-- `CLAUDE.md` — operating instructions + definition of done for AI sessions
-- `lib/scoring/` — the pure scoring function + its tests
-- `components/` — the shared UI vocabulary + design tokens
+- `CLAUDE.md` - mandatory start, implementation, verification, and finish rules
+- `STATUS.md` - current deployment and verification handover
+- `docs/SCHEMA.md` - current conceptual data model and invariants
+- `docs/WORKFLOWS.md` - current lifecycle and mismatch registry
+- `docs/decisions/README.md` - ADR index and supersession navigation
+- `docs/DESIGN.md` - maintained route/handoff coverage
+- `components/README.md` - shared UI inventory
+- `docs/DEPLOYMENT.md` - compatible rollout, recovery, and smoke-test runbook
+- `supabase/README.md` - ordered migration and database operations guide

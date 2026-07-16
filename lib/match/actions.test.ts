@@ -24,12 +24,12 @@ describe("rebuildRatings", () => {
 
   it("rejects direct match logging for a non-admin", async () => {
     mocks.getSessionPlayer.mockResolvedValue({ role: "player" });
-    await expect(adminLogMatch({ player1Id:"a", player2Id:"b", type:"ranked", format:"one_set", formatNote:"", playedDate:"2026-07-01", location:"", sets:[{selfGames:6,opponentGames:4,selfTiebreak:null,opponentTiebreak:null}] })).resolves.toEqual({ ok:false, error:"Only admins can directly log matches." });
+    await expect(adminLogMatch({ player1Id:"a", player2Id:"b", type:"ranked", format:"one_set", formatNote:"", playedDate:"2026-07-01", location:"", sets:[{selfGames:6,opponentGames:4,selfTiebreak:null,opponentTiebreak:null}] })).resolves.toEqual({ ok:false, error:"Only active admins can directly log matches." });
     expect(mocks.createClient).not.toHaveBeenCalled();
   });
 
   it("logs an admin match, rebuilds points, and returns a cache warning without losing the match", async () => {
-    mocks.getSessionPlayer.mockResolvedValue({ role: "admin" });
+    mocks.getSessionPlayer.mockResolvedValue({ role: "admin", status: "active" });
     const rpc = vi.fn()
       .mockResolvedValueOnce({ data:"court-id", error:null })
       .mockResolvedValueOnce({ data:"match-id", error:null });
@@ -48,7 +48,7 @@ describe("rebuildRatings", () => {
   });
 
   it("returns a friendly error when the rebuild fails", async () => {
-    mocks.getSessionPlayer.mockResolvedValue({ role: "admin" });
+    mocks.getSessionPlayer.mockResolvedValue({ role: "admin", status: "active" });
     mocks.rebuildRatingCache.mockRejectedValue(new Error("missing secret"));
 
     await expect(rebuildRatings()).resolves.toEqual({
@@ -58,7 +58,7 @@ describe("rebuildRatings", () => {
   });
 
   it("rebuilds and invalidates the board, profiles, and approval queue for an admin", async () => {
-    mocks.getSessionPlayer.mockResolvedValue({ role: "admin" });
+    mocks.getSessionPlayer.mockResolvedValue({ role: "admin", status: "active" });
     mocks.rebuildRatingCache.mockResolvedValue(undefined);
 
     await expect(rebuildRatings()).resolves.toEqual({ ok: true });

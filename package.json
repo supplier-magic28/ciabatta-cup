@@ -12,11 +12,16 @@
     "test:watch": "vitest",
     "docs:check": "node scripts/check-docs.mjs",
     "docs:check:test": "node --test scripts/check-docs.test.mjs",
+    "docs:impact": "node scripts/check-docs-impact.mjs",
+    "docs:impact:test": "node --test scripts/check-docs-impact.test.mjs",
     "test:e2e": "node scripts/run-e2e.mjs",
     "test:performance": "playwright test --config=playwright.performance.config.ts",
+    "test:integration": "vitest run tests/integration/ranked-lifecycle.test.ts",
     "db:start": "supabase start",
-    "db:test": "supabase test db supabase/tests/database/core_backend_hardening.test.sql supabase/tests/database/core_workflows.test.sql supabase/tests/database/20260718123000_configurable_cup_builder.test.sql supabase/tests/database/20260718126000_cup_trophies_invites.test.sql",
-    "db:lint": "supabase db lint --level warning"
+    "db:test": "node scripts/run-db-tests.mjs",
+    "db:lint": "supabase db lint --level warning",
+    "verify": "npm run lint && npm run typecheck && npm run test && npm run docs:check && npm run docs:check:test && npm run docs:impact && npm run docs:impact:test && npm run build && npm run test:performance && npm run test:e2e",
+    "preflight": "npm run verify"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",

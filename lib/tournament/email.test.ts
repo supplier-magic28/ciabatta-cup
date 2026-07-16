@@ -1,4 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+const mocks = vi.hoisted(() => ({ createAdminClient:vi.fn() }));
+vi.mock("@/lib/supabase/admin", () => ({ createAdminClient:mocks.createAdminClient }));
+
 import { renderTournamentEmail, sendTournamentEmail } from "./email";
 import { renderResultEmail } from "./email-templates";
 
@@ -39,6 +43,16 @@ describe("sendTournamentEmail", () => {
   beforeEach(() => {
     process.env.RESEND_API_KEY = "re_test";
     process.env.TOURNAMENT_EMAIL_FROM = "Ciabatta Cup <cup@example.com>";
+    mocks.createAdminClient.mockReturnValue({
+      from:vi.fn().mockReturnValue({
+        select:vi.fn().mockReturnValue({
+          eq:vi.fn().mockReturnValue({ single:vi.fn().mockResolvedValue({ data:{ email:"player@example.com" },error:null }) }),
+        }),
+      }),
+      rpc:vi.fn((name:string) => Promise.resolve(name === "claim_custom_email_v1"
+        ? { data:{ claimed:true,status:"processing" },error:null }
+        : { data:null,error:null })),
+    });
   });
 
   afterEach(() => vi.unstubAllGlobals());
@@ -51,7 +65,12 @@ describe("sendTournamentEmail", () => {
     vi.stubGlobal("fetch", fetchMock);
     const rendered = { subject: "Subject", html: "<p>Hello</p>", text: "Hello" };
 
-    await expect(sendTournamentEmail("player@example.com", rendered, "tournament/one/locked_in/player")).resolves.toBe("email-1");
+    await expect(sendTournamentEmail(
+      "player@example.com",
+      rendered,
+      "tournament/one/locked_in/player",
+      { kind:"tournament_locked_in", playerId:"player", entityType:"tournament", entityId:"one" },
+    )).resolves.toBe("email-1");
 
     const request = fetchMock.mock.calls[0][1];
     expect(request.headers["Idempotency-Key"]).toBe("tournament/one/locked_in/player");
@@ -81,5 +100,19 @@ describe("renderResultEmail", () => {
     expect(email.html).toContain("W vs Ben");
     expect(email.html).toContain("W vs Michaels");
     expect(email.text).toContain("W vs Ben: 3-0");
+  });
+
+  it("renders an official eighth-place recap without inventing points", () => {
+    const email = renderResultEmail({
+      ...base,
+      assetBaseUrl:"https://cup.example/emails",
+      placement:8,
+      points:0,
+      matches:[{ opponentName:"Ben",score:"3-6",won:false }],
+    });
+    expect(email.subject).toContain("8th");
+    expect(email.html).toContain("8TH");
+    expect(email.html).not.toContain("+0 PTS");
+    expect(email.text).toContain("L vs Ben: 3-6");
   });
 });

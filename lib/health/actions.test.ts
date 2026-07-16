@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   revalidatePath: vi.fn(),
   sendPlannedLifecycleEmail: vi.fn(),
   sendTournamentEmail: vi.fn(),
+  deliverTournamentResultEmails:vi.fn(),
 }));
 
 vi.mock("@/lib/auth/session", () => ({ getSessionPlayer: mocks.getSessionPlayer }));
@@ -13,6 +14,11 @@ vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: mocks.createAdminCli
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 vi.mock("@/lib/planned/delivery", () => ({ sendPlannedLifecycleEmail: mocks.sendPlannedLifecycleEmail }));
 vi.mock("@/lib/tournament/email", () => ({ sendTournamentEmail: mocks.sendTournamentEmail }));
+vi.mock("@/lib/tournament/delivery", () => ({
+  deliverTournamentLifecycleEmails:vi.fn(),
+  deliverTournamentResultEmails:mocks.deliverTournamentResultEmails,
+}));
+vi.mock("@/lib/tournament/invite-delivery", () => ({ deliverCupInviteEmails:vi.fn() }));
 
 import { retryLifecycleDelivery } from "./actions";
 
@@ -46,9 +52,10 @@ function adminFor(rows: Record<string, unknown>) {
 describe("lifecycle email recovery", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.getSessionPlayer.mockResolvedValue({ role: "admin" });
+    mocks.getSessionPlayer.mockResolvedValue({ role: "admin", status:"active" });
     mocks.sendPlannedLifecycleEmail.mockResolvedValue(undefined);
     mocks.sendTournamentEmail.mockResolvedValue("provider-id");
+    mocks.deliverTournamentResultEmails.mockResolvedValue({ attempted:1,delivered:1,failed:0,deliveryKeys:[] });
   });
 
   it("rejects a non-organiser before reading the delivery ledger", async () => {
@@ -59,13 +66,13 @@ describe("lifecycle email recovery", () => {
 
   it("retries one planned recipient from canonical facts", async () => {
     const delivery = { ...failed, idempotency_key:"planned/plan-1/locked/player-1" };
-    mocks.createAdminClient.mockReturnValue(adminFor({ lifecycle_email_deliveries:delivery }));
+    mocks.createAdminClient.mockReturnValue(adminFor({ custom_email_outbox:delivery }));
     await expect(retryLifecycleDelivery(delivery.idempotency_key)).resolves.toEqual({ ok:true });
     expect(mocks.sendPlannedLifecycleEmail).toHaveBeenCalledWith("plan-1", "locked", undefined, "player-1");
   });
 
   it("rejects a planned delivery whose key does not match canonical facts", async () => {
-    mocks.createAdminClient.mockReturnValue(adminFor({ lifecycle_email_deliveries:failed }));
+    mocks.createAdminClient.mockReturnValue(adminFor({ custom_email_outbox:failed }));
     await expect(retryLifecycleDelivery("delivery-key")).resolves.toEqual({
       ok:false,
       error:"Planned delivery key does not match its canonical facts.",
@@ -76,8 +83,8 @@ describe("lifecycle email recovery", () => {
   it("reconstructs a practice email and preserves its idempotency key", async () => {
     const delivery = { ...failed, kind:"practice_approved", entity_type:"practice", entity_id:"practice-1" };
     mocks.createAdminClient.mockReturnValue(adminFor({
-      lifecycle_email_deliveries:delivery,
-      practice_sessions:{ id:"practice-1",player_id:"player-1",activity:"serve_practice",minutes:45,practiced_on:"2026-07-18" },
+      custom_email_outbox:delivery,
+      practice_sessions:{ id:"practice-1",player_id:"player-1",activity:"serve_practice",minutes:45,practiced_on:"2026-07-18",status:"approved" },
       players:{ id:"player-1",email:"player@test.invalid",first_name:"Player" },
     }));
     await expect(retryLifecycleDelivery("delivery-key")).resolves.toEqual({ ok:true });
@@ -92,7 +99,7 @@ describe("lifecycle email recovery", () => {
   it("reconstructs a ranked match email and preserves its idempotency key", async () => {
     const delivery = { ...failed, kind:"ranked_match_logged",entity_type:"match",entity_id:"match-1" };
     mocks.createAdminClient.mockReturnValue(adminFor({
-      lifecycle_email_deliveries:delivery,
+      custom_email_outbox:delivery,
       matches:{ id:"match-1",type:"ranked",player1_id:"player-1",player2_id:"player-2",winner_id:"player-1",submitted_by:"player-1",external_won:false,played_at:"2026-07-18T00:00:00Z",planned_match_id:null,match_sets:[{set_number:1,p1_games:6,p2_games:4,tiebreak_p1:null,tiebreak_p2:null}] },
       players:[
         { id:"player-1",email:"one@test.invalid",first_name:"One",last_name:"Player",nickname:null,use_nickname:false },
@@ -109,13 +116,31 @@ describe("lifecycle email recovery", () => {
   });
 
   it("leaves unknown delivery kinds visible for manual recovery", async () => {
-    mocks.createAdminClient.mockReturnValue(adminFor({ lifecycle_email_deliveries:{ ...failed,kind:"legacy_unknown" } }));
+    mocks.createAdminClient.mockReturnValue(adminFor({ custom_email_outbox:{ ...failed,kind:"legacy_unknown" } }));
     await expect(retryLifecycleDelivery("delivery-key")).resolves.toEqual({ ok:false, error:"This delivery needs manual recovery." });
     expect(mocks.sendTournamentEmail).not.toHaveBeenCalled();
   });
 
+  it("retries a pending eighth-place email from persisted tournament facts", async () => {
+    const delivery = {
+      ...failed,
+      idempotency_key:"tournament/cup-1/result_8th/player-1",
+      kind:"tournament_result_8th",
+      entity_type:"tournament",
+      entity_id:"cup-1",
+      status:"pending",
+    };
+    mocks.createAdminClient.mockReturnValue(adminFor({ custom_email_outbox:delivery }));
+    await expect(retryLifecycleDelivery(delivery.idempotency_key)).resolves.toEqual({ ok:true });
+    expect(mocks.deliverTournamentResultEmails).toHaveBeenCalledWith(
+      "cup-1",
+      "player-1",
+      delivery.idempotency_key,
+    );
+  });
+
   it("does not retry a delivery that is already sent", async () => {
-    mocks.createAdminClient.mockReturnValue(adminFor({ lifecycle_email_deliveries:{ ...failed,status:"sent" } }));
+    mocks.createAdminClient.mockReturnValue(adminFor({ custom_email_outbox:{ ...failed,status:"sent" } }));
     await expect(retryLifecycleDelivery("delivery-key")).resolves.toEqual({ ok:false, error:"This delivery is not ready to retry." });
   });
 });

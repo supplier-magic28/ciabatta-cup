@@ -1,31 +1,27 @@
 # Design Implementation Guide
 
-This is the maintained bridge between the application and the approved Claude
-design handoff. It records what the product implements today; it does not
-replace the raw handoff artifacts.
+This is the maintained bridge between the application and committed design
+inputs. It records what the product implements today and is the canonical
+design-coverage tracker.
 
 ## Sources of truth
 
-- Raw reference screens and art direction:
-  `design-reference/design_handoff_ciabatta_cup/`.
-- Personal tennis calendar handoff: `design-reference/calendar design.zip`
-  (the supplied reference bundle; production implementation is `/calendar`).
-- Configurable cup-builder handoff: `design-reference/tournament build update.zip`.
-- Non-Ciabatta feature and email handoff:
-  `design-reference/design_handoff_non_ciabatta/`.
-- Profile tabs, streak, H2H, and tournament-history handoff:
-  `design-reference/design_handoff_profile_updates/`.
-- Courts and surfaces handoff: `court locations.zip` supplied externally;
-  implemented through the maintained route and component patterns below.
-- Planned-match email handoff: `match email updates.zip` supplied externally;
-  implemented through the shared table-based email primitives and lifecycle
-  mapping described below.
-- Authoritative design tokens: `components/tokens.ts` and the matching CSS
-  theme in `app/globals.css`.
-- Shared production UI vocabulary: `components/README.md`.
+Canonical sources must be committed and maintained:
 
-Do not edit the files in `design-reference/`. When a screen or reusable visual
-pattern changes, update this guide and the component inventory in the same task.
+- Implementation coverage and current interaction rules: this file.
+- Authoritative tokens/theme: `components/tokens.ts` and `app/globals.css`.
+- Shared production vocabulary: `components/README.md`.
+- Preserved, Git-tracked visual inputs:
+  `design-reference/design_handoff_ciabatta_cup/`,
+  `design-reference/design_handoff_non_ciabatta/`, and
+  `design-reference/design_handoff_profile_updates/`.
+
+Do not edit preserved handoff files. ZIP archives, missing externally supplied
+bundles, and untracked files are **not** part of the authority chain. They may
+inform one task, but any durable rule must be promoted into this guide, shared
+tokens/components, a test, or an intentionally committed extracted reference.
+When a route or reusable visual pattern changes, update this guide and the
+component inventory in the same task.
 
 ## Screen coverage
 
@@ -35,7 +31,7 @@ pattern changes, update this guide and the component inventory in the same task.
 | 02 Player profile | `/players/[playerId]` | Partial | Hero, the same career aggregates as leaderboard history, canonical award/decay points history, head-to-head, match log, nickname/avatar rendering, and profile-shaped loading are live; richer trend interaction is pending. |
 | 03 Log match | `/matches`, `/matches/new` | Partial | Matches owns all visible result-entry links; participant submission and audited any-two-player organiser finalization share the validated score wizard with stable pending feedback. The flow is not yet a full visual recreation of every handoff state. |
 | 04 Tournaments | `/tournaments`, `/tournaments/[tournamentId]` | Implemented | Event cards, optional cropped cover photos, live standings, qualification state, round/court schedule, results, final rules, champion, and responsive loading boards are live. Self-entry and multi-structure filtering remain deferred. |
-| 05 Sign in | `/sign-in`, `/sign-up`, `/accept-invite` | Implemented | Sign-in, signup, and invite password setup use the token-driven auth shell with stable pending controls and a matching form skeleton; safe internal return paths preserve email and notification deep links through authentication. |
+| 05 Sign in | `/sign-in`, `/sign-up`, `/accept-invite`, `/auth/confirm` | Implemented | Sign-in, signup, invite password setup, and the server callback use the token-driven auth contract with stable pending controls; safe internal return paths preserve email and notification deep links through authentication. |
 | 06 Admin dashboard | `/admin/approvals`, `/admin/players`, `/admin/health` | Partial | Approval queue, roster, per-action pending feedback, loading queues, and green/amber/red backend health with guarded recovery controls exist as focused routes; general activity feed is pending. |
 | 07 Manage tournament | `/admin/tournaments/new`, `/admin/tournaments/[tournamentId]` | Implemented | Photo-first partial creation, 2–8 ordered seats with persisted players shown in their saved seeds, reversible schedule lock, independent formats, three championship paths, permanent atomic draw lock, multi-set scoring, deciders, finals, and recovery-aware email controls are live. Withdrawals and post-lock substitutions remain deferred. |
 | Claymore trophy + invites | `/admin/tournaments/[tournamentId]`, `/tournaments/[tournamentId]`, `/notifications`, `/` | Implemented | An ordinary cup can own the Claymore collectible; organisers over-invite the bench by email plus Zeus, players RSVP without taking a roster seat, the director retains final-field authority, saved photo crop metadata reaches email, and official winners wear the badge in ladder history. Native push remains deferred. |
@@ -48,7 +44,8 @@ pattern changes, update this guide and the component inventory in the same task.
 | Non-Ciabatta opponents | `/matches/new`, `/matches`, `/`, `/players/[playerId]` | Implemented | Owner-private saved names, immediate unranked approval, flat +10 scoring, owner deletion with cache rebuild, a standard leaderboard history line for every player, generic shared identity, and win/loss result email are live. |
 | Courts and surfaces | `/matches/new`, `/matches/untagged`, `/courts/[courtId]`, `/players/[playerId]` | Implemented | Shared court typeahead, optional surface chips, metadata-only retro tagging, court detail/tallies, surface records, tournament defaults, and organiser merging are live. |
 | Zeus inbox | `/notifications` | Implemented | Permanent Zeus portrait/inbox across empty, read, and unread states; a dedicated top-right Zeus-avatar action updates live for the receiver through owner-filtered Realtime, with focus recovery, failure-aware mark-all-read, navigation-only actions, planned-match destinations, and weekly-deduped untagged nudges. |
-| Match workflow recovery | `/matches`, `/matches/[plannedMatchId]`, `/admin/approvals` | Implemented | Unfinished plans remain discoverable, score entry opens after the scheduled instant, either participant can submit with the correct perspective, queried scores receive append-only organiser corrections, and ordinary queried results can be corrected and resent. |
+| Match workflow recovery | `/matches`, `/matches/plan`, `/matches/[plannedMatchId]`, `/admin/approvals` | Implemented | Unfinished plans remain discoverable, score entry opens after the scheduled instant, either participant can submit with the correct perspective, queried scores receive append-only organiser corrections, and ordinary queried results can be corrected and resent. |
+| Points and practice | `/points`, `/practice/new`, `/admin/approvals` | Implemented | One documented points economy, retry-stable owner practice claims, organiser review, drought explanation, and committed-with-recovery feedback are live. |
 
 ## Implementation rules
 
@@ -77,6 +74,12 @@ inside the existing auth shell; the callback route is `/auth/confirm`.
   an absolute Melbourne timestamp before navigating to their precise target.
 - Leaderboard profile actions prefetch their dynamic destination, display an
   immediate `Opening…` state, and hand off to the profile-shaped loading route.
+
+The Playwright performance contracts verify pending-control geometry,
+route-shaped loading, reduced motion, mobile overflow, and query-shape source
+contracts against the production build. They do not currently measure latency,
+Core Web Vitals, throughput, or bundle size; quantitative budgets require a
+repeatable measurement and an ADR.
 # Calendar projection
 
 Calendar controls preserve validated URL state while grid/list, month, range,

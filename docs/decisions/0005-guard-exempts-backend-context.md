@@ -2,6 +2,7 @@
 
 - **Status:** Accepted (corrects a bootstrap assumption in ADR-0002)
 - **Date:** 2026-07-09
+- **Supersedes:** ADR-0002 (bootstrap mechanism only)
 
 ## Context
 

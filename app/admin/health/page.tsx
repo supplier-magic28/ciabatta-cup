@@ -27,6 +27,7 @@ function entityHref(entityType: string, entityId: string | null) {
   if (entityType === "planned_match" && entityId) return `/matches/${entityId}`;
   if (entityType === "practice") return "/admin/approvals?kind=practice";
   if (entityType === "match") return "/matches";
+  if (entityType === "tournament" && entityId) return `/admin/tournaments/${entityId}`;
   return null;
 }
 
@@ -42,6 +43,8 @@ export default async function AdminHealthPage() {
   const sent = health.deliveryCounts.sent ?? 0;
   const failed = health.deliveryCounts.failed ?? 0;
   const pending = health.deliveryCounts.pending ?? 0;
+  const processing = health.deliveryCounts.processing ?? 0;
+  const superseded = health.deliveryCounts.superseded ?? 0;
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:px-6">
@@ -79,15 +82,15 @@ export default async function AdminHealthPage() {
 
         <section className="border-2 border-ink bg-surface p-5 shadow-[3px_3px_0_var(--color-ink)]">
           <p className="font-mono text-[10px] uppercase tracking-[2px] text-muted">Email ledger</p>
-          <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-            {[["Sent", sent], ["Pending", pending], ["Failed", failed]].map(([label, value]) => (
+          <div className="mt-3 grid grid-cols-2 gap-2 text-center sm:grid-cols-5">
+            {[["Sent", sent], ["Pending", pending], ["Sending", processing], ["Failed", failed], ["Superseded", superseded]].map(([label, value]) => (
               <div key={label} className="border border-hairline p-2">
                 <p className="font-heading text-2xl font-bold text-ink">{value}</p>
                 <p className="font-mono text-[9px] uppercase text-muted">{label}</p>
               </div>
             ))}
           </div>
-          <p className="mt-4 font-body text-sm text-muted">Pending delivery becomes actionable after 15 minutes. Provider idempotency prevents a retry from creating a second email.</p>
+          <p className="mt-4 font-body text-sm text-muted">Committed pending work is immediately recoverable; an interrupted sending claim becomes recoverable after 15 minutes. Provider idempotency prevents a retry from creating a second email.</p>
         </section>
       </div>
 
@@ -137,7 +140,7 @@ export default async function AdminHealthPage() {
               <li key={delivery.idempotencyKey} className={`border-2 bg-surface p-4 shadow-[3px_3px_0_var(--color-ink)] ${delivery.status === "failed" ? "border-rust" : "border-crust"}`}>
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className={`font-mono text-[10px] uppercase ${delivery.status === "failed" ? "text-rust" : "text-crust"}`}>{delivery.status === "failed" ? "Failed" : "Stale pending"}</p>
+                    <p className={`font-mono text-[10px] uppercase ${delivery.status === "failed" ? "text-rust" : "text-crust"}`}>{delivery.status === "failed" ? "Failed" : delivery.status === "processing" ? "Stale sending claim" : "Pending"}</p>
                     <h3 className="mt-1 font-heading font-bold text-ink">{delivery.kind.replaceAll("_", " ")}</h3>
                   </div>
                   <span className="font-mono text-[9px] uppercase text-muted">Attempt {delivery.attemptCount}</span>

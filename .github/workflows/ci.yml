@@ -5,7 +5,32 @@ on:
   pull_request:
 
 jobs:
-  checks:
+  documentation-impact:
+    name: Documentation impact
+    runs-on: ubuntu-latest
+    env:
+      DOCS_IMPACT_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Canonical documentation checks
+        run: npm run docs:check
+      - name: Documentation checker contract tests
+        run: npm run docs:check:test
+      - name: Diff-aware documentation impact
+        run: npm run docs:impact
+      - name: Documentation impact contract tests
+        run: npm run docs:impact:test
+
+  application:
+    name: Application
     runs-on: ubuntu-latest
     env:
       NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
@@ -13,43 +38,29 @@ jobs:
       SUPABASE_SECRET_KEY: ci-placeholder
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
-
       - name: Install dependencies
         run: npm ci
-
       - name: Lint
         run: npm run lint
-
       - name: Typecheck
         run: npm run typecheck
-
-      - name: Test
+      - name: Unit tests
         run: npm run test
-
-      - name: Documentation checks
-        run: npm run docs:check
-
-      - name: Documentation check tests
-        run: npm run docs:check:test
-
       - name: Production build
         run: npm run build
-
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
-
-      - name: Performance budgets
+      - name: UI geometry and query-shape contracts
         run: npm run test:performance
-
-      - name: Browser smoke test
+      - name: Browser smoke tests
         run: npm run test:e2e
 
   database:
+    name: Database
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -59,9 +70,40 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
-      - name: Start local Supabase
+      - name: Start fresh local Supabase
         run: npm run db:start
-      - name: Database tests
+      - name: Database contract tests
         run: npm run db:test
       - name: Database lint
         run: npm run db:lint
+      - name: Destroy disposable Supabase stack
+        if: always()
+        run: npx supabase stop --no-backup
+
+  ranked-lifecycle-integration:
+    name: Ranked lifecycle integration
+    runs-on: ubuntu-latest
+    env:
+      RUN_SUPABASE_INTEGRATION: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Start fresh local Supabase
+        run: npm run db:start
+      - name: Export disposable local credentials
+        shell: bash
+        run: |
+          status="$(npx supabase status -o json)"
+          echo "NEXT_PUBLIC_SUPABASE_URL=$(jq -r '.API_URL // .api_url' <<< "$status")" >> "$GITHUB_ENV"
+          echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$(jq -r '.ANON_KEY // .PUBLISHABLE_KEY // .anon_key // .publishable_key' <<< "$status")" >> "$GITHUB_ENV"
+          echo "SUPABASE_SECRET_KEY=$(jq -r '.SERVICE_ROLE_KEY // .SECRET_KEY // .service_role_key // .secret_key' <<< "$status")" >> "$GITHUB_ENV"
+      - name: Authenticated ranked submission through public projection
+        run: npm run test:integration
+      - name: Destroy disposable Supabase stack
+        if: always()
+        run: npx supabase stop --no-backup

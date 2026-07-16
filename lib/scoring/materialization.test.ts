@@ -70,7 +70,7 @@ describe("rating cache materialization", () => {
     }
   });
 
-  it("adds tournament awards cumulatively to zero-based ordinary Elo", () => {
+  it("adds tournament awards cumulatively to public activity points", () => {
     const cache = buildRatingCache(["alice", "bob"], rows, [
       { player_id: "alice", points: 100, awarded_at: "2026-07-11T04:00:00Z" },
       { player_id: "alice", points: 100, awarded_at: "2026-08-11T04:00:00Z" },

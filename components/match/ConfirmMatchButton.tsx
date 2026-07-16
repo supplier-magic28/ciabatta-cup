@@ -24,7 +24,7 @@ export function ConfirmMatchButton({ matchId }: { matchId: string }) {
           startTransition(async () => {
             const result = await confirmMatch(matchId);
             if (!result.ok) setError(result.error);
-            else if (result.warning) setError(result.warning);
+            else if (result.warning ?? result.deliveryWarning?.message) setError(result.warning ?? result.deliveryWarning!.message);
           });
         }}
         className={

@@ -2,6 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-07-18
+- **Superseded by:** ADR-0042 (custom-email health and recovery scope only)
 
 ## Context
 

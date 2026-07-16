@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { getSessionPlayer } from "@/lib/auth/session";
 import { displayName } from "@/lib/auth/displayName";
-import { loadPublicLadderProjection } from "@/lib/scoring/publicProjection";
+import { loadLeaderboardProjection } from "@/lib/scoring/publicProjection";
 import {
   deriveLeaderboardHistory,
   type LeaderboardFixtureRow,
@@ -53,7 +53,7 @@ export default async function Home() {
   }));
   const playerById = new Map(players.map((player) => [player.id, player]));
   const activePlayerIds = new Set(players.filter((player) => player.status === "active").map((p) => p.id));
-  const projection = await loadPublicLadderProjection(players.map((player) => player.id));
+  const projection = await loadLeaderboardProjection(players.map((player) => player.id));
   const cache = projection.cache;
   const { data: historyMatchRows } = await supabase.from("matches").select("id,player1_id,player2_id,winner_id,external_won,type,status,played_at,location,tournament_id,fixture_id,match_sets(p1_games,p2_games)");
   const matchRows = historyMatchRows ?? [];

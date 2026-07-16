@@ -30,24 +30,22 @@ function mockAdmin({
     email: "test@example.com",
   } as Record<string, string> | null,
   targetError = null as { message: string } | null,
-  matchCount = 0,
-  matchError = null as { message: string } | null,
+  blockers = [] as string[],
+  blockerError = null as { message: string } | null,
   deleteError = null as { message: string } | null,
 } = {}) {
   const maybeSingle = vi.fn().mockResolvedValue({ data: target, error: targetError });
   const playerEq = vi.fn(() => ({ maybeSingle }));
   const playerSelect = vi.fn(() => ({ eq: playerEq }));
-  const matchOr = vi.fn().mockResolvedValue({ count: matchCount, error: matchError });
-  const matchSelect = vi.fn(() => ({ or: matchOr }));
+  const rpc = vi.fn().mockResolvedValue({ data: blockers, error: blockerError });
   const deleteUser = vi.fn().mockResolvedValue({ error: deleteError });
   const client = {
-    from: vi.fn((table: string) =>
-      table === "players" ? { select: playerSelect } : { select: matchSelect },
-    ),
+    from: vi.fn(() => ({ select: playerSelect })),
+    rpc,
     auth: { admin: { deleteUser } },
   };
   mocks.createAdminClient.mockReturnValue(client);
-  return { deleteUser, matchOr };
+  return { deleteUser, rpc };
 }
 
 describe("deletePlayer", () => {
@@ -67,7 +65,7 @@ describe("deletePlayer", () => {
   });
 
   it("rejects invalid ids and self-deletion", async () => {
-    mocks.getSessionPlayer.mockResolvedValue({ id: ACTOR_ID, role: "admin" });
+    mocks.getSessionPlayer.mockResolvedValue({ id: ACTOR_ID, role: "admin", status: "active" });
 
     await expect(deletePlayer(undefined, deleteForm("not-a-uuid"))).resolves.toEqual({
       error: "Invalid player.",
@@ -79,17 +77,17 @@ describe("deletePlayer", () => {
   });
 
   it("refuses to erase a player referenced by match facts", async () => {
-    mocks.getSessionPlayer.mockResolvedValue({ id: ACTOR_ID, role: "admin" });
-    const { deleteUser } = mockAdmin({ matchCount: 1 });
+    mocks.getSessionPlayer.mockResolvedValue({ id: ACTOR_ID, role: "admin", status: "active" });
+    const { deleteUser } = mockAdmin({ blockers: ["matches"] });
 
     await expect(deletePlayer(undefined, deleteForm())).resolves.toEqual({
-      error: "Players with match history cannot be deleted. Deactivate them instead.",
+      error: "Players with historical activity cannot be deleted. Deactivate them instead.",
     });
     expect(deleteUser).not.toHaveBeenCalled();
   });
 
   it("deletes an unused Auth identity and invalidates roster surfaces", async () => {
-    mocks.getSessionPlayer.mockResolvedValue({ id: ACTOR_ID, role: "admin" });
+    mocks.getSessionPlayer.mockResolvedValue({ id: ACTOR_ID, role: "admin", status: "active" });
     const { deleteUser } = mockAdmin();
 
     await expect(deletePlayer(undefined, deleteForm())).resolves.toEqual({
@@ -101,7 +99,7 @@ describe("deletePlayer", () => {
   });
 
   it("returns a friendly error when Supabase deletion fails", async () => {
-    mocks.getSessionPlayer.mockResolvedValue({ id: ACTOR_ID, role: "admin" });
+    mocks.getSessionPlayer.mockResolvedValue({ id: ACTOR_ID, role: "admin", status: "active" });
     mockAdmin({ deleteError: { message: "foreign key violation" } });
 
     await expect(deletePlayer(undefined, deleteForm())).resolves.toEqual({

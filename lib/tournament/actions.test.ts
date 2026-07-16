@@ -84,6 +84,7 @@ function replacementClient({ matchRows = [], fixtureRows = [] }: { matchRows?: u
     then: (resolve: (value: unknown) => unknown) => Promise.resolve(resolve({ error: null })),
   };
   const fixtureInsert = vi.fn().mockResolvedValue({ error: null });
+  const rpc = vi.fn().mockResolvedValue({ data: true, error: null });
 
   return {
     from: vi.fn((table: string) => {
@@ -94,6 +95,7 @@ function replacementClient({ matchRows = [], fixtureRows = [] }: { matchRows?: u
       return { select: () => replacementQuery };
     }),
     fixtureInsert,
+    rpc,
   };
 }
 
@@ -120,8 +122,8 @@ describe("recordTournamentResult", () => {
     expect(mocks.createClient).not.toHaveBeenCalled();
   });
 
-  it("reports a duplicate or transactional RPC failure without rebuilding Elo", async () => {
-    mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin" });
+  it("reports a duplicate or transactional RPC failure without rebuilding activity points", async () => {
+    mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin", status: "active" });
     mocks.createClient.mockResolvedValue(adminClient(new Error("fixture already has a result")));
     await expect(recordTournamentResult(undefined, resultForm())).resolves.toEqual({
       ok: false,
@@ -131,7 +133,7 @@ describe("recordTournamentResult", () => {
   });
 
   it("refuses to record a fixture skipped by standings completion", async () => {
-    mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin" });
+    mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin", status: "active" });
     const client = adminClient(null, { skipped_at: "2026-07-11T04:00:00.000Z" });
     mocks.createClient.mockResolvedValue(client);
     await expect(recordTournamentResult(undefined, resultForm())).resolves.toEqual({
@@ -142,7 +144,7 @@ describe("recordTournamentResult", () => {
   });
 
   it("surfaces cache rebuild failure after preserving the approved fact", async () => {
-    mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin" });
+    mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin", status: "active" });
     mocks.createClient.mockResolvedValue(adminClient());
     mocks.rebuildRatingCache.mockRejectedValue(new Error("missing service key"));
     await expect(recordTournamentResult(undefined, resultForm())).resolves.toEqual({
@@ -152,12 +154,12 @@ describe("recordTournamentResult", () => {
   });
 
   it("records, rebuilds, and invalidates tournament surfaces", async () => {
-    mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin" });
+    mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin", status: "active" });
     const client = adminClient();
     mocks.createClient.mockResolvedValue(client);
     await expect(recordTournamentResult(undefined, resultForm())).resolves.toEqual({
       ok: true,
-      message: "Result approved and Elo rebuilt.",
+      message: "Result approved and activity points rebuilt.",
     });
     expect(client.rpc).toHaveBeenCalledWith("record_tournament_result_v2", expect.objectContaining({
       p_fixture_id: "fixture-1",
@@ -183,7 +185,7 @@ describe("replaceTournamentParticipant", () => {
   });
 
   it("keeps the field locked after a result exists", async () => {
-    mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin" });
+    mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin", status: "active" });
     mocks.createClient.mockResolvedValue(replacementClient({ matchRows: [{ id: "match-1" }] }));
     await expect(replaceTournamentParticipant(undefined, replacementForm())).resolves.toEqual({
       ok: false,
@@ -192,7 +194,7 @@ describe("replaceTournamentParticipant", () => {
   });
 
   it("rejects a player who is already in the field", async () => {
-    mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin" });
+    mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin", status: "active" });
     mocks.createClient.mockResolvedValue(replacementClient());
     await expect(replaceTournamentParticipant(undefined, replacementForm("player-3"))).resolves.toEqual({
       ok: false,
@@ -201,18 +203,22 @@ describe("replaceTournamentParticipant", () => {
   });
 
   it("replaces the selected seed and writes a fresh draw", async () => {
-    mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin" });
+    mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin", status: "active" });
     const client = replacementClient({ fixtureRows: [{ id: "fixture-1" }] });
     mocks.createClient.mockResolvedValue(client);
     await expect(replaceTournamentParticipant(undefined, replacementForm())).resolves.toEqual({
       ok: true,
       message: "Player replaced and the draw was regenerated.",
     });
-    expect(client.fixtureInsert).toHaveBeenCalledOnce();
-    expect(client.fixtureInsert.mock.calls[0][0]).toEqual(expect.arrayContaining([
-      expect.objectContaining({ player1_id: "player-5" }),
-      expect.objectContaining({ player2_id: "player-5" }),
-    ]));
+    expect(client.rpc).toHaveBeenCalledWith("replace_tournament_participant_v2", expect.objectContaining({
+      p_tournament_id: "tournament-1",
+      p_outgoing_player_id: "player-4",
+      p_replacement_player_id: "player-5",
+      p_group_fixtures: expect.arrayContaining([
+        expect.objectContaining({ player1_id: "player-5" }),
+        expect.objectContaining({ player2_id: "player-5" }),
+      ]),
+    }));
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/tournaments/tournament-1");
   });
 });
@@ -229,7 +235,7 @@ describe("lockTournamentDraw", () => {
   });
 
   it("does not send email when the database refuses the lock", async () => {
-    mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin" });
+    mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin", status: "active" });
     const tournamentQuery=chain({id:"tournament-1",courts:2});
     const participantQuery=chain([{player_id:"player-1",seed:1},{player_id:"player-2",seed:2}]);
     const client = { from:vi.fn((table:string)=>({select:()=>table==="tournaments"?tournamentQuery:participantQuery})),rpc: vi.fn().mockResolvedValue({ error: new Error("checklist") }) };
@@ -253,27 +259,37 @@ describe("completeTournamentFromStandings", () => {
   });
 
   it("completes atomically through the standings RPC", async () => {
-    mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin" });
-    const client = { rpc: vi.fn().mockResolvedValue({ error: null }) };
+    mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin", status: "active" });
     const matchesQuery = { select: vi.fn(), eq: vi.fn() };
     matchesQuery.select.mockReturnValue(matchesQuery);
     matchesQuery.eq.mockResolvedValue({ data: [], error: null });
-    const placementUpsert = vi.fn().mockResolvedValue({ error: null });
-    const placementClient = { from: vi.fn((table: string) => table === "matches" ? matchesQuery : { upsert: placementUpsert }) };
-    mocks.createClient.mockResolvedValueOnce(client).mockResolvedValueOnce(placementClient);
-    mocks.loadTournamentBoard.mockResolvedValue({ tournament: { status: "completed", completion_path: "round_robin" }, standings: [], fixtures: [] });
+    const client = { from: vi.fn(() => matchesQuery), rpc: vi.fn().mockResolvedValue({ error: null }) };
+    mocks.createClient.mockResolvedValue(client);
+    mocks.loadTournamentBoard.mockResolvedValue({ tournament: { status: "scheduled", completion_path: null }, standings: [], fixtures: [] });
     mocks.deriveOfficialPlacements.mockReturnValue([]);
     mocks.rebuildRatingCache.mockResolvedValue(undefined);
     await expect(completeTournamentFromStandings(undefined, replacementForm())).resolves.toEqual({
       ok: true, message: "Tournament complete. The round-robin standings are final.",
     });
-    expect(client.rpc).toHaveBeenCalledWith("complete_tournament_from_standings_v2", { p_tournament_id: "tournament-1" });
+    expect(client.rpc).toHaveBeenCalledWith("finalize_tournament_v1", {
+      p_tournament_id: "tournament-1",
+      p_completion_path: "round_robin",
+      p_placements: [],
+    });
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/tournaments/tournament-1");
   });
 
   it("reports a required qualification decider", async () => {
-    mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin" });
-    mocks.createClient.mockResolvedValue({ rpc: vi.fn().mockResolvedValue({ error: { message: "complete the qualification decider first" } }) });
+    mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin", status: "active" });
+    const matchesQuery = { select: vi.fn(), eq: vi.fn() };
+    matchesQuery.select.mockReturnValue(matchesQuery);
+    matchesQuery.eq.mockResolvedValue({ data: [], error: null });
+    mocks.createClient.mockResolvedValue({
+      from: vi.fn(() => matchesQuery),
+      rpc: vi.fn().mockResolvedValue({ error: { message: "complete the qualification decider first" } }),
+    });
+    mocks.loadTournamentBoard.mockResolvedValue({ tournament: { status: "scheduled", completion_path: null }, standings: [], fixtures: [] });
+    mocks.deriveOfficialPlacements.mockReturnValue([]);
     await expect(completeTournamentFromStandings(undefined, replacementForm())).resolves.toEqual({
       ok: false, error: "Complete the championship decider first.",
     });

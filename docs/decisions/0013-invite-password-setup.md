@@ -2,6 +2,7 @@
 
 - **Status:** Accepted (supersedes ADR-0009's deferred password-step consequence)
 - **Date:** 2026-07-10
+- **Supersedes:** ADR-0009 (deferred password-step consequence only)
 
 ## Context
 

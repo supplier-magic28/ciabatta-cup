@@ -54,7 +54,7 @@ export interface BaseEmailParams {
 }
 
 export interface ResultEmailParams extends BaseEmailParams {
-  placement: 1 | 2 | 3 | 4;
+  placement: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
   matches: Array<{ opponentName: string; score: string; won: boolean }>;
   /** Only pass once placement points are actually awarded by the app. */
   points?: number;
@@ -212,14 +212,13 @@ View today's schedule: ${p.tournamentUrl}${textFooter}`;
 }
 
 // ------------------------------------------------------------------
-// Emails 04–07 · Results (one renderer, four placements)
-// NOTE: not wired into the app yet. Requires placement computation,
-// new email kinds in the delivery ledger, and an admin trigger.
+// Official results: one renderer for every supported placement, 1–8.
+// Completion persists each delivery intent before this renderer is called.
 // ------------------------------------------------------------------
 
 export function renderResultEmail(p: ResultEmailParams): RenderedEmail {
   const name = esc(p.firstName);
-  const hasPts = typeof p.points === 'number';
+  const hasPts = typeof p.points === 'number' && p.points > 0;
   const pts = hasPts ? String(p.points) : '';
 
   type Cfg = {
@@ -329,7 +328,29 @@ export function renderResultEmail(p: ResultEmailParams): RenderedEmail {
     },
   };
 
-  const cfg = cfgs[p.placement];
+  const fallbackOrdinal = `${p.placement}TH`;
+  const cfg = p.placement <= 4
+    ? cfgs[p.placement as 1 | 2 | 3 | 4]
+    : {
+        ordinal: fallbackOrdinal,
+        heroBg: C.ink,
+        heroFg: C.cream,
+        heroBorderBottom: `border-bottom:2px solid ${C.ink};`,
+        eyebrowColor: C.headerMuted,
+        heroSize: 56,
+        pillHtml: pill('OFFICIAL FINISH', { text: C.cream, border: C.headerMuted }),
+        trophy: false,
+        subject: `${fallbackOrdinal.toLowerCase()}. Result official, ${p.firstName}.`,
+        preheader: `Your complete tournament result is now official.`,
+        h1: `The books say ${fallbackOrdinal.toLowerCase()}, ${name}.`,
+        body: `Every match is recorded and your ${fallbackOrdinal.toLowerCase()} place is official. The next loaf starts from here.`,
+        bodyText: `Every match is recorded and your ${fallbackOrdinal.toLowerCase()} place is official. The next loaf starts from here.`,
+        seedChip: `${fallbackOrdinal} PLACE · ${SEASON_LABEL}`,
+        zeus: `The table is final, ${name}. The number is official, the tennis is remembered, and the next chapter remains gloriously unwritten.`,
+        zeusShadow: C.ink,
+        record: `Recorded: ${fallbackOrdinal.toLowerCase()} place`,
+        buttonLabel: 'See the final standings',
+      } satisfies Cfg;
   const matchRecapHtml = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:18px;border:2px solid ${C.ink};background-color:${C.card};">
     <tr><td colspan="2" style="padding:12px 14px;border-bottom:1px solid ${C.divider};font-family:${F.mono};font-size:10px;letter-spacing:2px;color:${C.crust};">YOUR TOURNAMENT</td></tr>
     ${p.matches.map((match, index) => `<tr>

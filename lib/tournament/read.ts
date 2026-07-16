@@ -3,7 +3,7 @@ import "server-only";
 import { displayName } from "@/lib/auth/displayName";
 import { indexEmbeddedSets } from "@/lib/match/embeddedSets";
 import { createClient } from "@/lib/supabase/server";
-import { deriveTournamentStandings, resolveRoundRobinPlacements } from "./logic";
+import { applyBoundaryDecider, boundaryDecider, deriveTournamentStandings } from "./logic";
 import type { TournamentResult } from "./types";
 
 export async function loadTournamentBoard(tournamentId: string) {
@@ -46,7 +46,8 @@ export async function loadTournamentBoard(tournamentId: string) {
   if (tournament.completion_path === "round_robin") {
     const deciderFixture = (fixtures ?? []).find((fixture) => fixture.stage === "tiebreak");
     const deciderWinnerId = deciderFixture ? matchByFixture.get(deciderFixture.id)?.winner_id ?? null : null;
-    standings = resolveRoundRobinPlacements(standings, deciderWinnerId);
+    const pair = boundaryDecider(standings, "standings");
+    if (pair && deciderWinnerId) standings = applyBoundaryDecider(standings, "standings", deciderWinnerId);
   }
   const championId = tournament.completion_path === "round_robin"
     ? standings[0]?.playerId ?? null

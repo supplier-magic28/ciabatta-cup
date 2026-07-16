@@ -128,17 +128,24 @@ export function deriveTournamentStandings(
     standing.gameDifference = standing.gamesWon - standing.gamesLost;
   }
 
-  const headToHeadWinner = new Map<string, string>();
+  // Head-to-head is a mini-league inside an otherwise tied wins/game-difference
+  // cohort. This is deterministic for two-way and multi-way ties and mirrors
+  // the authoritative database standings function.
+  const headToHeadWins = new Map<string, number>();
   for (const result of results) {
-    headToHeadWinner.set([result.player1Id, result.player2Id].sort().join(":"), result.winnerId);
+    const winner = standings.get(result.winnerId);
+    const loserId = result.winnerId === result.player1Id ? result.player2Id : result.player1Id;
+    const loser = standings.get(loserId);
+    if (winner && loser && winner.won === loser.won && winner.gameDifference === loser.gameDifference) {
+      headToHeadWins.set(result.winnerId, (headToHeadWins.get(result.winnerId) ?? 0) + 1);
+    }
   }
 
   return [...standings.values()].sort((a, b) => {
     if (a.won !== b.won) return b.won - a.won;
     if (a.gameDifference !== b.gameDifference) return b.gameDifference - a.gameDifference;
-    const headToHead = headToHeadWinner.get([a.playerId, b.playerId].sort().join(":"));
-    if (headToHead === a.playerId) return -1;
-    if (headToHead === b.playerId) return 1;
+    const headToHead = (headToHeadWins.get(b.playerId) ?? 0) - (headToHeadWins.get(a.playerId) ?? 0);
+    if (headToHead !== 0) return headToHead;
     return a.seed - b.seed || a.playerId.localeCompare(b.playerId);
   });
 }

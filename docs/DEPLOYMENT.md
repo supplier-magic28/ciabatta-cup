@@ -1,59 +1,61 @@
-# Production Release Runbook
+# Production release and recovery runbook
 
-Use this runbook when the league loop is ready to go live. It covers account
-configuration that cannot be committed to the repository.
+The production origin is `https://ciabatta-cup.app`. This runbook covers the
+account-bound configuration and compatible migration/application sequence that
+cannot be enforced entirely in source control.
 
-## 1. Apply Supabase migrations
+## 1. Preflight and release gate
 
-Link the Supabase CLI to the intended project, then apply every committed
-migration in order:
+From a clean checkout with valid dotenv syntax:
 
 ```bash
-supabase link
-supabase db push
+npm install
+npm run verify
+npm run db:start
+npm run db:test
+npm run db:lint
 ```
 
-Confirm that `20260710020000_advance_on_confirmation.sql`,
-`20260710030000_rating_cache.sql`, and
-`20260710040000_ciabatta_reigns.sql` are present in the project migration
-history. Apply `20260710060000_unranked_players_zero_points.sql` before
-`20260710070000_tournament_day_release.sql`. Do not deploy tournament routes or
-run the cache rebuild until the final migration is applied.
+Do not merge when a required check is skipped. GitHub branch protection for
+`main` must require the application verification, database-from-scratch,
+documentation-impact, and authenticated integration jobs. The integration job
+uses disposable player/opponent/admin accounts and proves ranked submit ->
+confirm -> approve -> cache rebuild -> exact ladder/profile agreement.
 
-## 2. Configure Vercel
+## 2. Environment and providers
 
-The Vercel project is connected to `supplier-magic28/ciabatta-cup`. Add
-`ciabatta-cup.app` to the project under **Settings -> Domains** and make it the
-canonical production domain. Configure these environment variables:
+Configure Production and Preview in Vercel:
 
 ```text
 NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 SUPABASE_SECRET_KEY
 NEXT_PUBLIC_SITE_URL=https://ciabatta-cup.app
+RESEND_API_KEY
+TOURNAMENT_EMAIL_FROM=Ciabatta Cup <verified@ciabatta-cup.app>
 ```
 
-The three Supabase values belong in Production and Preview. Set
-`NEXT_PUBLIC_SITE_URL` to the canonical value in Production; previews may omit
-it so request-origin fallback remains available. Redeploy `main` after an
-environment-variable change. Keep the secret key server-only; do not add it to
-a browser variable or repository file.
+The publishable values may reach the browser. `SUPABASE_SECRET_KEY`,
+`RESEND_API_KEY`, and `TOURNAMENT_EMAIL_FROM` are server-only. Verify the Resend
+sending domain and sender before testing custom match, practice, planned-match,
+RSVP, or tournament mail. Resend receives the outbox idempotency key so an
+ambiguous retry cannot create a second message.
 
-## 3. Configure Supabase Auth
-
-In **Authentication -> URL Configuration**, set:
+In Supabase Auth URL Configuration set:
 
 ```text
 Site URL: https://ciabatta-cup.app
-Redirect URL: https://ciabatta-cup.app/auth/confirm?next=%2F
-Recovery redirect: https://ciabatta-cup.app/auth/confirm?next=%2Fupdate-password
-Local redirect: http://localhost:3000/auth/confirm?next=%2F
-Local recovery redirect: http://localhost:3000/auth/confirm?next=%2Fupdate-password
+Invite callback: https://ciabatta-cup.app/auth/confirm?next=%2F
+Recovery callback: https://ciabatta-cup.app/auth/confirm?next=%2Fupdate-password
+Local invite callback: http://localhost:3000/auth/confirm?next=%2F
+Local recovery callback: http://localhost:3000/auth/confirm?next=%2Fupdate-password
 ```
 
-Configure custom SMTP with the verified `ciabatta-cup.app` sender domain. In
-**Authentication -> Email Templates -> Invite user**, ensure the acceptance
-link passes the OTP directly to the server-side confirmation route:
+Configure Supabase custom SMTP with the verified domain and disable click
+tracking for Auth links. Auth mail is provider-owned and intentionally does not
+enter the product custom-email outbox.
+
+Invite template:
 
 ```html
 <a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=invite">
@@ -61,12 +63,7 @@ link passes the OTP directly to the server-side confirmation route:
 </a>
 ```
 
-Disable click tracking for authentication email links so the provider does not
-rewrite them. Send a real invite only after the SMTP sender, template, Site URL,
-and redirect allow-list are saved.
-
-In **Authentication -> Email Templates -> Reset password**, use the server-side
-callback link:
+Recovery template:
 
 ```html
 <a href="https://ciabatta-cup.app/auth/confirm?next=%2Fupdate-password&token_hash={{ .TokenHash }}&type=recovery">
@@ -74,44 +71,167 @@ callback link:
 </a>
 ```
 
-## 4. Backfill and smoke-test
+## 3. Apply migrations compatibly
 
-1. Open `https://ciabatta-cup.app`, sign in as an admin, and use **Rebuild
-   ratings** on `/admin/approvals`.
-2. Invite a new player and confirm the email link begins with
-   `https://ciabatta-cup.app/auth/confirm` before completing it. Confirm it lands
-   on `/accept-invite`, choose a password, sign out, and sign back in with it.
-3. Confirm the accepted player's roster status changed from invited to active.
-4. Submit a ranked match, confirm as the opponent, and approve as the admin.
-5. Verify the leaderboard, holder banner, reign count, and both player profiles
-   update from the approved result.
-6. Run `npm run test:e2e` locally; CI runs the same anonymous-route browser
-   smoke test for every push and pull request.
+Applied migration files are immutable. Link the intended Supabase project,
+inspect pending history, and apply committed SQL in filename order:
 
-## 5. Prepare the Ciabatta Qualifier
+```bash
+supabase link
+supabase migration list
+supabase db push
+```
 
-1. Open `/admin/tournaments/new` and keep the defaults: **Ciabatta Qualifier**,
-   11 July 2026 at 10:30 AM, Northcote Tennis Club, and two courts.
-2. Set seed order to Ben, String, Michaels, then Ringo. Create the tournament and
-   select **Generate fixtures**.
-3. Verify Round 1 is Ben/String and Michaels/Ringo; Round 2 is Ben/Michaels and
-   Ringo/String; Round 3 is Ben/Ringo and String/Michaels.
-4. Open the player view and verify the event time, venue, empty standings, and
-   six pending fixtures. Do not enter a production score as a rehearsal because
-   approved match facts are immutable.
-5. On the day, enter each score from the director console. Select **Advance
-   tournament** after all six group matches, after any generated decider, and
-   after both placement matches to mark the event complete.
+For the current hardening release:
 
-If a result succeeds but the Elo rebuild fails, keep the approved match intact,
-repair the service-key or migration configuration, and use **Rebuild ratings**
-on `/admin/approvals`.
+1. Confirm production is healthy through
+   `20260718126000_cup_trophies_and_invites.sql`. The committed operations file
+   already targets health v5, so take the pre-migration SQL Editor snapshot with
+   the version that exists at migration 126:
 
-If cache rebuilding fails, keep the match facts intact, fix the server secret or
-migration state, then run the admin rebuild again.
+   ```sql
+   select public.core_backend_health_v2();
+   ```
+2. Enter read-only maintenance for domain mutations and custom-email actions,
+   then let in-flight application requests drain. Migration 127 begins writing
+   unified intents while the old application acknowledges delivery only in
+   legacy ledgers, so this release has no unattended mixed-write window.
+3. Apply these **additive** migrations consecutively in exact order before
+   deploying callers:
 
-## Password recovery verification
+   - `20260718127000_unified_email_delivery_outbox.sql`;
+   - `20260718128000_workflow_consistency_hardening.sql`;
+   - `20260718129000_transaction_invariant_repairs.sql`.
 
-Request a reset from `/forgot-password` and confirm the email redirects through
-`/auth/confirm?next=%2Fupdate-password`, then shows the two-field password form.
-Set and confirm the new password at `/update-password`, then sign in again.
+   They add the unified outbox, active/fact-safe workflow boundaries, clean-
+   stack grants, payload-safe retry checks, canonical tournament standings/
+   placement and draw/replacement/cover RPCs, legacy-ledger reconciliation,
+   and `core_backend_health_v5`. Migration 129 promotes conflicting legacy
+   `sent`/`failed` receipts into already-created outbox rows so delivered mail
+   cannot reappear as actionable recovery work.
+4. Run `supabase/ops/core_backend_health.sql` immediately after migration 129.
+   Confirm recent legacy claims remain `processing`, legacy sent receipts are
+   terminal in the outbox, superseded intent is non-actionable, required
+   infrastructure is present, and no new integrity issue exists.
+5. Deploy the application version that uses the unified outbox,
+   `submit_practice_v1`, v2 RSVP, scoped metadata completion, atomic group draw/
+   participant replacement/stage/finalisation/cover RPCs, deletion blockers,
+   and health v5. Ensure every old application instance has drained.
+6. While general writes remain frozen, perform the core and cup/RSVP smoke tests
+   below. Smoke one reconstructable delivery and verify its row reaches `sent`
+   or a recoverable `failed` state. Require
+   `fact_version = built_version`, zero genuine drift, exact participant/
+   placement set agreement, and no lifecycle integrity issue.
+7. Only then apply `20260718130000_rpc_mutation_path_enforcement.sql`. It revokes
+   obsolete direct practice, RSVP, email-ledger, and broad cup mutation paths;
+   activates active-member Storage policies; and installs transaction-marker
+   guards around championship stages, placements, and completion.
+8. Repeat health, practice retry, RSVP, group draw/replacement, stage,
+   completion, cover, and delivery recovery checks against the enforced
+   boundary, then reopen general mutations.
+
+A plain `supabase db push` from a checkout containing migrations 127-130 applies
+all four pending files and bypasses the enforcement gate. For this release,
+apply each whole file separately in the SQL Editor or deploy from staged
+artifacts. If SQL Editor is used, repair remote migration history after each
+successful stage; direct SQL execution does not record migration versions.
+
+Never deploy routes that call a new RPC before its additive migration, and never
+apply migration 130 while any live application instance still uses a direct
+write it revokes. After enforcement, recover with a forward migration/application
+fix; never edit an applied migration or roll an old direct-write client back
+into service.
+
+## 4. Core production smoke test
+
+Use non-disposable genuine accounts only for a real result; approved facts are
+immutable.
+
+1. Sign in as an active member and submit a ranked result with a stable
+   operation key. Verify one match, all sets, submitter confirmation, opponent
+   Zeus card, and both ranked-log email intents.
+2. Sign in as the opponent, confirm, and verify the match moves to
+   `pending_approval` and active organisers receive one deduped review card.
+3. Sign in as an active organiser and approve. Verify the fact is immutable and
+   the cache rebuild completes after the transaction.
+4. Confirm `/admin/health` has matching cache versions, no drift or lifecycle
+   issue, and only genuinely actionable email rows.
+5. Compare the exact activity total, ordinary Elo history, ladder position,
+   points timeline, and both player profiles. They must agree with the same
+   canonical projection.
+6. Retry the same creation/confirmation/approval inputs. Verify no duplicate
+   match, confirmation, Zeus row, email intent, or provider delivery.
+7. Submit one genuine practice claim and retry its captured operation key.
+   Verify `submit_practice_v1` returns the same fact ID, there is one pending row
+   and one `practice_logged` intent, and pending creation does not advance the
+   scoring fact version. Approve or reject it through the normal organiser
+   review path.
+
+Also verify an inactive player and inactive admin can still read permitted
+history but cannot submit, review, invite, tag, or manage a cup.
+
+## 5. Configurable cup and RSVP smoke test
+
+1. Create a draft cup with timezone, start time, venue/court, optional default
+   surface, cover/crop, seat count, group/playoff formats, and championship
+   path. Save and reload each configuration stage; verify cover/crop changes use
+   `update_tournament_cover_v1` after enforcement.
+2. Invite bench players with a browser-offset-aware response deadline. Verify
+   one generation-specific Zeus card and outbox intent per player. Retrying
+   delivery must not change RSVP state; re-inviting an expired player advances
+   generation; an accepted RSVP remains accepted.
+3. Confirm RSVP does not alter the ordered roster. Fill every seat with active
+   players, review the generated draw, and permanently lock it. Verify locked-in
+   intents exist for the complete roster and all frozen fields reject edits.
+   Before lock, repeat the exact group-draw replacement and one participant
+   substitution; verify exact retries do not rewrite, conflicting payloads fail,
+   and roster plus regenerated draw never become partially visible.
+4. Record every fixture with its ruleset. Verify each result is immediately
+   approved, immutable, stamped with tournament metadata, and excluded from
+   ordinary activity/Elo awards.
+5. Advance through any tiebreak/semifinal/final stages. Repeat each advance and
+   confirm no duplicate fixtures; a conflicting payload must fail and exact
+   pairings must match canonical database standings.
+6. Complete the cup. Verify completion and every 1-N placement commit together,
+   public activity points use 100/50/20/10/0..., and the first-place trophy is
+   derived from that placement.
+7. Send official result mail and verify every persisted placement 1-8 receives
+   exactly one recap, including zero-point placements.
+
+## 6. Health, email, and cache recovery
+
+`/admin/health` is the primary organiser surface. The equivalent SQL report is
+`supabase/ops/core_backend_health.sql`, which calls
+`core_backend_health_v5()`. The current projection reports:
+
+- scoring `fact_version`, `built_version`, last build, and genuine drift;
+- guarded lifecycle inconsistencies;
+- completed cups whose participant and placement sets differ, even when counts
+  happen to match;
+- required status/notification/outbox triggers and Realtime publication;
+- pending, failed, and fifteen-minute-stale custom email deliveries.
+
+For cache drift, preserve the source facts, repair configuration/migration
+state, and use the organiser rebuild. A version race retries once; persistent
+drift requires investigation before another lifecycle release.
+
+For custom email, retry only through the guarded health action. It reloads the
+canonical entity and recipient, reuses the original idempotency key, and never
+accepts an address/body from the browser. A provider-accepted message whose
+receipt could not be saved is safe to retry with the same key. A sent row cannot
+be rewritten with another provider receipt. Superseded rows are retained for
+audit but are not retryable; unknown legacy kinds remain manual diagnostics.
+
+For an integrity issue, stop consequential mutations for that workflow, retain
+all facts, inspect the named entity IDs, and repair with a reviewed forward-only
+migration. Never edit an applied migration or delete an approved fact to make
+the health panel green.
+
+## 7. Auth verification
+
+Invite a test identity and verify the email reaches `/auth/confirm`, then
+`/accept-invite`; set a password and confirm the profile becomes active only
+after password persistence. Request recovery from `/forgot-password`, follow
+the recovery callback, update the password, and sign in again. Confirm safe
+internal `next` paths survive authentication while external/protocol-relative
+destinations are rejected.

@@ -29,6 +29,13 @@ export async function sendPlannedLifecycleEmail(
     .eq("id", plannedMatchId)
     .single();
   if (!plan) throw new Error("Planned match not found.");
+  const lockedStates = new Set(["locked_in","awaiting_result_approval","awaiting_result_correction","awaiting_admin_approval","confirmed"]);
+  if (kind === "locked" && !lockedStates.has(plan.status)) {
+    throw new Error("Planned locked-in email no longer matches canonical facts.");
+  }
+  if (kind === "confirmed" && plan.status !== "confirmed") {
+    throw new Error("Planned confirmed email no longer matches canonical facts.");
+  }
 
   const ids = [plan.created_by, plan.opponent_player_id].filter(
     (id): id is string => Boolean(id),
@@ -38,6 +45,9 @@ export async function sendPlannedLifecycleEmail(
     .select("id,email,first_name")
     .in("id", ids);
   const allRecipients = people ?? [];
+  if (allRecipients.length !== ids.length || allRecipients.some((person) => !person.email)) {
+    throw new Error("The complete planned-match email recipient set is unavailable.");
+  }
   const recipients = targetPlayerId
     ? allRecipients.filter((person) => person.id === targetPlayerId)
     : allRecipients;

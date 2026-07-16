@@ -14,7 +14,7 @@ export function ApproveResultButton({ id }: { id: string }) {
     setError(""); setAction(kind);
     start(async () => {
       const result = kind === "approve" ? await approvePlannedResult(id) : await requestPlannedResultCorrection(id);
-      if (!result.ok) setError(result.error); else router.refresh();
+      if (!result.ok) setError(result.error); else { setError(result.deliveryWarning?.message ?? ""); router.refresh(); }
       setAction(null);
     });
   };
