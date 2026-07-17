@@ -37,9 +37,11 @@ action.
 
 Use the production HTTPS origin on a real supported Android phone:
 
-1. Open the owned Ciabatta Qualifier Cup detail sheet and confirm the renamed
-   award and enabled 3D CTA enter the viewer. Repeat with an owned Claymore when
-   available to cover its lineage ledger.
+1. Before the Claymore tournament completes, open its director console and use
+   **Preview trophy in 3D/AR** to test the exact production model and Android
+   placement stage without creating a winner or engraving. Open the owned
+   Ciabatta Qualifier Cup detail sheet to cover the completed-award path, then
+   repeat with an owned Claymore after completion to cover its lineage ledger.
 2. Confirm the poster resolves into the model, drag rotates it, pinch zooms it,
    the engraving ledger is chronological, and Close returns to the same sheet.
 3. Select **Place in your space**, accept camera access, detect a horizontal

@@ -142,7 +142,9 @@ of Done (`CLAUDE.md`).
   WebXR/Scene Viewer launcher with capability, load/error, permission-failure,
   poster, and reduced-motion states. Android candidates retain an explicit
   Scene Viewer floor-placement fallback while asynchronous capability detection
-  settles; the application never captures the camera directly.
+  settles; the application never captures the camera directly. The admin
+  tournament preview reuses this exact production stage before a winner exists
+  without fabricating an award or engraving.
 - `tournament/CupInviteConsole` — organiser bench multi-invite and RSVP status
   surface; it submits the browser timezone offset with the local deadline,
   preserves accepted responses across delivery retry, and keeps responses

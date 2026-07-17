@@ -58,7 +58,10 @@ model in `docs/SCHEMA.md`, and decision history in the ADR index.
   asynchronous capability detection settles and fall back to an explicit
   `ar_preferred` Scene Viewer floor-placement intent. Model files bypass
   authentication for platform handoff, while iPhone Quick Look stays disabled
-  until physical-device testing is available.
+  until physical-device testing is available. Registered tournament trophies
+  also expose an admin-only pre-event preview from the director console, so the
+  exact production model and Android floor-placement stage can be tested before
+  a winner exists without creating a placement, award, or engraving.
 
 ## Latest verification
 
@@ -74,8 +77,8 @@ syntax issue recorded below.
 | Vitest | 288 tests passed; one fresh-Supabase integration test skipped by design |
 | Documentation gates | `docs:check` and `docs:impact` passed; structural fixtures 16/16 and impact fixtures 8/8 passed |
 | Production build | Passed |
-| UI performance contracts | 11/11 passed; these are geometry/query-shape contracts only |
-| Browser smoke | 9/9 passed on a runner-owned dynamic port, including public immutable GLB delivery and exact preserved `next` destinations |
+| UI performance contracts | 12/12 passed; these are geometry/query-shape contracts only |
+| Browser smoke | 10/10 passed on a runner-owned dynamic port, including public immutable GLB delivery and exact preserved `next` destinations |
 | Database pgTAP/lint | All 256 declared pgTAP assertions passed locally and on a fresh CI stack (27+21+18+10+50+56+74); database lint passed after clean migration application |
 | Authenticated ranked integration | Passed on a disposable Node 24/Supabase stack: ranked submit, opponent confirm, organiser approve, cache rebuild, and exact ladder/profile agreement |
 | Production post-129 health | Operator-reported zero drift, no integrity issues, 18 sent deliveries, and no actionable deliveries |

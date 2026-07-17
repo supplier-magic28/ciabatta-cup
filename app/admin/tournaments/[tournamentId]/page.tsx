@@ -13,6 +13,7 @@ import { PARENT_ROUTES } from "@/lib/navigation/parents";
 import { WorkflowZeusInboxAction } from "@/components/notifications/ZeusInboxButton";
 import { CupInviteConsole } from "@/components/tournament/CupInviteConsole";
 import { createClient } from "@/lib/supabase/server";
+import { getRegisteredTrophyAsset } from "@/lib/trophies/assets";
 
 export default async function ManageTournamentPage({ params }: { params: Promise<{ tournamentId: string }> }) {
   const admin = await getSessionPlayer();
@@ -26,6 +27,9 @@ export default async function ManageTournamentPage({ params }: { params: Promise
     db.from("tournament_invites").select("player_id,status,hold_until").eq("tournament_id",tournamentId),
   ]);
   if (!board) notFound();
+  const trophyAsset = board.tournament.trophy_key
+    ? getRegisteredTrophyAsset(board.tournament.trophy_key)
+    : null;
   const canGenerate = board.fixtures.length === 0;
   const groupFixtures = board.fixtures.filter((fixture) => fixture.stage === "group");
   const groupComplete = groupFixtures.length > 0 && groupFixtures.every((fixture) => board.matchByFixture.has(fixture.id));
@@ -75,7 +79,12 @@ export default async function ManageTournamentPage({ params }: { params: Promise
           <h1 className="font-heading text-3xl font-bold">{board.tournament.name}</h1>
           <p className="mt-1 font-mono text-[10px] uppercase text-muted">Scores are approved immediately and cannot be edited.</p>
         </div>
-        <div className="flex gap-4 font-mono text-[10px] uppercase text-muted">
+        <div className="flex flex-wrap justify-end gap-4 font-mono text-[10px] uppercase text-muted">
+          {trophyAsset && (
+            <Link href={`/admin/tournaments/${tournamentId}/trophy-preview`}>
+              Preview trophy in 3D/AR
+            </Link>
+          )}
           <Link href={`/tournaments/${tournamentId}`}>Player view</Link>
           <BackLink href={PARENT_ROUTES.cups}>All cups</BackLink>
         </div>

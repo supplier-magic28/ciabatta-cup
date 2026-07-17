@@ -118,3 +118,19 @@ for (const [shape, ratio] of [["wide",16/7],["square",1],["three_two",3/2]] as c
 test("trophy viewer remains usable in a short narrow viewport",async({page})=>{await page.setViewportSize({width:320,height:500});const viewerCss=readFileSync(path.join(process.cwd(),"components/trophies/TrophyViewer.module.css"),"utf8");await page.setContent(`<style>${productionCss()}${viewerCss}</style><main class="viewer"><header class="header"><div><p class="eyebrow">Your trophy</p><h1>The Claymore</h1></div><a id="close" class="close">×</a></header><div class="layout"><section class="stagePanel"><div class="modelStage"><p class="gestureHint">Drag to inspect</p></div></section><aside class="story"><ol class="engravings"><li><span>A long champion name</span><b>Champion · 2027</b><small>A long tournament and location name</small></li></ol></aside></div></main>`);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);const close=await page.locator("#close").boundingBox();expect(close!.width).toBeGreaterThanOrEqual(44);expect(close!.height).toBeGreaterThanOrEqual(44);expect((await page.locator(".stagePanel").boundingBox())!.width).toBeLessThanOrEqual(320);});
 
 test("Android AR integration keeps floor-placement fallback without direct camera capture",()=>{const stage=readFileSync(path.join(process.cwd(),"components/trophies/TrophyModelStage.tsx"),"utf8");const controls=readFileSync(path.join(process.cwd(),"lib/trophies/viewer.ts"),"utf8");expect(stage).toContain('"ar-modes":"webxr scene-viewer"');expect(stage).toContain('"ar-placement":"floor"');expect(stage).toContain("canActivateAR");expect(stage).toContain("androidSceneViewerIntent");expect(controls).toContain("mode=ar_preferred");expect(stage).not.toContain("quick-look");expect(stage).not.toContain("getUserMedia");});
+
+test("director trophy preview reuses production AR without fabricating a winner", () => {
+  const source = readFileSync(
+    path.join(
+      process.cwd(),
+      "app/admin/tournaments/[tournamentId]/trophy-preview/page.tsx",
+    ),
+    "utf8",
+  );
+
+  expect(source).toContain('admin.role !== "admin"');
+  expect(source).toContain("getRegisteredTrophyAsset");
+  expect(source).toContain("<TrophyModelStage");
+  expect(source).toContain("Winner not decided");
+  expect(source).not.toContain("tournament_placements");
+});

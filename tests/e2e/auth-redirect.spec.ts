@@ -41,7 +41,7 @@ test("3D trophy assets are public for Android AR handoff", async ({ request }) =
   expect((await modelResponse.body()).byteLength).toBeGreaterThan(0);
 });
 
-for (const route of ["/tournaments", "/tournaments/example/trophy", "/admin/tournaments/new", "/admin/health", "/profile"]) {
+for (const route of ["/tournaments", "/tournaments/example/trophy", "/admin/tournaments/new", "/admin/tournaments/example/trophy-preview", "/admin/health", "/profile"]) {
   test(`anonymous visitors cannot open ${route}`, async ({ page }) => {
     await page.goto(route);
     await expect(page).toHaveURL((url) => url.pathname === "/sign-in" && url.searchParams.get("next") === route);
