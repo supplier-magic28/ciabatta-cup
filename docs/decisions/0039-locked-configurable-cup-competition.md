@@ -2,6 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-07-18
+- **Superseded by:** ADR-0045 (irreversible draw-lock scope only)
 
 ## Context
 

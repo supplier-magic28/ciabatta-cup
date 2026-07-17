@@ -138,16 +138,16 @@ but cache or delivery recovery remains available at `/admin/health`.
 | Contract | Current behaviour |
 | --- | --- |
 | Actor/status | Active organiser creates/configures a draft cup and selects only active roster members. |
-| Transaction boundary | Versioned tournament RPCs own create/configuration and permanent `lock_tournament_draw_v2`. `replace_tournament_group_draw_v1` validates and replaces the complete group schedule; `replace_tournament_participant_v2` commits the seed-preserving substitution plus regenerated draw; `update_tournament_cover_v1` owns crop metadata. Each locks/validates its cup before mutation. |
-| Transitions | `draft` configuration -> permanently locked `scheduled`; roster, formats, schedule, path, cover, and trophy freeze at draw lock. |
-| Idempotency | An exact group-draw or participant-replacement retry returns without rewriting; conflicting retry payloads fail. Draw pairings and schedule slots must be complete and unique. Locked-in email keys are recipient-stable. |
+| Transaction boundary | Versioned tournament RPCs own create/configuration, `lock_tournament_draw_v2`, and the pre-play recovery boundary `unlock_tournament_draw_v1`. `replace_tournament_group_draw_v1` validates and replaces the complete group schedule; `replace_tournament_participant_v2` commits the seed-preserving substitution plus regenerated draw; `update_tournament_cover_v1` owns crop metadata. Each locks/validates its cup before mutation. |
+| Transitions | `draft` configuration -> locked `scheduled`; an active organiser may return it to editable `draft` only while no result or placement exists, then must lock again before play. The schedule remains separately locked until deliberately reopened. After the first result, roster, formats, schedule, path, cover, and trophy remain permanently frozen. |
+| Idempotency | Pre-play unlock returns without rewriting when already unlocked. An exact group-draw or participant-replacement retry returns without rewriting; conflicting retry payloads fail. Draw pairings and schedule slots must be complete and unique. Locked-in email keys are recipient-stable, so a substituted player receives their new intent while already-delivered recipients are not duplicated. |
 | Approval | Organiser is the sole director. Draw lock is the only final-field and rules approval boundary. |
 | Scoring | Configuration and lock do not affect scoring or fact version. |
 | Zeus/dedupe | No general draw-lock Zeus event. RSVP Zeus is WF-009. |
 | Email/recovery | Draw lock transaction enqueues `tournament_locked_in` for every roster member. Game-day delivery is an explicit organiser command. Both use the unified outbox. |
-| Post-commit result | Lock remains committed if provider work fails and returns warnings; later resend claims only unsent work. |
-| Contract tests | Configurable-cup and transaction-invariant pgTAP plus tournament logic, action, photo/crop, and email tests. |
-| Classification | Organiser-only configuration and irreversible final lock are **intentional**. |
+| Post-commit result | Lock remains committed if provider work fails and returns warnings; later resend claims only unsent work. Unlock commits independently of prior sent locked-in mail and exposes the lead-up editor immediately. |
+| Contract tests | Configurable-cup, pre-play-unlock, and transaction-invariant pgTAP plus tournament logic, action, photo/crop, and email tests. |
+| Classification | Organiser-only configuration, reversible pre-play recovery, and permanent freeze after the first result are **intentional**. |
 
 ## WF-008 - Cup result, advancement, and completion
 

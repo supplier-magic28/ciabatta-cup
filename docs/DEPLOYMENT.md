@@ -103,12 +103,14 @@ For the current hardening release:
 
    - `20260718127000_unified_email_delivery_outbox.sql`;
    - `20260718128000_workflow_consistency_hardening.sql`;
-   - `20260718129000_transaction_invariant_repairs.sql`.
+   - `20260718129000_transaction_invariant_repairs.sql`;
+   - `20260718129500_preplay_draw_unlock.sql`.
 
    They add the unified outbox, active/fact-safe workflow boundaries, clean-
    stack grants, payload-safe retry checks, canonical tournament standings/
    placement and draw/replacement/cover RPCs, legacy-ledger reconciliation,
-   and `core_backend_health_v5`. Migration 129 promotes conflicting legacy
+   `core_backend_health_v5`, and guarded pre-play draw recovery. Migration 129
+   promotes conflicting legacy
    `sent`/`failed` receipts into already-created outbox rows so delivered mail
    cannot reappear as actionable recovery work.
 4. Run `supabase/ops/core_backend_health.sql` immediately after migration 129.
@@ -117,8 +119,9 @@ For the current hardening release:
    infrastructure is present, and no new integrity issue exists.
 5. Deploy the application version that uses the unified outbox,
    `submit_practice_v1`, v2 RSVP, scoped metadata completion, atomic group draw/
-   participant replacement/stage/finalisation/cover RPCs, deletion blockers,
-   and health v5. Ensure every old application instance has drained.
+   participant replacement/stage/finalisation/cover RPCs, the pre-play draw
+   unlock, deletion blockers, and health v5. Ensure every old application
+   instance has drained.
 6. While general writes remain frozen, perform the core and cup/RSVP smoke tests
    below. Smoke one reconstructable delivery and verify its row reaches `sent`
    or a recoverable `failed` state. Require
@@ -131,12 +134,12 @@ For the current hardening release:
    supplies explicit clean-stack service-role reads and organiser-bootstrap
    access plus the guarded invitee activation columns required when automatic
    Data API grants are disabled.
-8. Repeat health, practice retry, RSVP, group draw/replacement, stage,
+8. Repeat health, practice retry, RSVP, pre-play draw unlock/relock, group draw/replacement, stage,
    completion, cover, and delivery recovery checks against the enforced
    boundary, then reopen general mutations.
 
 A plain `supabase db push` from a checkout containing migrations 127-130 applies
-all four pending files and bypasses the enforcement gate. For this release,
+all five pending files and bypasses the enforcement gate. For this release,
 apply each whole file separately in the SQL Editor or deploy from staged
 artifacts. If SQL Editor is used, repair remote migration history after each
 successful stage; direct SQL execution does not record migration versions.

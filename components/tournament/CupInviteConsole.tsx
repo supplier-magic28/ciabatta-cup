@@ -26,7 +26,7 @@ export function CupInviteConsole({
     <section className="mb-8 border-2 border-ink bg-surface p-5 shadow-[4px_4px_0_var(--color-crust)]">
       <p className="font-mono text-[9px] uppercase tracking-[2px] text-crust">Cup invitations · RSVP</p>
       <h2 className="font-heading text-2xl font-bold">Invite the bench to chase the trophy</h2>
-      <p className="mt-2 text-sm text-muted">Responses show intent. You still choose the final roster and permanently confirm it at draw lock.</p>
+      <p className="mt-2 text-sm text-muted">Responses show intent. You still choose and confirm the final roster at draw lock.</p>
       <form
         action={(data) => {
           const selectedDeadline = new Date(String(data.get("deadline") ?? ""));

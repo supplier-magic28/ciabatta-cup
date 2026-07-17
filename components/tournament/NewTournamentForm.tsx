@@ -61,7 +61,7 @@ export function NewTournamentForm({ players, courts: courtOptions }: { players: 
       </fieldset>
 
       <div className="border-2 border-hairline bg-row p-4 font-mono text-[11px] leading-5 text-muted">
-        You can create an empty cup. Lock the schedule, choose formats and a championship path, fill every seat, then add a cover before the permanent draw lock.
+        You can create an empty cup. Lock the schedule, choose formats and a championship path, fill every seat, then add a cover before confirming the draw.
       </div>
       {state && !state.ok && <p className="font-mono text-[12px] text-rust" aria-live="polite">{state.error}</p>}
       {state?.ok && state.tournamentId ? (

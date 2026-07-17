@@ -16,7 +16,7 @@ vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 vi.mock("./read", () => ({ loadTournamentBoard: mocks.loadTournamentBoard }));
 vi.mock("./placements", () => ({ deriveOfficialPlacements: mocks.deriveOfficialPlacements }));
 
-import { completeTournamentFromStandings, lockTournamentDraw, recordTournamentResult, replaceTournamentParticipant } from "./actions";
+import { completeTournamentFromStandings, lockTournamentDraw, recordTournamentResult, replaceTournamentParticipant, unlockTournamentDraw } from "./actions";
 
 function resultForm() {
   const form = new FormData();
@@ -244,6 +244,37 @@ describe("lockTournamentDraw", () => {
       ok: false, error: "Couldn't lock the draw. Generate and review it first.",
     });
     expect(client.rpc).toHaveBeenCalledWith("lock_tournament_draw_v2", expect.objectContaining({ p_tournament_id: "tournament-1",p_group_fixtures:expect.any(Array) }));
+  });
+});
+
+describe("unlockTournamentDraw", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("rejects non-admins before attempting the unlock", async () => {
+    mocks.getSessionPlayer.mockResolvedValue({ role: "player" });
+    await expect(unlockTournamentDraw(undefined, replacementForm())).resolves.toEqual({
+      ok: false, error: "Only admins can manage tournaments.",
+    });
+    expect(mocks.createClient).not.toHaveBeenCalled();
+  });
+
+  it("unlocks through the guarded RPC and revalidates the cup", async () => {
+    mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin", status: "active" });
+    const client = { rpc: vi.fn().mockResolvedValue({ error: null }) };
+    mocks.createClient.mockResolvedValue(client);
+    await expect(unlockTournamentDraw(undefined, replacementForm())).resolves.toEqual({
+      ok: true, message: "Draw unlocked. Update the field, then lock it again before play.",
+    });
+    expect(client.rpc).toHaveBeenCalledWith("unlock_tournament_draw_v1", { p_tournament_id: "tournament-1" });
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/tournaments/tournament-1");
+  });
+
+  it("explains that a recorded result makes the draw final", async () => {
+    mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin", status: "active" });
+    mocks.createClient.mockResolvedValue({ rpc: vi.fn().mockResolvedValue({ error: new Error("cup draw has a recorded result") }) });
+    await expect(unlockTournamentDraw(undefined, replacementForm())).resolves.toEqual({
+      ok: false, error: "The draw can’t be unlocked after a result has been recorded.",
+    });
   });
 });
 

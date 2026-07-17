@@ -48,10 +48,11 @@ is intentionally exact; never edit an applied file or move a filename.
 38. `20260718127000_unified_email_delivery_outbox.sql` - unified custom-email intent, claim, recovery, and health v3.
 39. `20260718128000_workflow_consistency_hardening.sql` - active actors, fact-safe deletion, precise scoring triggers, idempotent practice submission, safe RSVP generations, tournament atomicity, and health v4.
 40. `20260718129000_transaction_invariant_repairs.sql` - clean-stack grants, deterministic cup standings/placements, payload-safe retries, lifecycle revisions, atomic draw/replacement/cover RPCs, legacy outbox reconciliation, and health v5.
-41. `20260718130000_rpc_mutation_path_enforcement.sql` - revoke direct practice, RSVP, email-ledger, cup, placement, and championship-stage writes after callers use the canonical RPCs; supply explicit clean-stack service reads, organiser bootstrap, and guarded invite-activation column grants.
+41. `20260718129500_preplay_draw_unlock.sql` - guarded organiser draw unlock before the first cup result.
+42. `20260718130000_rpc_mutation_path_enforcement.sql` - revoke direct practice, RSVP, email-ledger, cup, placement, and championship-stage writes after callers use the canonical RPCs; supply explicit clean-stack service reads, organiser bootstrap, and guarded invite-activation column grants.
 
-The final four migrations are one compatible rollout chain. Apply the additive
-outbox, workflow, and invariant migrations (127-129) in order, deploy the
+The final five migrations are one compatible rollout chain. Apply the additive
+outbox, workflow, invariant, and pre-play-unlock migrations (127-1295) in order, deploy the
 application that uses their canonical RPCs, prove the smoke/health contracts,
 and only then apply enforcement migration 130. Migration 129 supplies explicit
 clean-stack SQL grants needed by the rolling application; migration 130 removes
@@ -112,7 +113,8 @@ project already through the cup/RSVP migration, use this exact sequence:
 2. Freeze domain mutations/custom-email actions and drain in-flight requests.
 3. Apply `20260718127000_unified_email_delivery_outbox.sql`,
    `20260718128000_workflow_consistency_hardening.sql`, and
-   `20260718129000_transaction_invariant_repairs.sql` consecutively in that
+   `20260718129000_transaction_invariant_repairs.sql`, then
+   `20260718129500_preplay_draw_unlock.sql` consecutively in that
    order. Migration 129 reconciles both missing legacy rows and conflicts where
    migration 127 already created a pending intent before the old sender recorded
    `sent` or `failed`.
@@ -127,10 +129,10 @@ project already through the cup/RSVP migration, use this exact sequence:
    checks are green. Repeat them against the enforced boundary, then reopen
    mutations.
 
-Do not run a plain `supabase db push` from the four-file release because it will
+Do not run a plain `supabase db push` from this release because it will
 also apply migration 130 before its smoke gate. When the SQL Editor is used,
 run each complete file separately and then record successful application with
-`supabase migration repair --linked --status applied` for timestamps 127-129;
+`supabase migration repair --linked --status applied` for timestamps 127-1295;
 record 130 separately after enforcement.
 
 New work reads `core_backend_health_v5()`. Pending, failed, and fifteen-minute-

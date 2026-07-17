@@ -158,9 +158,9 @@ of Done (`CLAUDE.md`).
   while normalizing uploads to a bounded WebP before the Server Action runs.
 - `tournament/TournamentLeadupConsole` — schedule lock, independent formats,
   championship path, ordered 2–8 roster, persisted-seed-safe player options,
-  and permanent-lock checklist.
-- `tournament/TournamentLifecycleActions` — irreversible draw lock plus
-  retry-safe locked-in, game-day, and completed-placement email controls.
+  and draw-lock checklist.
+- `tournament/TournamentLifecycleActions` — draw lock, guarded pre-play admin
+  unlock, and retry-safe locked-in, game-day, and placement-email controls.
 - `tournament/TournamentAdminActions` — fixture generation plus confirmed,
   explicit standings-completion and final-stage progression controls.
 - `tournament/TournamentParticipantEditor` — pre-play admin replacement that

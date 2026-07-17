@@ -79,7 +79,10 @@ requests/checksums, not authority. PostgreSQL validates the complete group draw,
 uses one deterministic standings projection, derives the only valid placement
 order from approved fixtures, and commits stage/placement/completion facts in
 marked RPC transactions. Direct table writes to those boundaries are revoked or
-trigger-rejected after the compatible application rollout.
+trigger-rejected after the compatible application rollout. A locked draw may
+return to editable draft only through its row-locking organiser RPC and only
+before any match or placement fact exists; the first result remains the
+permanent sporting-history boundary.
 
 The application coordinates only work that cannot belong to the fact
 transaction: provider delivery, cache materialisation, route invalidation, and

@@ -14,14 +14,20 @@ model in `docs/SCHEMA.md`, and decision history in the ADR index.
   reported zero cache drift, no integrity issues, 18 terminal sent deliveries,
   and no actionable deliveries. The reconciliation itself changed zero rows,
   which is expected when no legacy delivery outcome needs importing.
-- `20260718130000_rpc_mutation_path_enforcement.sql` remains unapplied. Deploy
-  and smoke the canonical RPC application while general mutations remain
-  frozen, then apply migration 130 and repeat the smoke suite before reopening.
+- `20260718129500_preplay_draw_unlock.sql` and
+  `20260718130000_rpc_mutation_path_enforcement.sql` remain unapplied. Apply the
+  additive draw-unlock migration before deploying its caller, smoke the
+  canonical RPC application while general mutations remain frozen, then apply
+  migration 130 and repeat the smoke suite before reopening.
   V1 RSVP and standings-completion signatures remain compatibility wrappers.
 - The current branch also hardens documentation/verification: canonical
   workflow and ADR registries, diff-aware doc impact, recursive start/finish
   rules, aggregate verification, isolated browser-server startup, and updated
   redirect contracts.
+- A locked scheduled cup now has a guarded organiser recovery path before play:
+  the director can reopen it as a draft, edit or replace the withdrawn player,
+  regenerate the draw, and lock again. The database permanently refuses unlock
+  after the first match or placement fact.
 
 ## Current architecture state
 
@@ -65,21 +71,21 @@ model in `docs/SCHEMA.md`, and decision history in the ADR index.
 
 ## Latest verification
 
-The current migration and application tree has passed every constituent of the
-aggregate application preflight plus the complete pgTAP inventory. The local
-Supabase CLI lint/integration commands remain separately blocked by the dotenv
-syntax issue recorded below.
+The current application tree has passed every constituent of the aggregate
+application preflight. The established pgTAP inventory through migration 130
+was previously green; the new draw-unlock pgTAP contract remains locally
+unexecuted because the Supabase CLI cannot parse `.env.local`.
 
 | Check | Result |
 | --- | --- |
 | Aggregate application preflight | Passed on the current tree; every `npm run verify` constituent is green |
 | ESLint / TypeScript | Passed / passed |
-| Vitest | 288 tests passed; one fresh-Supabase integration test skipped by design |
+| Vitest | 291 tests passed; one fresh-Supabase integration test skipped by design |
 | Documentation gates | `docs:check` and `docs:impact` passed; structural fixtures 16/16 and impact fixtures 8/8 passed |
 | Production build | Passed |
 | UI performance contracts | 12/12 passed; these are geometry/query-shape contracts only |
 | Browser smoke | 10/10 passed on a runner-owned dynamic port, including public immutable GLB delivery and exact preserved `next` destinations |
-| Database pgTAP/lint | All 256 declared pgTAP assertions passed locally and on a fresh CI stack (27+21+18+10+50+56+74); database lint passed after clean migration application |
+| Database pgTAP/lint | The prior 256 assertions passed locally and on a fresh CI stack (27+21+18+10+50+56+74). The new 10-assertion pre-play unlock contract and database lint await a valid dotenv/local stack. |
 | Authenticated ranked integration | Passed on a disposable Node 24/Supabase stack: ranked submit, opponent confirm, organiser approve, cache rebuild, and exact ladder/profile agreement |
 | Production post-129 health | Operator-reported zero drift, no integrity issues, 18 sent deliveries, and no actionable deliveries |
 
@@ -98,6 +104,10 @@ syntax issue recorded below.
   `supabase_migrations.schema_migrations`. After repairing `.env.local`, rebuild
   this disposable local stack from migrations before treating its history as a
   clean-application proof.
+- The focused pre-play draw-unlock pgTAP command is currently blocked before
+  PostgreSQL by `.env.local` parsing (`failed to parse environment file:
+  .env.local`). The contract must run on the rebuilt disposable stack before
+  merge/deployment.
 - Production migrations 127-129 were applied through the SQL Editor, so their
   remote migration-history entries still need to be marked applied before a
   future linked `db push`. Migration 130 must remain pending until the new
@@ -115,9 +125,10 @@ syntax issue recorded below.
 1. Repair `.env.local` syntax without committing it; reset the disposable local
    stack from migrations, then run the aggregate database suite/lint,
    migration-from-scratch, and authenticated lifecycle checks.
-2. Deploy the canonical RPC application with mutations still frozen, drain old
-   instances, and run the controlled pre-enforcement health/smoke gate. Then
-   apply migration 130, repeat the gate, and reopen using `docs/DEPLOYMENT.md`.
+2. Apply migration 1295, deploy the canonical RPC application with mutations
+   still frozen, drain old instances, and run the controlled pre-enforcement
+   health/smoke gate. Then apply migration 130, repeat the gate, and reopen
+   using `docs/DEPLOYMENT.md`.
 3. Execute the credentialed production ranked lifecycle and configurable cup/
    RSVP/result-email smoke tests. Require zero genuine drift, no lifecycle
    integrity issue, complete placements, and exact projection agreement.

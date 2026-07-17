@@ -12,7 +12,7 @@ select has_function('public','update_tournament_schedule_v1',array['uuid','times
 select has_function('public','set_tournament_schedule_lock_v1',array['uuid','boolean'],'reversible pre-draw schedule lock exists');
 select has_function('public','configure_tournament_competition_v1',array['uuid','tournament_ruleset','tournament_ruleset','tournament_championship_path'],'independent competition configuration exists');
 select has_function('public','replace_tournament_roster_v1',array['uuid','integer','uuid[]'],'atomic ordered roster replacement exists');
-select has_function('public','lock_tournament_draw_v2',array['uuid','jsonb'],'atomic permanent draw lock exists');
+select has_function('public','lock_tournament_draw_v2',array['uuid','jsonb'],'atomic draw lock exists');
 select has_function('public','record_tournament_result_v2',array['uuid','uuid','jsonb','timestamp with time zone','integer'],'multi-set result RPC exists');
 select ok(has_function_privilege('authenticated','public.lock_tournament_draw_v2(uuid,jsonb)','execute'),'authenticated organisers can reach guarded draw lock');
 select ok(not has_function_privilege('anon','public.lock_tournament_draw_v2(uuid,jsonb)','execute'),'anonymous callers cannot lock draws');

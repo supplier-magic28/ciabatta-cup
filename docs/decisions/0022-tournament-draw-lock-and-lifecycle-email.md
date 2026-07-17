@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-07-11
-- **Superseded by:** ADR-0042 (custom lifecycle-email ledger/retry scope only)
+- **Superseded by:** ADR-0042 (custom lifecycle-email ledger/retry scope only) and ADR-0045 (irreversible draw-lock scope)
 
 ## Context
 

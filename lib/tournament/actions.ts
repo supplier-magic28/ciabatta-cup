@@ -180,8 +180,29 @@ export async function lockTournamentDraw(
   if (error) return { ok: false, error: "Couldn't lock the draw. Generate and review it first." };
   invalidateTournament(tournamentId);
   const delivery = await sendTournamentEmails(tournamentId, "locked_in");
-  if (!delivery.ok) return { ok: true, message: "Draw locked permanently.", warnings:[delivery.error], deliveryWarning:delivery.deliveryWarning };
+  if (!delivery.ok) return { ok: true, message: "Draw locked.", warnings:[delivery.error], deliveryWarning:delivery.deliveryWarning };
   return { ok: true, message: `Draw locked. ${delivery.message}` };
+}
+
+export async function unlockTournamentDraw(
+  _previous: TournamentActionState | undefined,
+  formData: FormData,
+): Promise<TournamentActionState> {
+  if (!(await requireAdmin())) return FORBIDDEN;
+  const tournamentId = textValue(formData, "tournamentId");
+  if (!tournamentId) return { ok: false, error: "Tournament not found." };
+  const { error } = await (await createClient()).rpc("unlock_tournament_draw_v1", {
+    p_tournament_id: tournamentId,
+  });
+  if (error) {
+    const message = error.message ?? "";
+    if (message.includes("result")) {
+      return { ok: false, error: "The draw can’t be unlocked after a result has been recorded." };
+    }
+    return { ok: false, error: "This draw can’t be unlocked." };
+  }
+  invalidateTournament(tournamentId);
+  return { ok: true, message: "Draw unlocked. Update the field, then lock it again before play." };
 }
 
 export async function sendLockedInEmail(

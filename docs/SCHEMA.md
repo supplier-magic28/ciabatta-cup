@@ -178,7 +178,7 @@ Once both rows exist, a database trigger advances a ranked result to
 | created_by | FK players | admin |
 | created_at / updated_at | timestamptz | |
 | cover_image_url | text nullable | optional public cover photo stored in the `tournament-images` bucket |
-| draw_locked_at | timestamptz nullable | irreversible director confirmation that freezes participants and the group draw |
+| draw_locked_at | timestamptz nullable | director confirmation that freezes participants and the group draw; an organiser may clear it through `unlock_tournament_draw_v1` only before any result or placement exists |
 | completion_path | enum nullable: round_robin, final_stage | explicit source of final placements; null until completion and on legacy rows |
 | seat_count | int 2–8 | configured capacity; all seats must be filled at draw lock |
 | schedule_locked_at | timestamptz nullable | reversible pre-draw configuration gate |
@@ -232,9 +232,11 @@ transaction-local marker.
 ### tournament_participants _(Phase 4 — implemented)_
 | tournament_id FK, player_id FK, seed int, entered_at | composite identity; seed is unique within a tournament and drives deterministic generation |
 
-Organisers atomically replace the complete ordered roster before draw lock or
-the first result. Active unique players must fit the 2–8 seats; permanent draw
-lock rejects empty seats and freezes the order. `replace_tournament_group_draw_v1`
+Organisers atomically replace the complete ordered roster while the draw is
+unlocked and before the first result. Active unique players must fit the 2–8
+seats; draw lock rejects empty seats and freezes the order. A locked scheduled
+cup can return to editable draft through `unlock_tournament_draw_v1` only while
+it has no match or placement facts. `replace_tournament_group_draw_v1`
 validates and replaces the complete circle-schedule pairing set in one locked
 transaction. `replace_tournament_participant_v2` preserves the outgoing seed,
 validates the regenerated complete group draw, and commits roster plus fixtures
@@ -252,7 +254,7 @@ expired RSVP advances it. Accepted is terminal. Re-sending an unexpired
 delivery retry changes only the outbox. Generation-specific Zeus and email keys
 dedupe new invitations and retry attempts. Acceptance records player intent but
 never consumes a seat or confirms the field; the organiser selects the roster
-and permanent draw lock is the only final confirmation.
+and organiser draw lock is the final confirmation before play.
 
 The invitation-history trigger prevents any accepted-row mutation, generation
 rollback/jumps, and a new generation unless the predecessor is expired. Response

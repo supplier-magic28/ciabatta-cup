@@ -28,7 +28,7 @@ the ADR files, while **Domain** is a navigation aid.
 | [ADR-0019](0019-pre-play-tournament-participant-replacement.md) | Pre-play tournament participant replacement | Accepted | Tournaments | - | - |
 | [ADR-0020](0020-personal-profile-settings.md) | Personal profile settings and public display identity | Accepted | Profiles | - | - |
 | [ADR-0021](0021-tournament-cover-photos.md) | Tournament cover photos | Accepted | Tournaments, storage | - | - |
-| [ADR-0022](0022-tournament-draw-lock-and-lifecycle-email.md) | Tournament draw lock and lifecycle email delivery | Accepted | Tournaments, email | - | ADR-0042 (custom lifecycle-email scope) |
+| [ADR-0022](0022-tournament-draw-lock-and-lifecycle-email.md) | Tournament draw lock and lifecycle email delivery | Accepted | Tournaments, email | - | ADR-0042 (custom lifecycle-email scope); ADR-0045 (irreversible lock scope) |
 | [ADR-0023](0023-optional-round-robin-completion.md) | Optional round-robin tournament completion | Accepted | Tournaments | - | - |
 | [ADR-0024](0024-tournament-placement-awards.md) | Tournament placement awards replace match Elo | Accepted | Tournaments, scoring | ADR-0016 tournament-scoring consequence | ADR-0025 (1000-point baseline only) |
 | [ADR-0025](0025-zero-based-ladder-and-player-history.md) | Zero-based ladder and derived player history | Accepted | Elo, profiles | ADR-0007 / ADR-0014 baseline and floor; ADR-0024 1000-point baseline | - |
@@ -45,12 +45,13 @@ the ADR files, while **Domain** is a navigation aid.
 | [ADR-0036](0036-rpc-lifecycle-boundaries-and-versioned-caches.md) | RPC lifecycle boundaries and versioned derived caches | Accepted | Reliability, scoring cache | - | - |
 | [ADR-0037](0037-admin-health-and-reconstructable-email-recovery.md) | Admin health and reconstructable email recovery | Accepted | Operations, email | - | ADR-0042 (custom-email scope) |
 | [ADR-0038](0038-canonical-activity-ledger-calendar.md) | Canonical activity ledger for personal calendar | Accepted | Public scoring, calendar | - | - |
-| [ADR-0039](0039-locked-configurable-cup-competition.md) | Locked configurable cup competition | Accepted | Tournaments | - | - |
+| [ADR-0039](0039-locked-configurable-cup-competition.md) | Locked configurable cup competition | Accepted | Tournaments | - | ADR-0045 (irreversible lock scope) |
 | [ADR-0040](0040-cup-trophies-and-rsvp-invites.md) | Ordinary cups own trophies and RSVP invitations | Accepted | Tournaments, invitations | - | - |
 | [ADR-0041](0041-recursive-documentation-and-workflow-registry.md) | Recursive documentation and a canonical workflow registry | Accepted | Documentation, process | - | - |
 | [ADR-0042](0042-unified-custom-email-outbox.md) | One durable outbox for custom product email | Accepted | Email, reliability | ADR-0022 / ADR-0037 (custom-email scopes) | - |
 | [ADR-0043](0043-workflow-consistency-and-tournament-atomicity.md) | Workflow consistency, precise scoring versions, and atomic cup completion | Accepted | Authorization, reliability, scoring, tournaments | ADR-0015 (deletion-eligibility dependency scope) | - |
 | [ADR-0044](0044-public-versioned-trophy-assets-for-ar.md) | Public versioned trophy assets for AR handoff | Accepted | Auth, static assets, AR | - | - |
+| [ADR-0045](0045-preplay-tournament-draw-unlock.md) | Guarded pre-play tournament draw unlock | Accepted | Tournaments, recovery | ADR-0022 / ADR-0039 irreversible lock scope | - |
 
 ## Adding a decision
 
