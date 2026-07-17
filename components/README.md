@@ -140,7 +140,9 @@ of Done (`CLAUDE.md`).
   engraving history.
 - `trophies/TrophyModelStage` — registered GLB renderer and Android-only
   WebXR/Scene Viewer launcher with capability, load/error, permission-failure,
-  poster, and reduced-motion states; it never captures the camera directly.
+  poster, and reduced-motion states. Android candidates retain an explicit
+  Scene Viewer floor-placement fallback while asynchronous capability detection
+  settles; the application never captures the camera directly.
 - `tournament/CupInviteConsole` — organiser bench multi-invite and RSVP status
   surface; it submits the browser timezone offset with the local deadline,
   preserves accepted responses across delivery retry, and keeps responses

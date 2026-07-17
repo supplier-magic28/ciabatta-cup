@@ -54,9 +54,11 @@ model in `docs/SCHEMA.md`, and decision history in the ADR index.
   its event name plus `Cup` and keeps a single-event engraving, making the
   existing Ciabatta Qualifier Cup directly testable. Supported Android
   devices may hand off to WebXR or Scene Viewer without a paid AR service or a
-  direct camera stream. Model files bypass authentication for platform handoff,
-  while iPhone Quick Look stays disabled until physical-device testing is
-  available.
+  direct camera stream. Android candidates keep the placement action while
+  asynchronous capability detection settles and fall back to an explicit
+  `ar_preferred` Scene Viewer floor-placement intent. Model files bypass
+  authentication for platform handoff, while iPhone Quick Look stays disabled
+  until physical-device testing is available.
 
 ## Latest verification
 
@@ -69,7 +71,7 @@ syntax issue recorded below.
 | --- | --- |
 | Aggregate application preflight | Passed on the current tree; every `npm run verify` constituent is green |
 | ESLint / TypeScript | Passed / passed |
-| Vitest | 287 tests passed; one fresh-Supabase integration test skipped by design |
+| Vitest | 288 tests passed; one fresh-Supabase integration test skipped by design |
 | Documentation gates | `docs:check` and `docs:impact` passed; structural fixtures 16/16 and impact fixtures 8/8 passed |
 | Production build | Passed |
 | UI performance contracts | 11/11 passed; these are geometry/query-shape contracts only |

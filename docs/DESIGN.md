@@ -80,8 +80,11 @@ inside the existing auth shell; the callback route is `/auth/confirm`.
   owned awards with registered assets may open the viewer.
 - The 3D viewer lazy-loads `<model-viewer>`, preserves a poster/error fallback,
   disables auto-rotation for reduced motion, and exposes platform-owned Android
-  AR only when `canActivateAR` succeeds. It never requests a camera stream
-  directly. Follow [the asset and Android AR runbook](TROPHY_ASSETS.md).
+  AR after model load. It rechecks asynchronous capability selection and keeps
+  a direct Chrome Scene Viewer intent available on Android while that check
+  settles, using floor placement and `ar_preferred` fallback semantics. It
+  never requests a camera stream directly. Follow
+  [the asset and Android AR runbook](TROPHY_ASSETS.md).
 - Keep Zeus outside the text navigation as a permanent top-right 44px avatar
   action; its rust badge appears only when unread messages exist.
 - Dashed borders identify people and actions outside the Ciabatta ladder.

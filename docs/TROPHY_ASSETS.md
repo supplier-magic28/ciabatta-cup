@@ -47,7 +47,11 @@ Use the production HTTPS origin on a real supported Android phone:
 4. Repeat with camera denied. The 3D viewer must remain usable and show the
    non-blocking AR hint.
 5. Confirm WebXR is preferred and Google Scene Viewer is the fallback when
-   browser WebXR is unavailable. Verify Google Play Services for AR is current.
+   browser WebXR is unavailable. The placement action must remain visible on an
+   Android Chrome candidate while `<model-viewer>` finishes asynchronous mode
+   selection; its explicit fallback launches Scene Viewer with
+   `mode=ar_preferred`. Verify Google Play Services for AR and the Google app
+   are current.
 6. Enable reduced motion and confirm the 3D model no longer auto-rotates.
 
 The automated suite proves asset conformance, viewer capability states,
