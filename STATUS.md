@@ -72,21 +72,22 @@ model in `docs/SCHEMA.md`, and decision history in the ADR index.
 
 ## Latest verification
 
-The repaired action has passed its focused unit suite, TypeScript, and ESLint.
-The corrected database contract and aggregate application preflight still need
-fresh-stack CI verification before this repair can deploy.
+The repaired tree passed the complete local application preflight and the
+fresh-stack GitHub CI run for commit `3630ceb`. The corrected database contract
+now reaches the unlock RPC and the full Database, Application, Documentation,
+and ranked-lifecycle gates are green.
 
 | Check | Result |
 | --- | --- |
-| Aggregate application preflight | Awaiting the repaired-tree `npm run verify` gate |
-| ESLint / TypeScript | Passed / passed on the repaired tree |
-| Vitest | Focused tournament action suite passed 21/21; aggregate suite awaits `npm run verify` |
+| Aggregate application preflight | Passed on the repaired tree, including production build and browser checks |
+| ESLint / TypeScript | Passed / passed |
+| Vitest | 295 tests passed; one fresh-Supabase integration test skipped by design |
 | Documentation gates | `docs:check` and `docs:impact` passed; structural fixtures 16/16 and impact fixtures 8/8 passed |
 | Production build | Passed |
 | UI performance contracts | 12/12 passed; these are geometry/query-shape contracts only |
 | Browser smoke | 10/10 passed on a runner-owned dynamic port, including public immutable GLB delivery and exact preserved `next` destinations |
-| Database pgTAP/lint | The prior baseline was green. GitHub run 29616811364 exposed that the original unlock fixture locked its cup before inserting participants, so the participant guard aborted before the RPC assertions. The corrected 14-assertion contract awaits a fresh disposable CI stack; local execution is blocked because Docker Desktop is not running. |
-| Authenticated ranked integration | Passed on a disposable Node 24/Supabase stack: ranked submit, opponent confirm, organiser approve, cache rebuild, and exact ladder/profile agreement |
+| Database pgTAP/lint | Passed on the fresh disposable stack in GitHub run 29712930430. The corrected 14-assertion contract reaches the RPC and the complete database suite/lint are green. |
+| Authenticated ranked integration | Passed in GitHub run 29712930430 on a disposable Node 24/Supabase stack: ranked submit, opponent confirm, organiser approve, cache rebuild, and exact ladder/profile agreement |
 | Production post-129 health | Operator-reported zero drift, no integrity issues, 18 sent deliveries, and no actionable deliveries |
 
 ## Active risks
@@ -104,10 +105,8 @@ fresh-stack CI verification before this repair can deploy.
   `supabase_migrations.schema_migrations`. After repairing `.env.local`, rebuild
   this disposable local stack from migrations before treating its history as a
   clean-application proof.
-- The corrected pre-play draw-unlock pgTAP and full database suite cannot run
-  locally while Docker Desktop is unavailable. Fresh-stack GitHub Database,
-  Application, Documentation, and ranked-lifecycle jobs must all pass before
-  deployment.
+- Docker Desktop is unavailable locally, so the corrected database contract was
+  proven on GitHub's disposable fresh stack rather than the workstation stack.
 - Production migrations 127-129 were applied through the SQL Editor, so their
   remote migration-history entries still need to be marked applied before a
   future linked `db push`. Migration 130 must remain pending until the new
@@ -122,16 +121,13 @@ fresh-stack CI verification before this repair can deploy.
 
 ## Next work
 
-1. Run the corrected 14-assertion unlock contract, aggregate pgTAP/lint,
-   authenticated lifecycle check, documentation gates, and application
-   preflight on a fresh CI stack.
-2. Confirm production lacks/presents
+1. Confirm production lacks/presents
    `to_regprocedure('public.unlock_tournament_draw_v1(uuid)')` as expected,
    record/apply migration 1295 in full when absent, then deploy the repaired
    canonical RPC application with mutations
    still frozen, drain old instances, and run the controlled pre-enforcement
    health/smoke gate. Then apply migration 130, repeat the gate, and reopen
    using `docs/DEPLOYMENT.md`.
-3. Execute the credentialed production ranked lifecycle and configurable cup/
+2. Execute the credentialed production ranked lifecycle and configurable cup/
    RSVP/result-email smoke tests. Require zero genuine drift, no lifecycle
    integrity issue, complete placements, and exact projection agreement.
