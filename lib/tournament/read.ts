@@ -63,6 +63,7 @@ export async function loadTournamentBoard(tournamentId: string) {
     playerById,
     championId,
     completedResults: approved.length,
+    hasTournamentMatches: (matches ?? []).length > 0,
   };
 }
 

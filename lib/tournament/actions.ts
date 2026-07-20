@@ -195,11 +195,21 @@ export async function unlockTournamentDraw(
     p_tournament_id: tournamentId,
   });
   if (error) {
+    console.error("Tournament draw unlock failed", {
+      tournamentId,
+      code: error.code ?? "unknown",
+      message: error.message ?? "unknown",
+    });
     const message = error.message ?? "";
+    if (error.code === "PGRST202" || (message.includes("unlock_tournament_draw_v1") && message.includes("schema cache"))) {
+      return { ok: false, error: "Draw unlock is not available in this deployment." };
+    }
     if (message.includes("result")) {
       return { ok: false, error: "The draw can’t be unlocked after a result has been recorded." };
     }
-    return { ok: false, error: "This draw can’t be unlocked." };
+    if (message.includes("cup not found")) return { ok: false, error: "Tournament not found." };
+    if (message.includes("only active organisers")) return FORBIDDEN;
+    return { ok: false, error: "Couldn’t unlock the draw. Try again." };
   }
   invalidateTournament(tournamentId);
   return { ok: true, message: "Draw unlocked. Update the field, then lock it again before play." };

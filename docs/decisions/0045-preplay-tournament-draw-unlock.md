@@ -34,3 +34,13 @@ who already received a locked-in message are not emailed twice; a newly added
 player receives a new recipient-specific intent on relock. If details change
 for existing recipients, the organiser must communicate that correction
 separately because delivered email receipts remain immutable.
+
+## Release verification addendum (2026-07-20)
+
+The application eligibility check must use the existence of any tournament
+match row, not only approved-result counts, so the visible recovery path mirrors
+the RPC boundary. The database contract builds participants and group fixtures
+before setting the draw lock; otherwise the established participant-lock guard
+aborts fixture setup and leaves the unlock RPC untested. Release verification
+therefore proves preservation and retry behavior as well as ordinary-player,
+direct-write, match-row, and placement refusal.

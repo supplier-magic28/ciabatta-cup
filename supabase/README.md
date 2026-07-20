@@ -60,6 +60,13 @@ the obsolete direct mutation paths. V1 RSVP and standings-completion signatures
 remain safe wrappers over current implementations. See ADR-0042, ADR-0043, and
 `docs/WORKFLOWS.md`.
 
+The pre-play-unlock pgTAP fixture must create its roster and group preview while
+the cup is unlocked, then set `draw_locked_at` before exercising the RPC. A
+fixture that inserts participants after locking tests the participant guard and
+never reaches the unlock contract. The focused contract covers successful and
+idempotent unlock, preserved preview/roster rows, ordinary-player and direct-
+write refusal, and independent match/placement refusal.
+
 ## Environment variables
 
 - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` — browser-safe

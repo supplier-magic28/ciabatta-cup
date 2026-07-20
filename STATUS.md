@@ -1,6 +1,6 @@
 # Ciabatta Cup status
 
-**Last updated:** 2026-07-18
+**Last updated:** 2026-07-20
 
 This is the short operational handover. Durable architecture belongs in
 `ARCHITECTURE.md`, current lifecycle contracts in `docs/WORKFLOWS.md`, the data
@@ -24,10 +24,11 @@ model in `docs/SCHEMA.md`, and decision history in the ADR index.
   workflow and ADR registries, diff-aware doc impact, recursive start/finish
   rules, aggregate verification, isolated browser-server startup, and updated
   redirect contracts.
-- A locked scheduled cup now has a guarded organiser recovery path before play:
-  the director can reopen it as a draft, edit or replace the withdrawn player,
-  regenerate the draw, and lock again. The database permanently refuses unlock
-  after the first match or placement fact.
+- The draw-unlock release repair now aligns the admin control with the database's
+  any-match boundary, preserves distinct operator-facing rollout/fact/auth/not-
+  found failures, and exercises the RPC only after building a legal unlocked
+  roster and fixture preview. Production still requires the migration gate
+  above before this recovery path is usable.
 
 ## Current architecture state
 
@@ -71,21 +72,20 @@ model in `docs/SCHEMA.md`, and decision history in the ADR index.
 
 ## Latest verification
 
-The current application tree has passed every constituent of the aggregate
-application preflight. The established pgTAP inventory through migration 130
-was previously green; the new draw-unlock pgTAP contract remains locally
-unexecuted because the Supabase CLI cannot parse `.env.local`.
+The repaired action has passed its focused unit suite, TypeScript, and ESLint.
+The corrected database contract and aggregate application preflight still need
+fresh-stack CI verification before this repair can deploy.
 
 | Check | Result |
 | --- | --- |
-| Aggregate application preflight | Passed on the current tree; every `npm run verify` constituent is green |
-| ESLint / TypeScript | Passed / passed |
-| Vitest | 291 tests passed; one fresh-Supabase integration test skipped by design |
+| Aggregate application preflight | Awaiting the repaired-tree `npm run verify` gate |
+| ESLint / TypeScript | Passed / passed on the repaired tree |
+| Vitest | Focused tournament action suite passed 21/21; aggregate suite awaits `npm run verify` |
 | Documentation gates | `docs:check` and `docs:impact` passed; structural fixtures 16/16 and impact fixtures 8/8 passed |
 | Production build | Passed |
 | UI performance contracts | 12/12 passed; these are geometry/query-shape contracts only |
 | Browser smoke | 10/10 passed on a runner-owned dynamic port, including public immutable GLB delivery and exact preserved `next` destinations |
-| Database pgTAP/lint | The prior 256 assertions passed locally and on a fresh CI stack (27+21+18+10+50+56+74). The new 10-assertion pre-play unlock contract and database lint await a valid dotenv/local stack. |
+| Database pgTAP/lint | The prior baseline was green. GitHub run 29616811364 exposed that the original unlock fixture locked its cup before inserting participants, so the participant guard aborted before the RPC assertions. The corrected 14-assertion contract awaits a fresh disposable CI stack; local execution is blocked because Docker Desktop is not running. |
 | Authenticated ranked integration | Passed on a disposable Node 24/Supabase stack: ranked submit, opponent confirm, organiser approve, cache rebuild, and exact ladder/profile agreement |
 | Production post-129 health | Operator-reported zero drift, no integrity issues, 18 sent deliveries, and no actionable deliveries |
 
@@ -104,10 +104,10 @@ unexecuted because the Supabase CLI cannot parse `.env.local`.
   `supabase_migrations.schema_migrations`. After repairing `.env.local`, rebuild
   this disposable local stack from migrations before treating its history as a
   clean-application proof.
-- The focused pre-play draw-unlock pgTAP command is currently blocked before
-  PostgreSQL by `.env.local` parsing (`failed to parse environment file:
-  .env.local`). The contract must run on the rebuilt disposable stack before
-  merge/deployment.
+- The corrected pre-play draw-unlock pgTAP and full database suite cannot run
+  locally while Docker Desktop is unavailable. Fresh-stack GitHub Database,
+  Application, Documentation, and ranked-lifecycle jobs must all pass before
+  deployment.
 - Production migrations 127-129 were applied through the SQL Editor, so their
   remote migration-history entries still need to be marked applied before a
   future linked `db push`. Migration 130 must remain pending until the new
@@ -122,10 +122,13 @@ unexecuted because the Supabase CLI cannot parse `.env.local`.
 
 ## Next work
 
-1. Repair `.env.local` syntax without committing it; reset the disposable local
-   stack from migrations, then run the aggregate database suite/lint,
-   migration-from-scratch, and authenticated lifecycle checks.
-2. Apply migration 1295, deploy the canonical RPC application with mutations
+1. Run the corrected 14-assertion unlock contract, aggregate pgTAP/lint,
+   authenticated lifecycle check, documentation gates, and application
+   preflight on a fresh CI stack.
+2. Confirm production lacks/presents
+   `to_regprocedure('public.unlock_tournament_draw_v1(uuid)')` as expected,
+   record/apply migration 1295 in full when absent, then deploy the repaired
+   canonical RPC application with mutations
    still frozen, drain old instances, and run the controlled pre-enforcement
    health/smoke gate. Then apply migration 130, repeat the gate, and reopen
    using `docs/DEPLOYMENT.md`.

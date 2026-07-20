@@ -178,7 +178,7 @@ Once both rows exist, a database trigger advances a ranked result to
 | created_by | FK players | admin |
 | created_at / updated_at | timestamptz | |
 | cover_image_url | text nullable | optional public cover photo stored in the `tournament-images` bucket |
-| draw_locked_at | timestamptz nullable | director confirmation that freezes participants and the group draw; an organiser may clear it through `unlock_tournament_draw_v1` only before any result or placement exists |
+| draw_locked_at | timestamptz nullable | director confirmation that freezes participants and the group draw; an organiser may clear it through `unlock_tournament_draw_v1` only before any tournament match row or placement exists |
 | completion_path | enum nullable: round_robin, final_stage | explicit source of final placements; null until completion and on legacy rows |
 | seat_count | int 2–8 | configured capacity; all seats must be filled at draw lock |
 | schedule_locked_at | timestamptz nullable | reversible pre-draw configuration gate |
@@ -236,7 +236,9 @@ Organisers atomically replace the complete ordered roster while the draw is
 unlocked and before the first result. Active unique players must fit the 2–8
 seats; draw lock rejects empty seats and freezes the order. A locked scheduled
 cup can return to editable draft through `unlock_tournament_draw_v1` only while
-it has no match or placement facts. `replace_tournament_group_draw_v1`
+it has no match rows or placement facts. The admin read model exposes this same
+any-match boundary; the row-locking RPC remains authoritative.
+`replace_tournament_group_draw_v1`
 validates and replaces the complete circle-schedule pairing set in one locked
 transaction. `replace_tournament_participant_v2` preserves the outgoing seed,
 validates the regenerated complete group draw, and commits roster plus fixtures

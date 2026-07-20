@@ -126,7 +126,7 @@ export default async function ManageTournamentPage({ params }: { params: Promise
       <TournamentLifecycleActions
           tournamentId={tournamentId}
           drawLocked={Boolean(board.tournament.draw_locked_at)}
-          canUnlock={Boolean(board.tournament.draw_locked_at) && board.completedResults === 0 && board.tournament.status === "scheduled"}
+          canUnlock={Boolean(board.tournament.draw_locked_at) && !board.hasTournamentMatches && board.tournament.status === "scheduled"}
           tournamentCompleted={board.tournament.status === "completed"}
         />
 

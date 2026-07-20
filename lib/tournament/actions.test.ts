@@ -271,10 +271,37 @@ describe("unlockTournamentDraw", () => {
 
   it("explains that a recorded result makes the draw final", async () => {
     mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin", status: "active" });
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     mocks.createClient.mockResolvedValue({ rpc: vi.fn().mockResolvedValue({ error: new Error("cup draw has a recorded result") }) });
     await expect(unlockTournamentDraw(undefined, replacementForm())).resolves.toEqual({
       ok: false, error: "The draw can’t be unlocked after a result has been recorded.",
     });
+    expect(errorSpy).toHaveBeenCalledWith("Tournament draw unlock failed", expect.objectContaining({ tournamentId: "tournament-1" }));
+    errorSpy.mockRestore();
+  });
+
+  it("identifies a deployment whose unlock RPC is missing", async () => {
+    mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin", status: "active" });
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    mocks.createClient.mockResolvedValue({ rpc: vi.fn().mockResolvedValue({ error: { code: "PGRST202", message: "Could not find the function public.unlock_tournament_draw_v1 in the schema cache" } }) });
+    await expect(unlockTournamentDraw(undefined, replacementForm())).resolves.toEqual({
+      ok: false, error: "Draw unlock is not available in this deployment.",
+    });
+    errorSpy.mockRestore();
+  });
+
+  it.each([
+    ["cup not found", "Tournament not found."],
+    ["only active organisers may unlock cup draws", "Only admins can manage tournaments."],
+    ["unexpected database failure", "Couldn’t unlock the draw. Try again."],
+  ])("maps the database failure %s", async (databaseMessage, expectedError) => {
+    mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin", status: "active" });
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    mocks.createClient.mockResolvedValue({ rpc: vi.fn().mockResolvedValue({ error: { code: "XX000", message: databaseMessage } }) });
+    await expect(unlockTournamentDraw(undefined, replacementForm())).resolves.toEqual({
+      ok: false, error: expectedError,
+    });
+    errorSpy.mockRestore();
   });
 });
 
