@@ -14,12 +14,13 @@ model in `docs/SCHEMA.md`, and decision history in the ADR index.
   reported zero cache drift, no integrity issues, 18 terminal sent deliveries,
   and no actionable deliveries. The reconciliation itself changed zero rows,
   which is expected when no legacy delivery outcome needs importing.
-- `20260718129500_preplay_draw_unlock.sql` and
-  `20260718130000_rpc_mutation_path_enforcement.sql` remain unapplied. Apply the
-  additive draw-unlock migration before deploying its caller, smoke the
-  canonical RPC application while general mutations remain frozen, then apply
-  migration 130 and repeat the smoke suite before reopening.
-  V1 RSVP and standings-completion signatures remain compatibility wrappers.
+- `20260718129500_preplay_draw_unlock.sql` was operator-confirmed applied in full
+  through the SQL Editor on 2026-07-20, and the production
+  `to_regprocedure('public.unlock_tournament_draw_v1(uuid)')` check succeeded.
+  Its remote migration-history entry still needs to be marked applied.
+  `20260718130000_rpc_mutation_path_enforcement.sql` remains unapplied until the
+  repaired caller passes its production smoke. V1 RSVP and standings-completion
+  signatures remain compatibility wrappers.
 - The current branch also hardens documentation/verification: canonical
   workflow and ADR registries, diff-aware doc impact, recursive start/finish
   rules, aggregate verification, isolated browser-server startup, and updated
@@ -27,8 +28,7 @@ model in `docs/SCHEMA.md`, and decision history in the ADR index.
 - The draw-unlock release repair now aligns the admin control with the database's
   any-match boundary, preserves distinct operator-facing rollout/fact/auth/not-
   found failures, and exercises the RPC only after building a legal unlocked
-  roster and fixture preview. Production still requires the migration gate
-  above before this recovery path is usable.
+  roster and fixture preview. The production migration gate is now satisfied.
 
 ## Current architecture state
 
@@ -107,9 +107,9 @@ and ranked-lifecycle gates are green.
   clean-application proof.
 - Docker Desktop is unavailable locally, so the corrected database contract was
   proven on GitHub's disposable fresh stack rather than the workstation stack.
-- Production migrations 127-129 were applied through the SQL Editor, so their
+- Production migrations 127-1295 were applied through the SQL Editor, so their
   remote migration-history entries still need to be marked applied before a
-  future linked `db push`. Migration 130 must remain pending until the new
+  future linked `db push`. Migration 130 must remain pending until the repaired
   application has deployed and passed the controlled production smoke suite.
 - The amended migration 130 has 74/74 focused and 256/256 aggregate local and
   fresh-stack CI coverage. It remains gated only on confirming the new
@@ -121,13 +121,10 @@ and ranked-lifecycle gates are green.
 
 ## Next work
 
-1. Confirm production lacks/presents
-   `to_regprocedure('public.unlock_tournament_draw_v1(uuid)')` as expected,
-   record/apply migration 1295 in full when absent, then deploy the repaired
-   canonical RPC application with mutations
-   still frozen, drain old instances, and run the controlled pre-enforcement
-   health/smoke gate. Then apply migration 130, repeat the gate, and reopen
-   using `docs/DEPLOYMENT.md`.
+1. Let the repaired `main` deployment drain old instances, then run the
+   controlled pre-enforcement draw-unlock/relock and health smoke with general
+   mutations still frozen. Record migration 1295 in remote history. Then apply
+   migration 130, repeat the gate, and reopen using `docs/DEPLOYMENT.md`.
 2. Execute the credentialed production ranked lifecycle and configurable cup/
    RSVP/result-email smoke tests. Require zero genuine drift, no lifecycle
    integrity issue, complete placements, and exact projection agreement.
