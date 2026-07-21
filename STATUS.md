@@ -85,9 +85,10 @@ model in `docs/SCHEMA.md`, and decision history in the ADR index.
 
 The standings-path repair passed the complete local application preflight: 301
 unit tests, TypeScript, ESLint, documentation checks, production build, 12 UI
-performance contracts, and 10 browser smokes. Its amended 22-assertion database
-contract now models the live standings-path cup; a fresh-stack database run
-remains required before deployment.
+performance contracts, and 10 browser smokes. Fresh-stack GitHub run
+29870503352 also passed Database, Application, Documentation, and ranked
+lifecycle; its amended 22-assertion database contract models the live
+standings-path cup.
 
 The director-final override passed the complete local application preflight and
 fresh-stack GitHub CI run 29869306021. Its database contract exercises the
