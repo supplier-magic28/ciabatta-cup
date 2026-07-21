@@ -107,7 +107,7 @@ function DirectorFinalOverride({
       action={submit}
       className="border-2 border-rust bg-surface p-3"
       onSubmit={(event) => {
-        if (!window.confirm("Replace the unplayed qualification decider with this best-of-three final? The other two players will finish third and fourth in their current table order.")) event.preventDefault();
+        if (!window.confirm("Replace the unplayed qualification decider with this group-format final? The other two players will finish third and fourth in their current table order.")) event.preventDefault();
       }}
     >
       <input type="hidden" name="tournamentId" value={tournamentId} />
@@ -134,7 +134,7 @@ function DirectorFinalOverride({
       {state && !state.ok && <p className="mt-2 font-mono text-[10px] text-rust" aria-live="polite">{state.error}</p>}
       {state?.ok && <p className="mt-2 font-mono text-[10px] text-green" aria-live="polite">{state.message}</p>}
       <Button type="submit" loading={pending} loadingLabel="Creating final..." className="mt-3 bg-rust text-cream">
-        Seed best-of-three final
+        Seed group-format final
       </Button>
     </form>
   );

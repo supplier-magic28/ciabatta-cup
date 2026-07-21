@@ -38,9 +38,15 @@ model in `docs/SCHEMA.md`, and decision history in the ADR index.
   RPC/UI allowed only top-two-final cups. The forward-only repair migration
   `20260722101000_standings_director_final_override.sql` was operator-confirmed
   applied through the production SQL Editor on 2026-07-22; inspection of the
-  installed function returned `supports_standings = true`. The matching caller
-  is ready to deploy. Database review continues to preserve the pending decider
-  as an explicitly skipped audit row rather than deleting fixture history.
+  installed function returned `supports_standings = true`. Caller commit
+  `251c039` deployed and the audited override installed Claymore's selected
+  final while preserving the decider as skipped history.
+- The live override exposed an event-language mismatch: “best of 3” meant one
+  first-to-three-games set matching the group stage, not three full standard
+  sets. Forward migration
+  `20260722102000_group_format_override_final.sql` safely repairs only an
+  audited override final with no match row and makes future override finals
+  inherit the locked `group_ruleset`; it remains unapplied in production.
 
 ## Current architecture state
 
@@ -83,6 +89,13 @@ model in `docs/SCHEMA.md`, and decision history in the ADR index.
   a winner exists without creating a placement, award, or engraving.
 
 ## Latest verification
+
+The group-format correction passed the complete local application preflight:
+301 unit tests, TypeScript, ESLint, documentation checks, production build, 12
+UI performance contracts, and 10 browser smokes. Its 23-assertion database
+contract covers the inherited short group format, safe repair of the mistaken
+unplayed legacy final, one-set scoring, placements, and result-email intents; a
+fresh-stack database run remains required before production application.
 
 The standings-path repair passed the complete local application preflight: 301
 unit tests, TypeScript, ESLint, documentation checks, production build, 12 UI
@@ -137,6 +150,11 @@ and ranked-lifecycle gates are green.
   still need to be marked applied before a future linked `db push`. Migration
   130 must remain pending until the repaired application has deployed and
   passed the controlled production smoke suite.
+- The group-format correction migration
+  `20260722102000_group_format_override_final.sql` is not yet applied in
+  production. Claymore's final must remain unscored until that migration is
+  verified and applied because the correction deliberately closes after any
+  final match row exists.
 - The amended migration 130 has 74/74 focused and 256/256 aggregate local and
   fresh-stack CI coverage. It remains gated only on confirming the new
   application deployment and completing the controlled pre-enforcement
@@ -147,9 +165,9 @@ and ranked-lifecycle gates are green.
 
 ## Next work
 
-1. Deploy the verified standings-path caller. Use the audited control to seed
-   Claymore and confirm the selected best-of-three pairing, skipped decider,
-   and table-order third/fourth before entering the final.
+1. Verify and apply `20260722102000_group_format_override_final.sql` before any
+   Claymore final score is submitted. Confirm the final reads `First to 3`, then
+   score it and verify final-derived first/second plus table-order third/fourth.
 2. Let the repaired `main` deployment drain old instances, then run the
    controlled pre-enforcement draw-unlock/relock and health smoke with general
    mutations still frozen. Record migration 1295 in remote history. Then apply

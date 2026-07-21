@@ -52,8 +52,9 @@ the ADR files, while **Domain** is a navigation aid.
 | [ADR-0043](0043-workflow-consistency-and-tournament-atomicity.md) | Workflow consistency, precise scoring versions, and atomic cup completion | Accepted | Authorization, reliability, scoring, tournaments | ADR-0015 (deletion-eligibility dependency scope) | - |
 | [ADR-0044](0044-public-versioned-trophy-assets-for-ar.md) | Public versioned trophy assets for AR handoff | Accepted | Auth, static assets, AR | - | - |
 | [ADR-0045](0045-preplay-tournament-draw-unlock.md) | Guarded pre-play tournament draw unlock | Accepted | Tournaments, recovery | ADR-0022 / ADR-0039 irreversible lock scope | - |
-| [ADR-0046](0046-audited-director-final-override.md) | Audited director-seeded cup final | Accepted | Tournaments, recovery | ADR-0016 / ADR-0023 qualification-decider scope | ADR-0047 (championship-path restriction only) |
+| [ADR-0046](0046-audited-director-final-override.md) | Audited director-seeded cup final | Accepted | Tournaments, recovery | ADR-0016 / ADR-0023 qualification-decider scope | ADR-0047 (championship-path restriction); ADR-0048 (override-final ruleset) |
 | [ADR-0047](0047-standings-cup-director-final-override.md) | Extend the director final override to standings cups | Accepted | Tournaments, recovery | ADR-0046 championship-path restriction | - |
+| [ADR-0048](0048-group-format-director-final.md) | Director final inherits the cup's group format | Accepted | Tournaments, scoring, recovery | ADR-0046 override-final ruleset | - |
 
 ## Adding a decision
 

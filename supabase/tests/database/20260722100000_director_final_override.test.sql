@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(22);
+select plan(23);
 
 select has_table('public','tournament_final_overrides','director final overrides are auditable facts');
 select has_function('public','override_tournament_final_v1',array['uuid','uuid','uuid','text'],'guarded director final override exists');
@@ -66,19 +66,25 @@ select is((select finalist_two_id from public.tournament_final_overrides where t
 select ok((select skipped_at is not null from public.fixtures where tournament_id='a2000000-0000-0000-0000-000000000001' and stage='tiebreak'),'unplayed decider is preserved as skipped');
 select is((select count(*) from public.fixtures where tournament_id='a2000000-0000-0000-0000-000000000001' and stage='group'),6::bigint,'all group fixtures are preserved');
 select is((select count(*) from public.matches where tournament_id='a2000000-0000-0000-0000-000000000001'),6::bigint,'all group match facts are preserved');
-select is((select ruleset from public.fixtures where tournament_id='a2000000-0000-0000-0000-000000000001' and stage='final'),'best_of_3_standard'::public.tournament_ruleset,'override final is best of three');
+select is((select ruleset from public.fixtures where tournament_id='a2000000-0000-0000-0000-000000000001' and stage='final'),'short_first_to_3'::public.tournament_ruleset,'override final inherits the group format');
 select is((select array[player1_id,player2_id] from public.fixtures where tournament_id='a2000000-0000-0000-0000-000000000001' and stage='final'),array['a1000000-0000-0000-0000-000000000001'::uuid,'a1000000-0000-0000-0000-000000000003'::uuid],'override installs the selected final');
-select ok(not public.override_tournament_final_v1('a2000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000003','Director selected the championship finalists.'),'exact override retry is idempotent');
+reset role;
+alter table public.fixtures disable trigger enforce_tournament_fixture_lock;
+update public.fixtures set ruleset='best_of_3_standard' where tournament_id='a2000000-0000-0000-0000-000000000001' and stage='final';
+alter table public.fixtures enable trigger enforce_tournament_fixture_lock;
+set local role authenticated;
+select set_config('request.jwt.claim.sub','a1000000-0000-0000-0000-000000000009',true);
+select ok(not public.override_tournament_final_v1('a2000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000003','Director selected the championship finalists.'),'exact override retry is idempotent and repairs the legacy format');
+select is((select ruleset from public.fixtures where tournament_id='a2000000-0000-0000-0000-000000000001' and stage='final'),'short_first_to_3'::public.tournament_ruleset,'exact retry repairs an unplayed legacy override final');
 select throws_ok($$select public.override_tournament_final_v1('a2000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000002','Director selected different championship finalists.')$$,'qualification override conflicts with the recorded director decision','conflicting override retry is rejected');
 select throws_ok($$select public.finalize_tournament_v1('a2000000-0000-0000-0000-000000000001','final_stage','[]')$$,'complete the final first','completion waits for the real final');
 reset role;
 
 insert into public.matches(id,type,format,player1_id,player2_id,winner_id,status,submitted_by,played_at,tournament_id,fixture_id)
-select 'a4000000-0000-0000-0000-000000000007','ranked','best_of_3',player1_id,player2_id,player2_id,'pending_approval',player1_id,now(),tournament_id,id
+select 'a4000000-0000-0000-0000-000000000007','ranked','custom',player1_id,player2_id,player2_id,'pending_approval',player1_id,now(),tournament_id,id
 from public.fixtures where tournament_id='a2000000-0000-0000-0000-000000000001' and stage='final';
 insert into public.match_sets(match_id,set_number,p1_games,p2_games) values
-  ('a4000000-0000-0000-0000-000000000007',1,4,6),
-  ('a4000000-0000-0000-0000-000000000007',2,3,6);
+  ('a4000000-0000-0000-0000-000000000007',1,1,3);
 update public.matches set status='approved' where id='a4000000-0000-0000-0000-000000000007';
 set local role authenticated;
 select set_config('request.jwt.claim.sub','a1000000-0000-0000-0000-000000000009',true);

@@ -338,7 +338,7 @@ describe("overrideTournamentFinal", () => {
     const rpc = vi.fn().mockResolvedValue({ data: true, error: null });
     mocks.createClient.mockResolvedValue({ rpc });
     await expect(overrideTournamentFinal(undefined, finalOverrideForm())).resolves.toEqual({
-      ok: true, message: "Director override recorded. The best-of-three final is ready.",
+      ok: true, message: "Director override recorded. The group-format final is ready.",
     });
     expect(rpc).toHaveBeenCalledWith("override_tournament_final_v1", {
       p_tournament_id: "tournament-1",

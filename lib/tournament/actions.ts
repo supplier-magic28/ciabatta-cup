@@ -725,7 +725,7 @@ export async function overrideTournamentFinal(
     return { ok: false, error: "Couldn’t create the director-seeded final." };
   }
   invalidateTournament(tournamentId);
-  return { ok: true, message: "Director override recorded. The best-of-three final is ready." };
+  return { ok: true, message: "Director override recorded. The group-format final is ready." };
 }
 
 export async function completeTournamentFromStandings(
