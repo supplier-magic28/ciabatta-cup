@@ -97,12 +97,9 @@ contract covers the inherited short group format, safe repair of the mistaken
 unplayed legacy final, one-set scoring, placements, and result-email intents; a
 first fresh-stack run correctly exposed that migration 130 also requires the
 stage-RPC transaction marker for the legacy-format rewrite. The migration,
-exact-retry path, and fixture simulation now carry that marker. Corrected run
-29871692415 passed Database (including all 23 assertions and lint), Application,
-and ranked lifecycle. Its incremental documentation job alone rejected the
-follow-up code-only commit because the canonical documentation was carried in
-its parent; this release-record commit supplies the required per-commit impact
-handoff before the final all-green rerun.
+exact-retry path, and fixture simulation now carry that marker. Fresh-stack run
+29871908416 passed Database (all 23 assertions plus lint), Application,
+Documentation, and ranked lifecycle.
 
 The standings-path repair passed the complete local application preflight: 301
 unit tests, TypeScript, ESLint, documentation checks, production build, 12 UI
