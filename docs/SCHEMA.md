@@ -231,7 +231,8 @@ transaction-local marker.
 
 ### `tournament_final_overrides`
 
-One optional audited director decision per four-player `top_two_final` cup.
+One optional audited director decision per four-player `standings` or
+`top_two_final` cup.
 `finalist_one_id` and `finalist_two_id` are roster foreign keys; `reason`,
 `created_by`, and `created_at` preserve who bypassed the qualification decider
 and why. Only `override_tournament_final_v1` may insert the row. It is available

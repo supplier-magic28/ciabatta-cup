@@ -20,7 +20,7 @@ insert into public.tournaments(
   id,name,status,starts_at,location_name,courts,created_by,seat_count,championship_path,playoff_ruleset
 ) values(
   'a2000000-0000-0000-0000-000000000001','Override Cup','scheduled',now(),'Test',2,
-  'a1000000-0000-0000-0000-000000000009',4,'top_two_final','standard_set_tiebreak_6_all'
+  'a1000000-0000-0000-0000-000000000009',4,'standings','standard_set_tiebreak_6_all'
 );
 insert into public.tournament_participants(tournament_id,player_id,seed) values
   ('a2000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000001',1),

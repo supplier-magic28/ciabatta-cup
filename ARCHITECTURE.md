@@ -84,11 +84,12 @@ return to editable draft only through its row-locking organiser RPC and only
 before any match or placement fact exists; the first result remains the
 permanent sporting-history boundary.
 An audited four-player director-final override is the narrow exception to
-automatic qualification pairing: it never changes group results, records the
-selected finalists and reason before championship scoring, preserves the
-unplayed decider as skipped history, derives first and second from the real
-best-of-three final, and retains canonical table order for third and fourth
-inside the same RPC-only atomic scoring boundary.
+automatic qualification pairing for standings and top-two paths: it never
+changes group results or the configured championship path, records the selected
+finalists and reason before championship scoring, preserves the unplayed
+decider as skipped history, derives first and second from the real best-of-three
+final, and retains canonical table order for third and fourth inside the same
+RPC-only atomic scoring boundary.
 
 The application coordinates only work that cannot belong to the fact
 transaction: provider delivery, cache materialisation, route invalidation, and

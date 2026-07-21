@@ -6,7 +6,7 @@ import { TournamentLifecycleActions } from "@/components/tournament/TournamentLi
 import {TournamentLeadupConsole} from "@/components/tournament/TournamentLeadupConsole";
 import {TournamentPhotoControl} from "@/components/tournament/TournamentPhotoControl";
 import { getSessionPlayer } from "@/lib/auth/session";
-import { boundaryDecider } from "@/lib/tournament/logic";
+import { boundaryDecider, canOfferDirectorFinalOverride, finalStageAdvanceControl } from "@/lib/tournament/logic";
 import { loadActiveTournamentPlayers, loadTournamentBoard } from "@/lib/tournament/read";
 import { BackLink } from "@/components/ui/BackLink";
 import { PARENT_ROUTES } from "@/lib/navigation/parents";
@@ -44,7 +44,11 @@ export default async function ManageTournamentPage({ params }: { params: Promise
     && finalResultCount === 0;
   let advanceLabel = "Complete group matches first";
   let advanceDisabled = true;
-  if (groupComplete && neededDecider && !deciderFixture) {
+  const finalStageControl = finalStageAdvanceControl(finalFixtures.length, finalResultCount);
+  if (finalStageControl) {
+    advanceLabel = finalStageControl.label;
+    advanceDisabled = finalStageControl.disabled;
+  } else if (groupComplete && neededDecider && !deciderFixture) {
     advanceLabel = "Create qualification decider";
     advanceDisabled = false;
   } else if (groupComplete && neededDecider && !deciderComplete) {
@@ -58,23 +62,20 @@ export default async function ManageTournamentPage({ params }: { params: Promise
   } else if (groupComplete && finalFixtures.length === 0) {
     advanceLabel = "Create championship matches";
     advanceDisabled = false;
-  } else if (finalFixtures.length > 0 && finalResultCount === finalFixtures.length) {
-    advanceLabel = "Complete tournament";
-    advanceDisabled = false;
-  } else if (finalFixtures.length > 0) {
-    advanceLabel = finalFixtures.length === 1 ? "Complete final first" : "Complete final stage first";
   }
   const participants = board.participants.map((participant) => ({
     id: participant.player_id,
     seed: participant.seed,
     name: board.playerById.get(participant.player_id)?.name ?? "Player",
   }));
-  const canOverrideQualification = groupComplete
-    && board.tournament.championship_path === "top_two_final"
-    && board.participants.length === 4
-    && finalFixtures.length === 0
-    && semifinalFixtures.length === 0
-    && !deciderComplete;
+  const canOverrideQualification = canOfferDirectorFinalOverride({
+    groupComplete,
+    championshipPath: board.tournament.championship_path,
+    participantCount: board.participants.length,
+    finalFixtureCount: finalFixtures.length,
+    semifinalFixtureCount: semifinalFixtures.length,
+    deciderComplete,
+  });
 
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">

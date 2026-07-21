@@ -13,6 +13,34 @@ export function qualificationCutoff(path: TournamentChampionshipPath, playerCoun
   return 4;
 }
 
+export function canOfferDirectorFinalOverride(input: {
+  groupComplete: boolean;
+  championshipPath: TournamentChampionshipPath;
+  participantCount: number;
+  finalFixtureCount: number;
+  semifinalFixtureCount: number;
+  deciderComplete: boolean;
+}): boolean {
+  return input.groupComplete
+    && (input.championshipPath === "standings" || input.championshipPath === "top_two_final")
+    && input.participantCount === 4
+    && input.finalFixtureCount === 0
+    && input.semifinalFixtureCount === 0
+    && !input.deciderComplete;
+}
+
+export function finalStageAdvanceControl(
+  finalFixtureCount: number,
+  finalResultCount: number,
+): { label: string; disabled: boolean } | null {
+  if (finalFixtureCount === 0) return null;
+  if (finalResultCount === finalFixtureCount) return { label: "Complete tournament", disabled: false };
+  return {
+    label: finalFixtureCount === 1 ? "Complete final first" : "Complete final stage first",
+    disabled: true,
+  };
+}
+
 /** The two players immediately across a wins-tied qualification boundary. */
 export function boundaryDecider(
   standings: readonly TournamentStanding[],

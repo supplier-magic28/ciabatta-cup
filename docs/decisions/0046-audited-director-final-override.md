@@ -3,6 +3,7 @@
 - **Status:** Accepted
 - **Date:** 2026-07-22
 - **Supersedes:** ADR-0016 and ADR-0023 for the mandatory qualification-decider scope only
+- **Superseded by:** ADR-0047 for the configured championship-path restriction only
 
 ## Context
 

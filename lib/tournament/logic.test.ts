@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyBoundaryDecider, boundaryDecider, deriveTournamentStandings, generateRoundRobin, planFinalStage, planTopFourSemifinals, resolveDecider, resolveRoundRobinPlacements } from "./logic";
+import { applyBoundaryDecider, boundaryDecider, canOfferDirectorFinalOverride, deriveTournamentStandings, finalStageAdvanceControl, generateRoundRobin, planFinalStage, planTopFourSemifinals, resolveDecider, resolveRoundRobinPlacements } from "./logic";
 
 describe("generateRoundRobin", () => {
   it("matches the four-player qualifier draw exactly", () => {
@@ -51,6 +51,25 @@ describe("configurable championship paths", () => {
 
   it("seeds top-four semifinals first-v-fourth and second-v-third", () => {
     expect(planTopFourSemifinals(standings)).toEqual({semifinal1:["a","d"],semifinal2:["b","c"]});
+  });
+
+  it("offers the audited four-player final for standings and top-two cups", () => {
+    const state = {
+      groupComplete: true,
+      participantCount: 4,
+      finalFixtureCount: 0,
+      semifinalFixtureCount: 0,
+      deciderComplete: false,
+    };
+    expect(canOfferDirectorFinalOverride({ ...state, championshipPath: "standings" })).toBe(true);
+    expect(canOfferDirectorFinalOverride({ ...state, championshipPath: "top_two_final" })).toBe(true);
+    expect(canOfferDirectorFinalOverride({ ...state, championshipPath: "top_four_finals" })).toBe(false);
+  });
+
+  it("lets an installed override final supersede the skipped decider control", () => {
+    expect(finalStageAdvanceControl(1, 0)).toEqual({ label: "Complete final first", disabled: true });
+    expect(finalStageAdvanceControl(1, 1)).toEqual({ label: "Complete tournament", disabled: false });
+    expect(finalStageAdvanceControl(0, 0)).toBeNull();
   });
 });
 

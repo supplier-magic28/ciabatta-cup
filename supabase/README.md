@@ -51,6 +51,7 @@ is intentionally exact; never edit an applied file or move a filename.
 41. `20260718129500_preplay_draw_unlock.sql` - guarded organiser draw unlock before the first cup result.
 42. `20260718130000_rpc_mutation_path_enforcement.sql` - revoke direct practice, RSVP, email-ledger, cup, placement, and championship-stage writes after callers use the canonical RPCs; supply explicit clean-stack service reads, organiser bootstrap, and guarded invite-activation column grants.
 43. `20260722100000_director_final_override.sql` - audited four-player director override that preserves group facts and the skipped decider, installs a best-of-three final, and derives the remaining placements from table order.
+44. `20260722101000_standings_director_final_override.sql` - extends that audited override to an existing four-player standings cup without changing its configured path.
 
 The final five migrations are one compatible rollout chain. Apply the additive
 outbox, workflow, invariant, and pre-play-unlock migrations (127-1295) in order, deploy the
@@ -143,8 +144,10 @@ application caller. It is compatible whether migration 130 is still staged or
 already enforced. Confirm
 `to_regprocedure('public.override_tournament_final_v1(uuid,uuid,uuid,text)')`,
 record version `20260722100000` in remote migration history, and only then use
-the override control. The RPC refuses any cup whose championship-stage scoring
-has started.
+the override control. For an existing standings-path cup, then apply
+`20260722101000_standings_director_final_override.sql` and record that version
+before deploying the broadened caller. The RPC refuses any cup whose
+championship-stage scoring has started.
 
 Do not run a plain `supabase db push` from this release because it will
 also apply migration 130 before its smoke gate. When the SQL Editor is used,
