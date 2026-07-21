@@ -23,6 +23,10 @@ export interface ScoringMatchRow {
   tournament_id: string | null;
 }
 
+export type ScoringMatchWithEvent = ScoringMatchRow & {
+  tournaments?: { starts_at: string } | Array<{ starts_at: string }> | null;
+};
+
 export interface TournamentPlacementRow {
   player_id: string;
   points: number;
@@ -38,6 +42,14 @@ export function normalizeTournamentPlacementDates<T extends TournamentPlacementW
   return rows.map(({ tournaments, ...row }) => {
     const tournament = Array.isArray(tournaments) ? tournaments[0] : tournaments;
     return { ...row, awarded_at: tournament?.starts_at ?? row.awarded_at };
+  });
+}
+
+/** Use the single-day cup start for activity replay without rewriting match facts. */
+export function normalizeTournamentMatchDates<T extends ScoringMatchWithEvent>(rows: T[]): Array<Omit<T, "tournaments">> {
+  return rows.map(({ tournaments, ...row }) => {
+    const tournament = Array.isArray(tournaments) ? tournaments[0] : tournaments;
+    return { ...row, played_at: row.tournament_id ? (tournament?.starts_at ?? row.played_at) : row.played_at };
   });
 }
 

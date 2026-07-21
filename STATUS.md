@@ -46,7 +46,18 @@ model in `docs/SCHEMA.md`, and decision history in the ADR index.
   sets. Forward migration
   `20260722102000_group_format_override_final.sql` safely repairs only an
   audited override final with no match row and makes future override finals
-  inherit the locked `group_ruleset`; it remains unapplied in production.
+  inherit the locked `group_ruleset`. The operator reports migrations 1020 and
+  `20260722103000_tournament_activity_event_dates.sql` applied through the
+  production SQL Editor on 2026-07-22; their remote migration-history entries
+  still need reconciliation.
+- Claymore's placement rows are present with 100/50/20/10 awards, but its match
+  rows were timestamped when scores were entered several days after the event.
+  The activity replay therefore applied false pre-entry drought and consumed
+  Ben's +10 and most or all of other placement movement. The forward
+  `20260722103000_tournament_activity_event_dates.sql` repair is operator-
+  reported applied, while its caller remains pending deployment. Together they
+  preserve the approved facts, normalize legacy cup activity to `starts_at`,
+  and make future tournament result timestamps database-owned.
 
 ## Current architecture state
 
@@ -121,14 +132,14 @@ and ranked-lifecycle gates are green.
 
 | Check | Result |
 | --- | --- |
-| Aggregate application preflight | Passed on the director-final tree, including production build and browser checks |
+| Aggregate application preflight | `npm run verify` passed for the tournament-date repair with network access for the configured Google Fonts |
 | ESLint / TypeScript | Passed / passed |
-| Vitest | 299 tests passed; one fresh-Supabase integration test skipped by design |
+| Vitest | 303 tests passed; one fresh-Supabase integration test skipped by design, including the Claymore +20/+10 event-date regression |
 | Documentation gates | `docs:check` and `docs:impact` passed; structural fixtures 16/16 and impact fixtures 8/8 passed |
 | Production build | Passed |
 | UI performance contracts | 12/12 passed; these are geometry/query-shape contracts only |
 | Browser smoke | 10/10 passed on a runner-owned dynamic port, including public immutable GLB delivery and exact preserved `next` destinations |
-| Database pgTAP/lint | Passed on the fresh disposable stack in GitHub run 29869306021, including the 22-assertion director-final contract and aggregate database lint. |
+| Database pgTAP/lint | Previous tree passed on the fresh disposable stack in GitHub run 29869306021. The new five-assertion tournament-date contract is added but locally unverified because `npm run db:start` stops on the existing malformed `.env.local` (`unexpected character '\n' in variable name`); fresh-stack CI is required. |
 | Authenticated ranked integration | Passed in GitHub run 29869306021 on a disposable Node 24/Supabase stack: ranked submit, opponent confirm, organiser approve, cache rebuild, and exact ladder/profile agreement |
 | Production post-129 health | Operator-reported zero drift, no integrity issues, 18 sent deliveries, and no actionable deliveries |
 
@@ -154,11 +165,11 @@ and ranked-lifecycle gates are green.
   still need to be marked applied before a future linked `db push`. Migration
   130 must remain pending until the repaired application has deployed and
   passed the controlled production smoke suite.
-- The group-format correction migration
-  `20260722102000_group_format_override_final.sql` is not yet applied in
-  production. Claymore's final must remain unscored until that migration is
-  verified and applied because the correction deliberately closes after any
-  final match row exists.
+- Group-format and tournament activity-date migrations 1020/1030 are operator-
+  reported applied through the SQL Editor but do not yet have reconciled remote
+  migration-history records. Until the compatible application deploys, a
+  rating rebuild will continue to replay Claymore's late score-entry dates and
+  cannot restore the intended placement movement.
 - The amended migration 130 has 74/74 focused and 256/256 aggregate local and
   fresh-stack CI coverage. It remains gated only on confirming the new
   application deployment and completing the controlled pre-enforcement
@@ -169,9 +180,11 @@ and ranked-lifecycle gates are green.
 
 ## Next work
 
-1. Verify and apply `20260722102000_group_format_override_final.sql` before any
-   Claymore final score is submitted. Confirm the final reads `First to 3`, then
-   score it and verify final-derived first/second plus table-order third/fourth.
+1. Deploy the compatible tournament-date caller, run the organiser rating
+   rebuild, and confirm
+   Claymore ledgers contain +20/+10 on 18 July followed only by legitimate
+   post-cup decay; verify cache fact/built versions match and reconcile remote
+   migration history for migrations 1020/1030.
 2. Let the repaired `main` deployment drain old instances, then run the
    controlled pre-enforcement draw-unlock/relock and health smoke with general
    mutations still frozen. Record migration 1295 in remote history. Then apply

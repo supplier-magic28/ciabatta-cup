@@ -22,7 +22,7 @@ the ADR files, while **Domain** is a navigation aid.
 | [ADR-0013](0013-invite-password-setup.md) | Invited players choose a password before activation | Accepted | Auth | ADR-0009 password-step consequence | - |
 | [ADR-0014](0014-unranked-players-zero-points.md) | Unranked players display zero points | Accepted | Elo | - | ADR-0025 (baseline and floor) |
 | [ADR-0015](0015-delete-unused-players.md) | Hard-delete only players without match history | Accepted | Players, fact preservation | - | ADR-0043 (deletion-eligibility dependency scope) |
-| [ADR-0016](0016-organiser-operated-round-robin-tournaments.md) | Organiser-operated round-robin tournaments | Accepted | Tournaments | - | ADR-0024 (tournament scoring only) / ADR-0046 (director qualification override only) |
+| [ADR-0016](0016-organiser-operated-round-robin-tournaments.md) | Organiser-operated round-robin tournaments | Accepted | Tournaments | - | ADR-0024 (tournament scoring only) / ADR-0046 (director qualification override only) / ADR-0049 (result timestamp ownership only) |
 | [ADR-0017](0017-responsive-performance-contract.md) | Responsive performance contract | Accepted | Performance, UI | - | - |
 | [ADR-0018](0018-password-recovery-workflow.md) | Password recovery workflow | Accepted | Auth | - | - |
 | [ADR-0019](0019-pre-play-tournament-participant-replacement.md) | Pre-play tournament participant replacement | Accepted | Tournaments | - | - |
@@ -35,7 +35,7 @@ the ADR files, while **Domain** is a navigation aid.
 | [ADR-0026](0026-private-external-opponents-and-flat-awards.md) | Private external opponents and rebuildable flat awards | Accepted | External matches, privacy | - | - |
 | [ADR-0027](0027-owner-deletion-of-external-test-matches.md) | Owner deletion of external test matches | Accepted | External matches | - | - |
 | [ADR-0028](0028-derived-melbourne-tennis-streaks.md) | Derived Melbourne tennis streaks | Accepted | Profiles, dates | - | - |
-| [ADR-0029](0029-activity-points-and-derived-decay.md) | Activity points and permanent derived decay | Accepted | Public scoring | - | - |
+| [ADR-0029](0029-activity-points-and-derived-decay.md) | Activity points and permanent derived decay | Accepted | Public scoring | - | ADR-0049 (tournament activity-date source only) |
 | [ADR-0030](0030-planned-match-shells-and-zeus-notifications.md) | Planned match shells and Zeus notifications | Accepted | Planned matches, notifications | - | ADR-0033 (partial transition mechanics) |
 | [ADR-0031](0031-shared-courts-and-metadata-only-surface-tags.md) | Shared courts and metadata-only surface tags | Accepted | Courts, match metadata | - | - |
 | [ADR-0032](0032-transactional-realtime-zeus-notifications.md) | Transactional and realtime Zeus notifications | Accepted | Notifications | - | ADR-0033 (partial transition mechanics) |
@@ -55,6 +55,7 @@ the ADR files, while **Domain** is a navigation aid.
 | [ADR-0046](0046-audited-director-final-override.md) | Audited director-seeded cup final | Accepted | Tournaments, recovery | ADR-0016 / ADR-0023 qualification-decider scope | ADR-0047 (championship-path restriction); ADR-0048 (override-final ruleset) |
 | [ADR-0047](0047-standings-cup-director-final-override.md) | Extend the director final override to standings cups | Accepted | Tournaments, recovery | ADR-0046 championship-path restriction | - |
 | [ADR-0048](0048-group-format-director-final.md) | Director final inherits the cup's group format | Accepted | Tournaments, scoring, recovery | ADR-0046 override-final ruleset | - |
+| [ADR-0049](0049-canonical-tournament-activity-date.md) | Canonical tournament activity date | Accepted | Tournaments, scoring, cache recovery | ADR-0016 result timestamp / ADR-0029 tournament activity date | - |
 
 ## Adding a decision
 

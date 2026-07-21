@@ -56,12 +56,17 @@ Melbourne-day activity projection over those sources:
 - tournament placement awards;
 - permanent derived daily and drought deductions, floored at zero.
 
+Single-day cup activity is replayed on the tournament `starts_at` day. The
+projection normalizes legacy tournament matches that were timestamped when a
+director entered their score, while ordinary match dates remain unchanged.
+New tournament-result RPC writes take that date from the locked schedule.
+
 Ordinary non-tournament ranked matches separately feed pure zero-floor Elo for
 analysis and tournament seeding. Public activity points and Elo must never be
 described as the same value. `players.rating_points`, `rating_history`, and
 `ciabatta_reigns` are replaceable materialisations, never source facts.
 
-The scoring cache is versioned. Points-affecting transactions increment
+The scoring cache is versioned. Points- or tennis-day-affecting transactions increment
 `fact_version`; a rebuild installs a snapshot only when its source version is
 still current. A racing rebuild retries once, and an organiser can inspect and
 repair drift without altering source facts.

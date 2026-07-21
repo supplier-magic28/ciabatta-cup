@@ -533,7 +533,7 @@ export async function recordTournamentResult(
     p_fixture_id: fixture.id,
     p_winner_id: validated.winnerId,
     p_sets: validated.sets.map((set,index)=>({set_number:index+1,p1_games:set.p1Games,p2_games:set.p2Games,tiebreak_p1:set.tiebreakP1,tiebreak_p2:set.tiebreakP2})),
-    p_played_at: new Date().toISOString(),
+    p_played_at: null,
     p_duration_minutes: null,
   });
   if (error) return { ok: false, error: "Couldn't record this result. It may already be complete." };

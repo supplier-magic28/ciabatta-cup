@@ -173,6 +173,7 @@ describe("recordTournamentResult", () => {
     expect(client.rpc).toHaveBeenCalledWith("record_tournament_result_v2", expect.objectContaining({
       p_fixture_id: "fixture-1",
       p_winner_id: "player-1",
+      p_played_at: null,
     }));
     expect(mocks.rebuildRatingCache).toHaveBeenCalledOnce();
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/tournaments/tournament-1");

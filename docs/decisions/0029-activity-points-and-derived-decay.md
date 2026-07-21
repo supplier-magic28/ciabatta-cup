@@ -2,6 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-07-13
+- **Superseded by:** ADR-0049 (tournament activity-date source only)
 
 ## Context
 

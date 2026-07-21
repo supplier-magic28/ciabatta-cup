@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildRatingCache, normalizeTournamentPlacementDates, toScoringMatches, type ScoringMatchRow } from "./materialization";
+import { buildRatingCache, normalizeTournamentMatchDates, normalizeTournamentPlacementDates, toScoringMatches, type ScoringMatchRow } from "./materialization";
 
 const rows: ScoringMatchRow[] = [
   {
@@ -120,6 +120,40 @@ describe("rating cache materialization", () => {
       points:100,
       awarded_at:"2026-07-11T00:00:00Z",
     }]);
+  });
+
+  it("replays late-entered cup matches on the event date without rewriting ordinary dates", () => {
+    const normalized = normalizeTournamentMatchDates([
+      { ...rows[0], id:"cup-match", tournament_id:"cup-1", played_at:"2026-07-21T22:30:00Z", tournaments:{ starts_at:"2026-07-18T00:30:00Z" } },
+      { ...rows[0], id:"ordinary-match", played_at:"2026-07-21T22:30:00Z", tournaments:null },
+    ]);
+
+    expect(normalized.map(({ id, played_at }) => ({ id, played_at }))).toEqual([
+      { id:"cup-match", played_at:"2026-07-18T00:30:00Z" },
+      { id:"ordinary-match", played_at:"2026-07-21T22:30:00Z" },
+    ]);
+    expect(normalized.every((row) => !("tournaments" in row))).toBe(true);
+  });
+
+  it("keeps Claymore placement awards intact before legitimate post-cup decay", () => {
+    const matches = normalizeTournamentMatchDates([{
+      ...rows[0], id:"claymore-match", tournament_id:"claymore", played_at:"2026-07-21T22:30:00Z",
+      tournaments:{ starts_at:"2026-07-18T00:30:00Z" },
+    }]);
+    const placements = normalizeTournamentPlacementDates([
+      { tournament_id:"claymore", player_id:"alice", points:20, awarded_at:"2026-07-21T22:30:00Z", tournaments:{ starts_at:"2026-07-18T00:30:00Z" } },
+      { tournament_id:"claymore", player_id:"bob", points:10, awarded_at:"2026-07-21T22:30:00Z", tournaments:{ starts_at:"2026-07-18T00:30:00Z" } },
+    ]);
+    const cache = buildRatingCache(["alice", "bob"], matches, placements, [], [], "2026-07-22");
+
+    expect(cache.activityLedgers.get("alice")).toContainEqual({ date:"2026-07-18", kind:"placement", sourceId:"claymore", delta:20 });
+    expect(cache.activityLedgers.get("bob")).toContainEqual({ date:"2026-07-18", kind:"placement", sourceId:"claymore", delta:10 });
+    expect(cache.ratingPoints).toEqual([
+      { playerId:"alice", rating:16 },
+      { playerId:"bob", rating:6 },
+    ]);
+    expect(cache.eloRatings.get("alice")).toBe(0);
+    expect(cache.eloRatings.get("bob")).toBe(0);
   });
 
   it("keeps the activity-points incumbent ranked first when current totals tie", () => {

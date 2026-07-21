@@ -53,6 +53,7 @@ is intentionally exact; never edit an applied file or move a filename.
 43. `20260722100000_director_final_override.sql` - audited four-player director override that preserves group facts and the skipped decider, installs a best-of-three final, and derives the remaining placements from table order.
 44. `20260722101000_standings_director_final_override.sql` - extends that audited override to an existing four-player standings cup without changing its configured path.
 45. `20260722102000_group_format_override_final.sql` - repairs an unplayed override final to the cup's group format and makes future overrides inherit that locked ruleset.
+46. `20260722103000_tournament_activity_event_dates.sql` - makes the locked cup start the canonical tournament activity timestamp and versions tournament tennis-day changes.
 
 The final five migrations are one compatible rollout chain. Apply the additive
 outbox, workflow, invariant, and pre-play-unlock migrations (127-1295) in order, deploy the
@@ -69,6 +70,12 @@ fixture that inserts participants after locking tests the participant guard and
 never reaches the unlock contract. The focused contract covers successful and
 idempotent unlock, preserved preview/roster rows, ordinary-player and direct-
 write refusal, and independent match/placement refusal.
+
+Tournament result v2 retains its five-argument signature for rolling deploys,
+but migration 1030 owns `played_at` from `tournaments.starts_at`; callers pass
+null rather than score-entry time. Existing approved rows are not updated.
+Application projections normalize legacy cup timestamps before activity replay,
+and the organiser runs one cache rebuild after rollout.
 
 ## Environment variables
 

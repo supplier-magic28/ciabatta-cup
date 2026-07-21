@@ -108,7 +108,7 @@ partial index permits only one match fact per fixture (ADR-0016).
 | winner_id | FK players nullable | null until scored |
 | status | enum: pending_confirmation, pending_approval, approved, queried, rejected | see lifecycle below |
 | submitted_by | FK players | player who submitted it, or admin who recorded a tournament result |
-| played_at | timestamptz | |
+| played_at | timestamptz | player-selected for ordinary matches; tournament results use the cup's locked `starts_at` |
 | duration_minutes | int nullable | shown as "2h 14m" |
 | tournament_id | FK tournaments nullable | null = casual match |
 | fixture_id | FK fixtures nullable | links a tournament result to its slot |
@@ -493,8 +493,10 @@ caches. Approved league and tournament facts remain immutable.
 
 All player-logged matches store a compulsory `played_at` date selected by the
 submitter. `matches.location` is optional trimmed text (maximum 160 characters)
-for a court or venue. Tournament-created facts continue to derive `played_at`
-from their event workflow and may leave `location` null.
+for a court or venue. Tournament-created facts derive `played_at` from the
+single-day cup's locked `starts_at` and may leave `location` null. Legacy cup
+rows retain their immutable stored timestamp, but activity, decay, streak,
+reign, and cache projections normalize them to that same event date.
 
 ## play_days _(Phase 7 — implemented)_
 
@@ -525,7 +527,7 @@ non-ranked record and external opponent identities remain owner-private.
 
 ## Canonical activity-points inputs
 
-`players.rating_points` is a rebuildable snapshot of public activity points, not authoritative Elo. Public points are derived from approved ordinary matches (+15 participation each, +15 winner bonus), approved exhibition/external participation (+10), approved `practice_sessions` (+5), tournament placements, and permanent derived inactivity deductions. Ordinary Elo remains a separate pure projection for seeding/history.
+`players.rating_points` is a rebuildable snapshot of public activity points, not authoritative Elo. Public points are derived from approved ordinary matches (+15 participation each, +15 winner bonus), approved exhibition/external participation (+10), approved `practice_sessions` (+5), tournament placements, and permanent derived inactivity deductions. A non-rejected tournament match marks tennis on its tournament `starts_at` day; it receives no ordinary award. Ordinary Elo remains a separate pure projection for seeding/history.
 
 `practice_sessions` stores an owner claim (`serves`, `wall_hits`, or `other`),
 1–300 minutes, Melbourne-calendar practice date, optional 500-character note,
@@ -563,11 +565,12 @@ status graphs; approved result facts remain terminal and immutable.
 
 `scoring_cache_state` is a singleton containing `fact_version`,
 `built_version`, and the last successful rebuild time. Triggers increment the
-fact version only when the canonical activity projection changes: an approved
-match enters/leaves or changes a scoring input, approved practice enters/leaves
-or changes its player/date, a placement changes, or a play day changes. Pending
-submissions, lifecycle status noise, and court/surface metadata do not create
-false drift. `replace_rating_cache_with_reigns_v2` takes an advisory lock and
+fact version only when the canonical activity projection changes: a non-rejected
+match tennis day enters/leaves or changes participant/date, an approved ordinary
+match award changes, approved practice enters/leaves or changes its player/date,
+a placement changes, or a play day changes. Lifecycle changes that alter neither
+tennis-day nor award contributions and court/surface metadata do not create false
+drift. `replace_rating_cache_with_reigns_v2` takes an advisory lock and
 refuses a snapshot built from a stale version.
 
 `lifecycle_email_deliveries` is the legacy match/planned/practice diagnostic

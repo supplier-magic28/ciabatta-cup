@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-07-10
-- **Superseded by:** ADR-0024 (tournament-scoring consequence only) and ADR-0046 (director qualification-override scope only)
+- **Superseded by:** ADR-0024 (tournament-scoring consequence only), ADR-0046 (director qualification-override scope only), and ADR-0049 (result timestamp ownership only)
 
 ## Context
 
