@@ -50,7 +50,7 @@ is intentionally exact; never edit an applied file or move a filename.
 40. `20260718129000_transaction_invariant_repairs.sql` - clean-stack grants, deterministic cup standings/placements, payload-safe retries, lifecycle revisions, atomic draw/replacement/cover RPCs, legacy outbox reconciliation, and health v5.
 41. `20260718129500_preplay_draw_unlock.sql` - guarded organiser draw unlock before the first cup result.
 42. `20260718130000_rpc_mutation_path_enforcement.sql` - revoke direct practice, RSVP, email-ledger, cup, placement, and championship-stage writes after callers use the canonical RPCs; supply explicit clean-stack service reads, organiser bootstrap, and guarded invite-activation column grants.
-43. `20260722100000_director_final_override.sql` - audited four-player director override that preserves group facts, replaces only unplayed championship fixtures, installs a best-of-three final, and derives the remaining placements from table order.
+43. `20260722100000_director_final_override.sql` - audited four-player director override that preserves group facts and the skipped decider, installs a best-of-three final, and derives the remaining placements from table order.
 
 The final five migrations are one compatible rollout chain. Apply the additive
 outbox, workflow, invariant, and pre-play-unlock migrations (127-1295) in order, deploy the

@@ -63,7 +63,7 @@ select set_config('request.jwt.claim.sub','a1000000-0000-0000-0000-000000000009'
 select ok(public.override_tournament_final_v1('a2000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000003','Director selected the championship finalists.'),'director override commits');
 select is((select finalist_one_id from public.tournament_final_overrides where tournament_id='a2000000-0000-0000-0000-000000000001'),'a1000000-0000-0000-0000-000000000001'::uuid,'first finalist is audited');
 select is((select finalist_two_id from public.tournament_final_overrides where tournament_id='a2000000-0000-0000-0000-000000000001'),'a1000000-0000-0000-0000-000000000003'::uuid,'second finalist is audited');
-select is((select count(*) from public.fixtures where tournament_id='a2000000-0000-0000-0000-000000000001' and stage='tiebreak'),0::bigint,'unplayed decider is removed');
+select ok((select skipped_at is not null from public.fixtures where tournament_id='a2000000-0000-0000-0000-000000000001' and stage='tiebreak'),'unplayed decider is preserved as skipped');
 select is((select count(*) from public.fixtures where tournament_id='a2000000-0000-0000-0000-000000000001' and stage='group'),6::bigint,'all group fixtures are preserved');
 select is((select count(*) from public.matches where tournament_id='a2000000-0000-0000-0000-000000000001'),6::bigint,'all group match facts are preserved');
 select is((select ruleset from public.fixtures where tournament_id='a2000000-0000-0000-0000-000000000001' and stage='final'),'best_of_3_standard'::public.tournament_ruleset,'override final is best of three');
@@ -82,7 +82,7 @@ insert into public.match_sets(match_id,set_number,p1_games,p2_games) values
 update public.matches set status='approved' where id='a4000000-0000-0000-0000-000000000007';
 set local role authenticated;
 select set_config('request.jwt.claim.sub','a1000000-0000-0000-0000-000000000009',true);
-select throws_ok($$select public.override_tournament_final_v1('a2000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000003','Director selected the championship finalists.')$$,'qualification override is closed after a championship-stage result starts','override closes when final scoring starts');
+select ok(not public.override_tournament_final_v1('a2000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000003','Director selected the championship finalists.'),'exact override retry stays safe after final scoring starts');
 select lives_ok($$select public.finalize_tournament_v1('a2000000-0000-0000-0000-000000000001','final_stage','[{"player_id":"a1000000-0000-0000-0000-000000000003","placement":1,"points":100},{"player_id":"a1000000-0000-0000-0000-000000000001","placement":2,"points":50},{"player_id":"a1000000-0000-0000-0000-000000000002","placement":3,"points":20},{"player_id":"a1000000-0000-0000-0000-000000000004","placement":4,"points":10}]')$$,'override completion commits from the real final and table remainder');
 reset role;
 select is((select status from public.tournaments where id='a2000000-0000-0000-0000-000000000001'),'completed'::public.tournament_status,'override cup completes');

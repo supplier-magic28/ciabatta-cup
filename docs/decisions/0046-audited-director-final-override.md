@@ -18,8 +18,8 @@ An active organiser may record one audited final override for a locked,
 four-player `top_two_final` cup after all six group fixtures are approved and
 before any championship-stage match exists. The organiser selects two distinct
 roster finalists and records a 10-500 character reason. The row-locking RPC
-preserves every group fixture and match, removes only unplayed post-group
-fixtures, and installs one `best_of_3_standard` final.
+preserves every group fixture and match, marks the unplayed qualification
+decider as skipped, and installs one `best_of_3_standard` final.
 
 The override is retry-stable and cannot be changed. Once championship scoring
 starts, the override closes. First and second are derived from the approved

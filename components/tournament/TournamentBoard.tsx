@@ -89,7 +89,7 @@ export function TournamentBoard({ board, admin = false }: { board: Board; admin?
                         <span className={`text-right font-mono text-[11px] ${match ? "text-green" : "text-muted"}`}>
                           {match
                             ? formatScore(sets.map((set) => ({ p1Games: set.p1_games, p2Games: set.p2_games, tiebreakP1: set.tiebreak_p1, tiebreakP2: set.tiebreak_p2 })))
-                            : skipped ? "Skipped — completed from standings" : "Pending"}
+                            : skipped ? fixture.stage === "tiebreak" ? "Skipped — director final" : "Skipped — completed from standings" : "Pending"}
                         </span>
                       </div>
                       {admin && !match && !skipped && (

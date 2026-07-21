@@ -235,8 +235,8 @@ One optional audited director decision per four-player `top_two_final` cup.
 `finalist_one_id` and `finalist_two_id` are roster foreign keys; `reason`,
 `created_by`, and `created_at` preserve who bypassed the qualification decider
 and why. Only `override_tournament_final_v1` may insert the row. It is available
-after all group results and before any championship-stage match, removes only
-unplayed post-group fixtures, and installs one `best_of_3_standard` final.
+after all group results and before any championship-stage match, preserves the
+unplayed decider as skipped, and installs one `best_of_3_standard` final.
 First/second come from that approved final; non-finalists retain canonical
 group-table order for third/fourth. The ordinary finalizer validates this
 override-derived placement checksum atomically.

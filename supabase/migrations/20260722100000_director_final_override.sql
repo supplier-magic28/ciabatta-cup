@@ -62,6 +62,29 @@ $$;
 revoke all on function public.player_deletion_blockers_v1(uuid) from public;
 grant execute on function public.player_deletion_blockers_v1(uuid) to authenticated,service_role;
 
+-- The existing early-completion exception preserves skipped finals/playoffs.
+-- Extend the same single-column transition to an unplayed qualification
+-- decider so the override keeps, rather than deletes, its scheduling history.
+create or replace function public.enforce_tournament_fixture_lock()
+returns trigger language plpgsql security definer set search_path=public
+as $$
+declare target_tournament_id uuid:=case when tg_op='DELETE' then old.tournament_id else new.tournament_id end;
+begin
+  if tg_op='UPDATE' and old.stage in('tiebreak','final','playoff')
+    and old.skipped_at is null and new.skipped_at is not null
+    and (to_jsonb(new)-'skipped_at')=(to_jsonb(old)-'skipped_at')
+  then return new; end if;
+  if exists(select 1 from public.tournaments where id=target_tournament_id and draw_locked_at is not null)
+    and (tg_op<>'INSERT' or new.stage='group')
+  then raise exception 'round-robin fixtures are locked by the director'; end if;
+  if exists(select 1 from public.matches where tournament_id=target_tournament_id)
+    and (tg_op<>'INSERT' or new.stage='group')
+  then raise exception 'round-robin fixtures are locked after the first result'; end if;
+  if tg_op='DELETE' then return old; end if;
+  return new;
+end;
+$$;
+
 create or replace function public.override_tournament_final_v1(
   p_tournament_id uuid,
   p_finalist_one_id uuid,
@@ -108,10 +131,6 @@ begin
   where f.tournament_id=v_t.id and f.stage='group';
   if v_group_count<>6 or v_group_result_count<>v_group_count
   then raise exception 'complete every round-robin fixture first'; end if;
-  if exists(
-    select 1 from public.matches m join public.fixtures f on f.id=m.fixture_id
-    where f.tournament_id=v_t.id and f.stage<>'group'
-  ) then raise exception 'qualification override is closed after a championship-stage result starts'; end if;
 
   select * into v_override from public.tournament_final_overrides where tournament_id=v_t.id;
   if found then
@@ -122,6 +141,15 @@ begin
     return false;
   end if;
 
+  if exists(
+    select 1 from public.matches m join public.fixtures f on f.id=m.fixture_id
+    where f.tournament_id=v_t.id and f.stage<>'group'
+  ) then raise exception 'qualification override is closed after a championship-stage result starts'; end if;
+  if exists(
+    select 1 from public.fixtures
+    where tournament_id=v_t.id and stage<>'group' and stage<>'tiebreak'
+  ) then raise exception 'qualification override requires an unplayed decider-only stage'; end if;
+
   select coalesce(max(round_number),0)+1 into v_round
   from public.fixtures where tournament_id=v_t.id and stage='group';
 
@@ -130,7 +158,8 @@ begin
   ) values(v_t.id,p_finalist_one_id,p_finalist_two_id,v_reason,auth.uid());
 
   perform pg_catalog.set_config('app.tournament_stage_rpc','on',true);
-  delete from public.fixtures where tournament_id=v_t.id and stage<>'group';
+  update public.fixtures set skipped_at=coalesce(skipped_at,now())
+    where tournament_id=v_t.id and stage='tiebreak';
   insert into public.fixtures(
     tournament_id,stage,round_number,slot_number,court_number,ruleset,player1_id,player2_id
   ) values(

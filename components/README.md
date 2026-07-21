@@ -167,7 +167,8 @@ of Done (`CLAUDE.md`).
 - `tournament/TournamentParticipantEditor` — pre-play admin replacement that
   preserves a seed and regenerates the complete round-robin draw.
 - `tournament/TournamentBoard` — shared standings and round/court schedule used
-  by the player and director views, including preserved skipped fixtures.
+  by the player and director views, including distinct standings-completion and
+  director-final labels for preserved skipped fixtures.
 - `tournament/TournamentResultForm` — two-step admin review for short,
   standard, pro-set, and best-of-three fixtures with atomic approval.
 - `tournament/TournamentPhotoControl` — admin-only tournament cover upload,

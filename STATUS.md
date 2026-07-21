@@ -32,7 +32,9 @@ model in `docs/SCHEMA.md`, and decision history in the ADR index.
 - The current repair branch adds a guarded director-seeded final for the
   four-player Claymore edge case. Migration
   `20260722100000_director_final_override.sql` and its application caller remain
-  undeployed pending fresh-stack verification.
+  undeployed pending fresh-stack verification. Database review tightened the
+  transition to preserve the pending decider as an explicitly skipped audit
+  row rather than deleting fixture history.
 
 ## Current architecture state
 

@@ -156,8 +156,8 @@ file and confirm
 `to_regprocedure('public.override_tournament_final_v1(uuid,uuid,uuid,text)')`
 before deploying its admin caller. Record its remote migration-history version
 separately when SQL Editor is used. The production smoke must prove the chosen
-best-of-three final, preserved six group results, absent unplayed decider, and
-fixed table-order third/fourth before the final score is entered.
+best-of-three final, preserved six group results, visibly skipped unplayed
+decider, and fixed table-order third/fourth before the final score is entered.
 
 ## 4. Core production smoke test
 
