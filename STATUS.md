@@ -36,10 +36,11 @@ model in `docs/SCHEMA.md`, and decision history in the ADR index.
   succeeded; Vercel deployed caller commit `7ef42dd`. The live cup then exposed
   a release assumption: Claymore is configured for standings, while the first
   RPC/UI allowed only top-two-final cups. The forward-only repair migration
-  `20260722101000_standings_director_final_override.sql` and matching caller
-  broaden only that path boundary. Database review continues to preserve the
-  pending decider as an explicitly skipped audit row rather than deleting
-  fixture history.
+  `20260722101000_standings_director_final_override.sql` was operator-confirmed
+  applied through the production SQL Editor on 2026-07-22; inspection of the
+  installed function returned `supports_standings = true`. The matching caller
+  is ready to deploy. Database review continues to preserve the pending decider
+  as an explicitly skipped audit row rather than deleting fixture history.
 
 ## Current architecture state
 
@@ -131,15 +132,11 @@ and ranked-lifecycle gates are green.
   clean-application proof.
 - Docker Desktop is unavailable locally, so the corrected database contract was
   proven on GitHub's disposable fresh stack rather than the workstation stack.
-- Production migrations 127-1295 and 132 were applied through the SQL Editor,
-  so their remote migration-history entries still need to be marked applied
-  before a future linked `db push`. Migration 130 must remain pending until the
-  repaired application has deployed and passed the controlled production smoke
-  suite.
-- The standings-path repair migration
-  `20260722101000_standings_director_final_override.sql` is not yet applied in
-  production; its application caller must not deploy until its fresh-stack
-  database contract is green and the RPC replacement is applied.
+- Production migrations 127-1295 and both director-final migrations were
+  applied through the SQL Editor, so their remote migration-history entries
+  still need to be marked applied before a future linked `db push`. Migration
+  130 must remain pending until the repaired application has deployed and
+  passed the controlled production smoke suite.
 - The amended migration 130 has 74/74 focused and 256/256 aggregate local and
   fresh-stack CI coverage. It remains gated only on confirming the new
   application deployment and completing the controlled pre-enforcement
@@ -150,11 +147,9 @@ and ranked-lifecycle gates are green.
 
 ## Next work
 
-1. Prove the standings-path override on a fresh stack, apply
-   `20260722101000_standings_director_final_override.sql` in production, then
-   deploy the matching caller. Use the audited control to seed Claymore and
-   confirm the selected best-of-three pairing, skipped decider, and table-order
-   third/fourth before entering the final.
+1. Deploy the verified standings-path caller. Use the audited control to seed
+   Claymore and confirm the selected best-of-three pairing, skipped decider,
+   and table-order third/fourth before entering the final.
 2. Let the repaired `main` deployment drain old instances, then run the
    controlled pre-enforcement draw-unlock/relock and health smoke with general
    mutations still frozen. Record migration 1295 in remote history. Then apply
