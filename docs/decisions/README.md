@@ -22,14 +22,14 @@ the ADR files, while **Domain** is a navigation aid.
 | [ADR-0013](0013-invite-password-setup.md) | Invited players choose a password before activation | Accepted | Auth | ADR-0009 password-step consequence | - |
 | [ADR-0014](0014-unranked-players-zero-points.md) | Unranked players display zero points | Accepted | Elo | - | ADR-0025 (baseline and floor) |
 | [ADR-0015](0015-delete-unused-players.md) | Hard-delete only players without match history | Accepted | Players, fact preservation | - | ADR-0043 (deletion-eligibility dependency scope) |
-| [ADR-0016](0016-organiser-operated-round-robin-tournaments.md) | Organiser-operated round-robin tournaments | Accepted | Tournaments | - | ADR-0024 (tournament scoring only) |
+| [ADR-0016](0016-organiser-operated-round-robin-tournaments.md) | Organiser-operated round-robin tournaments | Accepted | Tournaments | - | ADR-0024 (tournament scoring only) / ADR-0046 (director qualification override only) |
 | [ADR-0017](0017-responsive-performance-contract.md) | Responsive performance contract | Accepted | Performance, UI | - | - |
 | [ADR-0018](0018-password-recovery-workflow.md) | Password recovery workflow | Accepted | Auth | - | - |
 | [ADR-0019](0019-pre-play-tournament-participant-replacement.md) | Pre-play tournament participant replacement | Accepted | Tournaments | - | - |
 | [ADR-0020](0020-personal-profile-settings.md) | Personal profile settings and public display identity | Accepted | Profiles | - | - |
 | [ADR-0021](0021-tournament-cover-photos.md) | Tournament cover photos | Accepted | Tournaments, storage | - | - |
 | [ADR-0022](0022-tournament-draw-lock-and-lifecycle-email.md) | Tournament draw lock and lifecycle email delivery | Accepted | Tournaments, email | - | ADR-0042 (custom lifecycle-email scope); ADR-0045 (irreversible lock scope) |
-| [ADR-0023](0023-optional-round-robin-completion.md) | Optional round-robin tournament completion | Accepted | Tournaments | - | - |
+| [ADR-0023](0023-optional-round-robin-completion.md) | Optional round-robin tournament completion | Accepted | Tournaments | - | ADR-0046 (director qualification override only) |
 | [ADR-0024](0024-tournament-placement-awards.md) | Tournament placement awards replace match Elo | Accepted | Tournaments, scoring | ADR-0016 tournament-scoring consequence | ADR-0025 (1000-point baseline only) |
 | [ADR-0025](0025-zero-based-ladder-and-player-history.md) | Zero-based ladder and derived player history | Accepted | Elo, profiles | ADR-0007 / ADR-0014 baseline and floor; ADR-0024 1000-point baseline | - |
 | [ADR-0026](0026-private-external-opponents-and-flat-awards.md) | Private external opponents and rebuildable flat awards | Accepted | External matches, privacy | - | - |
@@ -52,6 +52,7 @@ the ADR files, while **Domain** is a navigation aid.
 | [ADR-0043](0043-workflow-consistency-and-tournament-atomicity.md) | Workflow consistency, precise scoring versions, and atomic cup completion | Accepted | Authorization, reliability, scoring, tournaments | ADR-0015 (deletion-eligibility dependency scope) | - |
 | [ADR-0044](0044-public-versioned-trophy-assets-for-ar.md) | Public versioned trophy assets for AR handoff | Accepted | Auth, static assets, AR | - | - |
 | [ADR-0045](0045-preplay-tournament-draw-unlock.md) | Guarded pre-play tournament draw unlock | Accepted | Tournaments, recovery | ADR-0022 / ADR-0039 irreversible lock scope | - |
+| [ADR-0046](0046-audited-director-final-override.md) | Audited director-seeded cup final | Accepted | Tournaments, recovery | ADR-0016 / ADR-0023 qualification-decider scope | - |
 
 ## Adding a decision
 

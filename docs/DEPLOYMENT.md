@@ -150,6 +150,15 @@ write it revokes. After enforcement, recover with a forward migration/applicatio
 fix; never edit an applied migration or roll an old direct-write client back
 into service.
 
+Migration `20260722100000_director_final_override.sql` is additive and works on
+either side of the staged migration-130 enforcement boundary. Apply the whole
+file and confirm
+`to_regprocedure('public.override_tournament_final_v1(uuid,uuid,uuid,text)')`
+before deploying its admin caller. Record its remote migration-history version
+separately when SQL Editor is used. The production smoke must prove the chosen
+best-of-three final, preserved six group results, absent unplayed decider, and
+fixed table-order third/fourth before the final score is entered.
+
 ## 4. Core production smoke test
 
 Use non-disposable genuine accounts only for a real result; approved facts are

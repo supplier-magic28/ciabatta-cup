@@ -1,6 +1,6 @@
 # Ciabatta Cup status
 
-**Last updated:** 2026-07-20
+**Last updated:** 2026-07-22
 
 This is the short operational handover. Durable architecture belongs in
 `ARCHITECTURE.md`, current lifecycle contracts in `docs/WORKFLOWS.md`, the data
@@ -29,6 +29,10 @@ model in `docs/SCHEMA.md`, and decision history in the ADR index.
   any-match boundary, preserves distinct operator-facing rollout/fact/auth/not-
   found failures, and exercises the RPC only after building a legal unlocked
   roster and fixture preview. The production migration gate is now satisfied.
+- The current repair branch adds a guarded director-seeded final for the
+  four-player Claymore edge case. Migration
+  `20260722100000_director_final_override.sql` and its application caller remain
+  undeployed pending fresh-stack verification.
 
 ## Current architecture state
 
@@ -71,6 +75,10 @@ model in `docs/SCHEMA.md`, and decision history in the ADR index.
   a winner exists without creating a placement, award, or engraving.
 
 ## Latest verification
+
+The director-final override is not yet included in the verified baseline below.
+Its focused application and database contracts, aggregate preflight, and fresh-
+stack CI are pending.
 
 The repaired tree passed the complete local application preflight and the
 fresh-stack GitHub CI run for commit `3630ceb`. The corrected database contract
@@ -121,10 +129,13 @@ and ranked-lifecycle gates are green.
 
 ## Next work
 
-1. Let the repaired `main` deployment drain old instances, then run the
+1. Verify the director-final override migration/action locally where available
+   and on fresh-stack CI. Apply migration 132 before deploying its caller, then
+   use the audited control to seed the Claymore final.
+2. Let the repaired `main` deployment drain old instances, then run the
    controlled pre-enforcement draw-unlock/relock and health smoke with general
    mutations still frozen. Record migration 1295 in remote history. Then apply
    migration 130, repeat the gate, and reopen using `docs/DEPLOYMENT.md`.
-2. Execute the credentialed production ranked lifecycle and configurable cup/
+3. Execute the credentialed production ranked lifecycle and configurable cup/
    RSVP/result-email smoke tests. Require zero genuine drift, no lifecycle
    integrity issue, complete placements, and exact projection agreement.

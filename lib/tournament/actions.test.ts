@@ -16,7 +16,7 @@ vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 vi.mock("./read", () => ({ loadTournamentBoard: mocks.loadTournamentBoard }));
 vi.mock("./placements", () => ({ deriveOfficialPlacements: mocks.deriveOfficialPlacements }));
 
-import { completeTournamentFromStandings, lockTournamentDraw, recordTournamentResult, replaceTournamentParticipant, unlockTournamentDraw } from "./actions";
+import { completeTournamentFromStandings, lockTournamentDraw, overrideTournamentFinal, recordTournamentResult, replaceTournamentParticipant, unlockTournamentDraw } from "./actions";
 
 function resultForm() {
   const form = new FormData();
@@ -104,6 +104,15 @@ function replacementForm(replacementPlayerId = "player-5") {
   form.set("tournamentId", "tournament-1");
   form.set("outgoingPlayerId", "player-4");
   form.set("replacementPlayerId", replacementPlayerId);
+  return form;
+}
+
+function finalOverrideForm(finalistTwoId = "player-3", reason = "Director decision after group play.") {
+  const form = new FormData();
+  form.set("tournamentId", "tournament-1");
+  form.set("finalistOneId", "player-1");
+  form.set("finalistTwoId", finalistTwoId);
+  form.set("reason", reason);
   return form;
 }
 
@@ -300,6 +309,54 @@ describe("unlockTournamentDraw", () => {
     mocks.createClient.mockResolvedValue({ rpc: vi.fn().mockResolvedValue({ error: { code: "XX000", message: databaseMessage } }) });
     await expect(unlockTournamentDraw(undefined, replacementForm())).resolves.toEqual({
       ok: false, error: expectedError,
+    });
+    errorSpy.mockRestore();
+  });
+});
+
+describe("overrideTournamentFinal", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("rejects non-admins before database access", async () => {
+    mocks.getSessionPlayer.mockResolvedValue({ role: "player" });
+    await expect(overrideTournamentFinal(undefined, finalOverrideForm())).resolves.toEqual({
+      ok: false, error: "Only admins can manage tournaments.",
+    });
+    expect(mocks.createClient).not.toHaveBeenCalled();
+  });
+
+  it("rejects duplicate finalists before database access", async () => {
+    mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin", status: "active" });
+    await expect(overrideTournamentFinal(undefined, finalOverrideForm("player-1"))).resolves.toEqual({
+      ok: false, error: "Choose two different finalists.",
+    });
+    expect(mocks.createClient).not.toHaveBeenCalled();
+  });
+
+  it("records the audited director override through its RPC", async () => {
+    mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin", status: "active" });
+    const rpc = vi.fn().mockResolvedValue({ data: true, error: null });
+    mocks.createClient.mockResolvedValue({ rpc });
+    await expect(overrideTournamentFinal(undefined, finalOverrideForm())).resolves.toEqual({
+      ok: true, message: "Director override recorded. The best-of-three final is ready.",
+    });
+    expect(rpc).toHaveBeenCalledWith("override_tournament_final_v1", {
+      p_tournament_id: "tournament-1",
+      p_finalist_one_id: "player-1",
+      p_finalist_two_id: "player-3",
+      p_reason: "Director decision after group play.",
+    });
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/tournaments/tournament-1");
+  });
+
+  it("identifies a deployment whose override RPC is missing", async () => {
+    mocks.getSessionPlayer.mockResolvedValue({ id: "admin", role: "admin", status: "active" });
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    mocks.createClient.mockResolvedValue({
+      rpc: vi.fn().mockResolvedValue({ error: { code: "PGRST202", message: "Could not find override_tournament_final_v1" } }),
+    });
+    await expect(overrideTournamentFinal(undefined, finalOverrideForm())).resolves.toEqual({
+      ok: false, error: "Director final override is not available in this deployment.",
     });
     errorSpy.mockRestore();
   });

@@ -632,7 +632,7 @@ export async function advanceTournament(
       invalidateTournament(tournamentId);
       return { ok: true, message: "Tournament complete. The champion is official." };
     }
-    return { ok: false, error: "Complete the final and third-place match first." };
+    return { ok: false, error: finalFixtures.length === 1 ? "Complete the final first." : "Complete the final and third-place match first." };
   }
 
   const maxGroupRound = Math.max(...groupFixtures.map((fixture) => fixture.round_number));
@@ -683,6 +683,49 @@ export async function advanceTournament(
   try{await installTournamentStage(tournamentId,"final_stage",championshipFixtures)}catch{return { ok: false, error: "Couldn't create the final stage." };}
   invalidateTournament(tournamentId);
   return { ok: true, message: "The final and third-place match are ready." };
+}
+
+export async function overrideTournamentFinal(
+  _previous: TournamentActionState | undefined,
+  formData: FormData,
+): Promise<TournamentActionState> {
+  if (!(await requireAdmin())) return FORBIDDEN;
+  const tournamentId = textValue(formData, "tournamentId");
+  const finalistOneId = textValue(formData, "finalistOneId");
+  const finalistTwoId = textValue(formData, "finalistTwoId");
+  const reason = textValue(formData, "reason");
+  if (!tournamentId) return { ok: false, error: "Tournament not found." };
+  if (!finalistOneId || !finalistTwoId || finalistOneId === finalistTwoId) {
+    return { ok: false, error: "Choose two different finalists." };
+  }
+  if (reason.length < 10 || reason.length > 500) {
+    return { ok: false, error: "Record a short reason between 10 and 500 characters." };
+  }
+
+  const { error } = await (await createClient()).rpc("override_tournament_final_v1", {
+    p_tournament_id: tournamentId,
+    p_finalist_one_id: finalistOneId,
+    p_finalist_two_id: finalistTwoId,
+    p_reason: reason,
+  });
+  if (error) {
+    console.error("Tournament final override failed", {
+      tournamentId,
+      code: error.code ?? "unknown",
+      message: error.message ?? "unknown",
+    });
+    const message = error.message ?? "";
+    if (error.code === "PGRST202" || message.includes("override_tournament_final_v1")) {
+      return { ok: false, error: "Director final override is not available in this deployment." };
+    }
+    if (message.includes("championship-stage result")) {
+      return { ok: false, error: "The override closed when championship-stage scoring began." };
+    }
+    if (message.includes("round-robin")) return { ok: false, error: "Complete every group match first." };
+    return { ok: false, error: "Couldn’t create the director-seeded final." };
+  }
+  invalidateTournament(tournamentId);
+  return { ok: true, message: "Director override recorded. The best-of-three final is ready." };
 }
 
 export async function completeTournamentFromStandings(

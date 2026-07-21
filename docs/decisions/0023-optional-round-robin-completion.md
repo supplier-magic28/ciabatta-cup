@@ -2,6 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-07-11
+- **Superseded by:** ADR-0046 (director qualification-override scope only)
 
 ## Context
 

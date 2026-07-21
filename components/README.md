@@ -162,7 +162,8 @@ of Done (`CLAUDE.md`).
 - `tournament/TournamentLifecycleActions` — draw lock, guarded pre-play admin
   unlock, and retry-safe locked-in, game-day, and placement-email controls.
 - `tournament/TournamentAdminActions` — fixture generation plus confirmed,
-  explicit standings-completion and final-stage progression controls.
+  explicit standings-completion, final-stage progression, and audited
+  director-seeded best-of-three final controls.
 - `tournament/TournamentParticipantEditor` — pre-play admin replacement that
   preserves a seed and regenerates the complete round-robin draw.
 - `tournament/TournamentBoard` — shared standings and round/court schedule used

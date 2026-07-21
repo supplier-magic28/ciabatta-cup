@@ -50,6 +50,7 @@ is intentionally exact; never edit an applied file or move a filename.
 40. `20260718129000_transaction_invariant_repairs.sql` - clean-stack grants, deterministic cup standings/placements, payload-safe retries, lifecycle revisions, atomic draw/replacement/cover RPCs, legacy outbox reconciliation, and health v5.
 41. `20260718129500_preplay_draw_unlock.sql` - guarded organiser draw unlock before the first cup result.
 42. `20260718130000_rpc_mutation_path_enforcement.sql` - revoke direct practice, RSVP, email-ledger, cup, placement, and championship-stage writes after callers use the canonical RPCs; supply explicit clean-stack service reads, organiser bootstrap, and guarded invite-activation column grants.
+43. `20260722100000_director_final_override.sql` - audited four-player director override that preserves group facts, replaces only unplayed championship fixtures, installs a best-of-three final, and derives the remaining placements from table order.
 
 The final five migrations are one compatible rollout chain. Apply the additive
 outbox, workflow, invariant, and pre-play-unlock migrations (127-1295) in order, deploy the
@@ -135,6 +136,15 @@ project already through the cup/RSVP migration, use this exact sequence:
 7. Apply `20260718130000_rpc_mutation_path_enforcement.sql` only after those
    checks are green. Repeat them against the enforced boundary, then reopen
    mutations.
+
+For the director-seeded final release, apply
+`20260722100000_director_final_override.sql` in full before deploying its
+application caller. It is compatible whether migration 130 is still staged or
+already enforced. Confirm
+`to_regprocedure('public.override_tournament_final_v1(uuid,uuid,uuid,text)')`,
+record version `20260722100000` in remote migration history, and only then use
+the override control. The RPC refuses any cup whose championship-stage scoring
+has started.
 
 Do not run a plain `supabase db push` from this release because it will
 also apply migration 130 before its smoke gate. When the SQL Editor is used,

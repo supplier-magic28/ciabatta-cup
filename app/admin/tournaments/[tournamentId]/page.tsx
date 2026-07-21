@@ -62,13 +62,19 @@ export default async function ManageTournamentPage({ params }: { params: Promise
     advanceLabel = "Complete tournament";
     advanceDisabled = false;
   } else if (finalFixtures.length > 0) {
-    advanceLabel = "Complete final stage first";
+    advanceLabel = finalFixtures.length === 1 ? "Complete final first" : "Complete final stage first";
   }
   const participants = board.participants.map((participant) => ({
     id: participant.player_id,
     seed: participant.seed,
     name: board.playerById.get(participant.player_id)?.name ?? "Player",
   }));
+  const canOverrideQualification = groupComplete
+    && board.tournament.championship_path === "top_two_final"
+    && board.participants.length === 4
+    && finalFixtures.length === 0
+    && semifinalFixtures.length === 0
+    && !deciderComplete;
 
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
@@ -119,6 +125,10 @@ export default async function ManageTournamentPage({ params }: { params: Promise
             canCompleteFromStandings={canCompleteFromStandings}
             advanceLabel={advanceLabel}
             advanceDisabled={advanceDisabled}
+            qualificationOverridePlayers={canOverrideQualification ? board.standings.map((standing) => ({
+              id: standing.playerId,
+              name: board.playerById.get(standing.playerId)?.name ?? "Player",
+            })) : undefined}
           />
         )}
       </section>
