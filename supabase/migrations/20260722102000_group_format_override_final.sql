@@ -34,18 +34,24 @@ begin
 end;
 $$;
 
-update public.fixtures f
-set ruleset=t.group_ruleset
-from public.tournaments t
-where t.id=f.tournament_id
-  and f.stage='final'
-  and f.ruleset='best_of_3_standard'
-  and f.ruleset<>t.group_ruleset
-  and exists(
-    select 1 from public.tournament_final_overrides o
-    where o.tournament_id=f.tournament_id
-  )
-  and not exists(select 1 from public.matches m where m.fixture_id=f.id);
+do $$
+begin
+  perform pg_catalog.set_config('app.tournament_stage_rpc','on',true);
+  update public.fixtures f
+  set ruleset=t.group_ruleset
+  from public.tournaments t
+  where t.id=f.tournament_id
+    and f.stage='final'
+    and f.ruleset='best_of_3_standard'
+    and f.ruleset<>t.group_ruleset
+    and exists(
+      select 1 from public.tournament_final_overrides o
+      where o.tournament_id=f.tournament_id
+    )
+    and not exists(select 1 from public.matches m where m.fixture_id=f.id);
+  perform pg_catalog.set_config('app.tournament_stage_rpc','',true);
+end;
+$$;
 
 create or replace function public.override_tournament_final_v1(
   p_tournament_id uuid,
@@ -100,10 +106,12 @@ begin
       or v_override.finalist_two_id is distinct from p_finalist_two_id
       or v_override.reason is distinct from v_reason
     then raise exception 'qualification override conflicts with the recorded director decision'; end if;
+    perform pg_catalog.set_config('app.tournament_stage_rpc','on',true);
     update public.fixtures f set ruleset=v_t.group_ruleset
       where f.tournament_id=v_t.id and f.stage='final'
         and f.ruleset='best_of_3_standard'
         and not exists(select 1 from public.matches where fixture_id=f.id);
+    perform pg_catalog.set_config('app.tournament_stage_rpc','',true);
     return false;
   end if;
 

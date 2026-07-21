@@ -70,7 +70,9 @@ select is((select ruleset from public.fixtures where tournament_id='a2000000-000
 select is((select array[player1_id,player2_id] from public.fixtures where tournament_id='a2000000-0000-0000-0000-000000000001' and stage='final'),array['a1000000-0000-0000-0000-000000000001'::uuid,'a1000000-0000-0000-0000-000000000003'::uuid],'override installs the selected final');
 reset role;
 alter table public.fixtures disable trigger enforce_tournament_fixture_lock;
+select set_config('app.tournament_stage_rpc','on',true);
 update public.fixtures set ruleset='best_of_3_standard' where tournament_id='a2000000-0000-0000-0000-000000000001' and stage='final';
+select set_config('app.tournament_stage_rpc','',true);
 alter table public.fixtures enable trigger enforce_tournament_fixture_lock;
 set local role authenticated;
 select set_config('request.jwt.claim.sub','a1000000-0000-0000-0000-000000000009',true);

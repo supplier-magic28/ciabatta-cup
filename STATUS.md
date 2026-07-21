@@ -95,7 +95,10 @@ The group-format correction passed the complete local application preflight:
 UI performance contracts, and 10 browser smokes. Its 23-assertion database
 contract covers the inherited short group format, safe repair of the mistaken
 unplayed legacy final, one-set scoring, placements, and result-email intents; a
-fresh-stack database run remains required before production application.
+first fresh-stack run correctly exposed that migration 130 also requires the
+stage-RPC transaction marker for the legacy-format rewrite. The migration,
+exact-retry path, and fixture simulation now carry that marker; the corrected
+fresh-stack rerun remains required before production application.
 
 The standings-path repair passed the complete local application preflight: 301
 unit tests, TypeScript, ESLint, documentation checks, production build, 12 UI
