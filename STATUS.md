@@ -31,8 +31,8 @@ model in `docs/SCHEMA.md`, and decision history in the ADR index.
   roster and fixture preview. The production migration gate is now satisfied.
 - The current repair branch adds a guarded director-seeded final for the
   four-player Claymore edge case. Migration
-  `20260722100000_director_final_override.sql` and its application caller remain
-  undeployed pending fresh-stack verification. Database review tightened the
+  `20260722100000_director_final_override.sql` and its application caller are
+  verified but remain undeployed pending the production migration gate. Database review tightened the
   transition to preserve the pending decider as an explicitly skipped audit
   row rather than deleting fixture history.
 
@@ -78,9 +78,11 @@ model in `docs/SCHEMA.md`, and decision history in the ADR index.
 
 ## Latest verification
 
-The director-final override is not yet included in the verified baseline below.
-Its focused application and database contracts, aggregate preflight, and fresh-
-stack CI are pending.
+The director-final override passed the complete local application preflight and
+fresh-stack GitHub CI run 29869306021. Its database contract exercises the
+three-way group tie, audited selection, preserved skipped decider, best-of-three
+final, retry/conflict paths, final score, exact 1-4 placements, and result-email
+intents.
 
 The repaired tree passed the complete local application preflight and the
 fresh-stack GitHub CI run for commit `3630ceb`. The corrected database contract
@@ -89,15 +91,15 @@ and ranked-lifecycle gates are green.
 
 | Check | Result |
 | --- | --- |
-| Aggregate application preflight | Passed on the repaired tree, including production build and browser checks |
+| Aggregate application preflight | Passed on the director-final tree, including production build and browser checks |
 | ESLint / TypeScript | Passed / passed |
-| Vitest | 295 tests passed; one fresh-Supabase integration test skipped by design |
+| Vitest | 299 tests passed; one fresh-Supabase integration test skipped by design |
 | Documentation gates | `docs:check` and `docs:impact` passed; structural fixtures 16/16 and impact fixtures 8/8 passed |
 | Production build | Passed |
 | UI performance contracts | 12/12 passed; these are geometry/query-shape contracts only |
 | Browser smoke | 10/10 passed on a runner-owned dynamic port, including public immutable GLB delivery and exact preserved `next` destinations |
-| Database pgTAP/lint | Passed on the fresh disposable stack in GitHub run 29712930430. The corrected 14-assertion contract reaches the RPC and the complete database suite/lint are green. |
-| Authenticated ranked integration | Passed in GitHub run 29712930430 on a disposable Node 24/Supabase stack: ranked submit, opponent confirm, organiser approve, cache rebuild, and exact ladder/profile agreement |
+| Database pgTAP/lint | Passed on the fresh disposable stack in GitHub run 29869306021, including the 22-assertion director-final contract and aggregate database lint. |
+| Authenticated ranked integration | Passed in GitHub run 29869306021 on a disposable Node 24/Supabase stack: ranked submit, opponent confirm, organiser approve, cache rebuild, and exact ladder/profile agreement |
 | Production post-129 health | Operator-reported zero drift, no integrity issues, 18 sent deliveries, and no actionable deliveries |
 
 ## Active risks
@@ -131,9 +133,9 @@ and ranked-lifecycle gates are green.
 
 ## Next work
 
-1. Verify the director-final override migration/action locally where available
-   and on fresh-stack CI. Apply migration 132 before deploying its caller, then
-   use the audited control to seed the Claymore final.
+1. Apply migration 132 in production, verify
+   `override_tournament_final_v1(uuid,uuid,uuid,text)` exists, then deploy its
+   verified caller and use the audited control to seed the Claymore final.
 2. Let the repaired `main` deployment drain old instances, then run the
    controlled pre-enforcement draw-unlock/relock and health smoke with general
    mutations still frozen. Record migration 1295 in remote history. Then apply
