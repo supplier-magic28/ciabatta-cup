@@ -31,10 +31,11 @@ model in `docs/SCHEMA.md`, and decision history in the ADR index.
   roster and fixture preview. The production migration gate is now satisfied.
 - The current repair branch adds a guarded director-seeded final for the
   four-player Claymore edge case. Migration
-  `20260722100000_director_final_override.sql` and its application caller are
-  verified but remain undeployed pending the production migration gate. Database review tightened the
-  transition to preserve the pending decider as an explicitly skipped audit
-  row rather than deleting fixture history.
+  `20260722100000_director_final_override.sql` was operator-confirmed applied
+  through the production SQL Editor on 2026-07-22 and its RPC existence check
+  succeeded. The verified application caller is ready to deploy. Database
+  review tightened the transition to preserve the pending decider as an
+  explicitly skipped audit row rather than deleting fixture history.
 
 ## Current architecture state
 
@@ -119,10 +120,11 @@ and ranked-lifecycle gates are green.
   clean-application proof.
 - Docker Desktop is unavailable locally, so the corrected database contract was
   proven on GitHub's disposable fresh stack rather than the workstation stack.
-- Production migrations 127-1295 were applied through the SQL Editor, so their
-  remote migration-history entries still need to be marked applied before a
-  future linked `db push`. Migration 130 must remain pending until the repaired
-  application has deployed and passed the controlled production smoke suite.
+- Production migrations 127-1295 and 132 were applied through the SQL Editor,
+  so their remote migration-history entries still need to be marked applied
+  before a future linked `db push`. Migration 130 must remain pending until the
+  repaired application has deployed and passed the controlled production smoke
+  suite.
 - The amended migration 130 has 74/74 focused and 256/256 aggregate local and
   fresh-stack CI coverage. It remains gated only on confirming the new
   application deployment and completing the controlled pre-enforcement
@@ -133,9 +135,9 @@ and ranked-lifecycle gates are green.
 
 ## Next work
 
-1. Apply migration 132 in production, verify
-   `override_tournament_final_v1(uuid,uuid,uuid,text)` exists, then deploy its
-   verified caller and use the audited control to seed the Claymore final.
+1. Deploy the verified director-final caller, then use the audited control to
+   seed the Claymore final and confirm the selected best-of-three pairing,
+   skipped decider, and table-order third/fourth before entering the final.
 2. Let the repaired `main` deployment drain old instances, then run the
    controlled pre-enforcement draw-unlock/relock and health smoke with general
    mutations still frozen. Record migration 1295 in remote history. Then apply
