@@ -27,6 +27,41 @@ create policy "active_players_read_tournament_final_overrides"
 revoke insert,update,delete on public.tournament_final_overrides from authenticated,service_role;
 grant select on public.tournament_final_overrides to authenticated,service_role;
 
+-- The audit actor is a restrictive player dependency, so the central safe-
+-- deletion projection must expose it before an unused identity can be removed.
+create or replace function public.player_deletion_blockers_v1(p_player_id uuid)
+returns text[] language plpgsql stable security definer set search_path=''
+as $$
+declare v_blockers text[]:='{}'::text[];
+begin
+  if auth.uid() is not null and not public.is_admin() then raise exception 'only organisers may inspect deletion eligibility'; end if;
+  if p_player_id is null then raise exception 'player is required'; end if;
+  if exists(select 1 from public.matches where p_player_id in(player1_id,player2_id,winner_id,submitted_by,admin_logged_by)) then v_blockers:=array_append(v_blockers,'matches'); end if;
+  if exists(select 1 from public.practice_sessions where p_player_id in(player_id,reviewed_by)) then v_blockers:=array_append(v_blockers,'practice'); end if;
+  if exists(select 1 from public.play_days where player_id=p_player_id) then v_blockers:=array_append(v_blockers,'play_days'); end if;
+  if exists(select 1 from public.tournaments where created_by=p_player_id) then v_blockers:=array_append(v_blockers,'tournaments'); end if;
+  if exists(select 1 from public.tournament_participants where player_id=p_player_id) then v_blockers:=array_append(v_blockers,'tournament_participation'); end if;
+  if exists(select 1 from public.tournament_placements where player_id=p_player_id) then v_blockers:=array_append(v_blockers,'tournament_placements'); end if;
+  if exists(select 1 from public.fixtures where p_player_id in(player1_id,player2_id)) then v_blockers:=array_append(v_blockers,'fixtures'); end if;
+  if exists(select 1 from public.tournament_invites where player_id=p_player_id) then v_blockers:=array_append(v_blockers,'tournament_invites'); end if;
+  if exists(select 1 from public.tournament_final_overrides where created_by=p_player_id) then v_blockers:=array_append(v_blockers,'tournament_final_overrides'); end if;
+  if exists(select 1 from public.planned_matches where p_player_id in(created_by,opponent_player_id,cancelled_by)) then v_blockers:=array_append(v_blockers,'planned_matches'); end if;
+  if exists(select 1 from public.planned_match_results where p_player_id in(submitted_by,winner_player_id,corrected_by)) then v_blockers:=array_append(v_blockers,'planned_results'); end if;
+  if exists(select 1 from public.external_opponents where owner_id=p_player_id) then v_blockers:=array_append(v_blockers,'external_opponents'); end if;
+  if exists(select 1 from public.courts where created_by=p_player_id) then v_blockers:=array_append(v_blockers,'courts'); end if;
+  if exists(select 1 from public.activity_log where actor_id=p_player_id) then v_blockers:=array_append(v_blockers,'activity_log'); end if;
+  if exists(select 1 from public.match_confirmations where player_id=p_player_id) then v_blockers:=array_append(v_blockers,'match_confirmations'); end if;
+  if exists(select 1 from public.rating_history where player_id=p_player_id) then v_blockers:=array_append(v_blockers,'rating_history'); end if;
+  if exists(select 1 from public.ciabatta_reigns where player_id=p_player_id) then v_blockers:=array_append(v_blockers,'ciabatta_reigns'); end if;
+  if exists(select 1 from public.tournament_email_deliveries where player_id=p_player_id) then v_blockers:=array_append(v_blockers,'tournament_email_deliveries'); end if;
+  if exists(select 1 from public.lifecycle_email_deliveries where player_id=p_player_id) then v_blockers:=array_append(v_blockers,'lifecycle_email_deliveries'); end if;
+  if exists(select 1 from public.custom_email_outbox where player_id=p_player_id) then v_blockers:=array_append(v_blockers,'custom_email_outbox'); end if;
+  return v_blockers;
+end;
+$$;
+revoke all on function public.player_deletion_blockers_v1(uuid) from public;
+grant execute on function public.player_deletion_blockers_v1(uuid) to authenticated,service_role;
+
 create or replace function public.override_tournament_final_v1(
   p_tournament_id uuid,
   p_finalist_one_id uuid,
